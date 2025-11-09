@@ -57,7 +57,7 @@ const ClassManagement = () => {
   const fetchClasses = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/classes', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/classes`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -106,7 +106,7 @@ const ClassManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/classes', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/classes`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

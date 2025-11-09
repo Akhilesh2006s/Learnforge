@@ -133,7 +133,7 @@ const ExamManagement = () => {
   const fetchExams = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/exams', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/exams`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -186,7 +186,7 @@ const ExamManagement = () => {
   const handleCreateExam = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/exams', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/exams`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -373,7 +373,7 @@ const ExamManagement = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/upload-question-image', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/upload-question-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -71,7 +71,7 @@ const SubjectManagement = () => {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/subjects', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/subjects`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -127,7 +127,7 @@ const SubjectManagement = () => {
   const fetchTeachers = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/teachers', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/teachers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ const SubjectManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/subjects', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/subjects`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

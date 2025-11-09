@@ -77,7 +77,7 @@ const VideoManagement = () => {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/subjects', {
+      const response = await fetch(`${API_BASE_URL}/api/subjects`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ const VideoManagement = () => {
   const fetchVideos = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/videos', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/videos`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -119,7 +119,7 @@ const VideoManagement = () => {
   const handleCreateVideo = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/videos', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/videos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

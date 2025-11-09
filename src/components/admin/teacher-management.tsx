@@ -519,7 +519,7 @@ const TeacherManagement = () => {
           await delay(600); // give backend time to persist
           try {
             const token2 = localStorage.getItem('authToken');
-            const resp2 = await fetch('${API_BASE_URL}/api/admin/teachers', {
+            const resp2 = await fetch(`${API_BASE_URL}/api/admin/teachers`, {
               headers: {
                 'Authorization': `Bearer ${token2}`,
                 'Content-Type': 'application/json'

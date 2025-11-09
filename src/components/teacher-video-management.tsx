@@ -77,7 +77,7 @@ const TeacherVideoManagement = () => {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/teacher/subjects', {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/subjects`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -95,7 +95,7 @@ const TeacherVideoManagement = () => {
   const fetchVideos = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/teacher/videos', {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/videos`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

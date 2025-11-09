@@ -84,7 +84,7 @@ const AssessmentManagement = () => {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/subjects', {
+      const response = await fetch(`${API_BASE_URL}/api/subjects`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -102,7 +102,7 @@ const AssessmentManagement = () => {
   const fetchAssessments = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/assessments', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/assessments`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ const AssessmentManagement = () => {
   const handleCreateAssessment = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('${API_BASE_URL}/api/admin/assessments', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/assessments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

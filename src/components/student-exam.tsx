@@ -238,7 +238,7 @@ export default function StudentExam({ examId, onComplete, onExit }: StudentExamP
 
     // Save result to backend
     try {
-      await fetch('${API_BASE_URL}/api/student/exam-results', {
+      await fetch(`${API_BASE_URL}/api/student/exam-results`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

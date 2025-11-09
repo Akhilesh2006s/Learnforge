@@ -68,6 +68,8 @@ interface ExamResult {
     physics: { correct: number; total: number; marks: number };
     chemistry: { correct: number; total: number; marks: number };
   };
+  answers?: Record<string, any>;
+  questions?: Question[];
 }
 
 export default function StudentExams() {
@@ -731,7 +733,8 @@ export default function StudentExams() {
                                 physics: { correct: 0, total: 0, marks: 0 },
                                 chemistry: { correct: 0, total: 0, marks: 0 }
                               },
-                              answers: result.answers || {}
+                              answers: result.answers || {},
+                              questions: examWithQuestions.questions || []
                             };
                             
                             // Set the exam and result to show the detailed view

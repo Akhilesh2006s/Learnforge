@@ -146,13 +146,27 @@ export default function AdminManagement() {
     setIsAddingAdmin(true);
     try {
       const token = localStorage.getItem('authToken');
+      
+      // Prepare payload - backend expects: name, email, board, schoolName, permissions
+      // Note: Backend sets default password 'admin123', so we don't send password
+      const payload = {
+        name: newAdmin.name,
+        email: newAdmin.email,
+        board: newAdmin.board,
+        schoolName: newAdmin.schoolName,
+        permissions: [] // Optional, defaults to empty array
+      };
+      
+      console.log('Creating admin with payload:', payload);
+      console.log('API URL:', `${API_BASE_URL}/api/super-admin/admins`);
+      
       const response = await fetch(`${API_BASE_URL}/api/super-admin/admins`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newAdmin),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -173,8 +187,14 @@ export default function AdminManagement() {
       console.error('Error adding admin:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to add admin";
       
-      // Show specific error messages
-      if (errorMessage.includes('already exists')) {
+      // Check for network errors
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_NAME_NOT_RESOLVED')) {
+        toast({
+          title: "Network Error",
+          description: "Cannot connect to the server. Please check your internet connection and ensure the backend is running.",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('already exists')) {
         toast({
           title: "Admin Already Exists",
           description: "An admin with this email already exists. Please use a different email.",
@@ -183,7 +203,7 @@ export default function AdminManagement() {
       } else {
         toast({
           title: "Error",
-          description: errorMessage,
+          description: errorMessage || "Failed to add admin. Please try again.",
           variant: "destructive",
         });
       }

@@ -70,6 +70,8 @@ interface ExamResult {
     physics: { correct: number; total: number; marks: number };
     chemistry: { correct: number; total: number; marks: number };
   };
+  answers?: Record<string, any>;
+  questions?: Question[];
 }
 
 export default function StudentExam({ examId, onComplete, onExit }: StudentExamProps) {
@@ -229,7 +231,9 @@ export default function StudentExam({ examId, onComplete, onExit }: StudentExamP
       obtainedMarks,
       percentage,
       timeTaken: (exam.duration * 60) - timeLeft,
-      subjectWiseScore
+      subjectWiseScore,
+      answers: answers,
+      questions: exam.questions || []
     };
 
     // Save result to backend

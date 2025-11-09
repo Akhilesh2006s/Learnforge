@@ -325,18 +325,27 @@ const AdminDashboard = () => {
                     <button
                       onClick={async () => {
                         try {
-                          const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                            method: 'POST',
-                            headers: {
-                              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                              'Content-Type': 'application/json'
+                          const token = localStorage.getItem('authToken');
+                          if (token) {
+                            try {
+                              await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`,
+                                  'Content-Type': 'application/json'
+                                }
+                              });
+                            } catch (error) {
+                              console.error('Logout API error:', error);
                             }
-                          });
-                          if (response.ok) {
-                            window.location.href = '/signin';
                           }
+                          localStorage.removeItem('authToken');
+                          localStorage.removeItem('user');
+                          window.location.href = '/signin';
                         } catch (error) {
                           console.error('Logout failed:', error);
+                          localStorage.removeItem('authToken');
+                          localStorage.removeItem('user');
                           window.location.href = '/signin';
                         }
                       }}

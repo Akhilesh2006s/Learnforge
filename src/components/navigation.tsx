@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { BookOpen, FileText, MessageCircle, User, Menu, Bell, LogOut, Sparkles, Video } from "lucide-react";
 import { API_BASE_URL } from '@/lib/api-config';
+import { clearAuthData, getAuthToken } from '@/lib/auth-utils';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,21 +16,32 @@ export default function Navigation() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json'
+      const token = getAuthToken();
+      if (token) {
+        try {
+          await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (error) {
+          console.error('Logout API error:', error);
+          // Continue with logout even if API call fails
         }
-      });
-      
-      if (response.ok) {
-        window.location.href = '/signin';
-      } else {
-        console.error('Logout failed');
       }
+      
+      // Clear all authentication data
+      clearAuthData();
+      
+      // Redirect to login page
+      setLocation('/signin');
     } catch (error) {
       console.error('Logout error:', error);
+      // Clear storage and redirect even on error
+      clearAuthData();
+      setLocation('/signin');
     } finally {
       setIsLoggingOut(false);
     }

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { API_BASE_URL } from '@/lib/api-config';
+import { InteractiveBackground, FloatingParticles } from "@/components/background/InteractiveBackground";
 import { 
   BookOpen, 
   Users, 
@@ -232,10 +233,15 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex relative overflow-hidden">
+      {/* Interactive Background */}
+      <div className="fixed inset-0 z-0">
+        <InteractiveBackground />
+        <FloatingParticles />
+      </div>
       {/* Mobile Header */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-white/20">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-white/20 relative">
           <div className="flex items-center justify-between p-responsive">
             <div className="flex items-center space-x-responsive">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -402,7 +408,7 @@ const AdminDashboard = () => {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div className="w-64 bg-white/60 backdrop-blur-xl shadow-2xl border-r border-white/20">
+        <div className="w-64 bg-white/60 backdrop-blur-xl shadow-2xl border-r border-white/20 relative z-10">
         {/* Logo Section */}
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center space-x-3">
@@ -519,9 +525,9 @@ const AdminDashboard = () => {
       )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col relative z-10">
           {/* Top Header */}
-          <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 px-responsive py-responsive">
+          <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 px-responsive py-responsive relative z-10">
             <div className="flex-responsive-col items-center sm:items-start justify-between space-y-responsive sm:space-y-0">
               <div className="text-center sm:text-left">
                 <h2 className="text-responsive-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent capitalize">{activeTab}</h2>
@@ -560,7 +566,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Content Area */}
-          <div className={`flex-1 p-responsive overflow-auto ${isMobile ? 'pt-20' : ''}`}>
+          <div className={`flex-1 p-responsive overflow-auto ${isMobile ? 'pt-20' : ''} relative z-10`}>
           {activeTab === 'overview' && (
             <div className="space-y-8">
             {/* Colorful Stats Cards */}

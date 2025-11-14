@@ -324,16 +324,19 @@ export default function EduOTT() {
       <div className="w-full px-2 sm:px-4 lg:px-6 pt-24 pb-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen relative">
         <div className="max-w-7xl mx-auto">
           
-          {/* Robot GIF - Fixed at Bottom Left */}
-          {!isMobile && (
-            <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
-              <img 
-                src="/ROBOT.gif" 
-                alt="Robot" 
-                className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
-              />
-            </div>
-          )}
+        {/* Robot GIF - Fixed at Bottom Left */}
+        {!isMobile && (
+          <div 
+            className="fixed bottom-8 left-4 z-30 cursor-pointer"
+            onClick={() => window.location.href = '/ai-tutor'}
+          >
+            <img 
+              src="/ROBOT.gif" 
+              alt="Robot - Click to chat with Vidya AI" 
+              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
+            />
+          </div>
+        )}
           
           {/* Header */}
           <div className="mb-8">

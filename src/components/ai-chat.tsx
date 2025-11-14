@@ -184,8 +184,12 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
     <Card className={className}>
       <CardHeader>
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+            <img 
+              src="/ROBOT.gif" 
+              alt="Vidya AI" 
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
           <CardTitle className="text-lg">Vidya AI</CardTitle>
           <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -213,8 +217,12 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                   }`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
-                      <Zap className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <img 
+                        src="/ROBOT.gif" 
+                        alt="Vidya AI" 
+                        className="w-full h-full object-cover rounded-full"
+                      />
                     </div>
                   )}
                   
@@ -247,8 +255,12 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
             
             {(sendMessageMutation.isPending || analyzeImageMutation.isPending) && (
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
-                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img 
+                    src="/ROBOT.gif" 
+                    alt="Vidya AI" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
                 </div>
                 <div className="chat-message-ai">
                   <p className="text-sm">Thinking...</p>

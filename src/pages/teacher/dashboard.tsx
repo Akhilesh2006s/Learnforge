@@ -52,6 +52,7 @@ import {
 import AIChat from '@/components/ai-chat';
 import VideoModal from '@/components/video-modal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { InteractiveBackground, FloatingParticles } from "@/components/background/InteractiveBackground";
 
 interface TeacherStats {
   totalStudents: number;
@@ -799,9 +800,15 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Interactive Background */}
+      <div className="fixed inset-0 z-0">
+        <InteractiveBackground />
+        <FloatingParticles />
+      </div>
+      
       {/* Header */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 relative">
         <div className="w-full px-2 sm:px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -833,7 +840,7 @@ const TeacherDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="w-full px-2 sm:px-4 lg:px-6 py-8">
+      <div className="w-full px-2 sm:px-4 lg:px-6 py-8 relative z-10">
         {/* Welcome Message */}
         <div className="mb-8">
           <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent capitalize">

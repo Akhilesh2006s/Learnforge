@@ -12,11 +12,11 @@ import {
   UploadIcon,
   FileTextIcon,
   TrophyIcon,
-  RadioIcon
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'live-sessions';
+export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'vidya-ai';
 
 interface SuperAdminSidebarProps {
   currentView: SuperAdminView;
@@ -32,7 +32,7 @@ export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdmi
     { id: 'content', label: 'Content Management', icon: UploadIcon },
     { id: 'exams', label: 'Exam Management', icon: FileTextIcon },
     { id: 'iq-rank-boost', label: 'IQ/Rank Boost Activities', icon: TrophyIcon },
-    { id: 'live-sessions', label: 'Live Sessions', icon: RadioIcon },
+    { id: 'vidya-ai', label: 'Vidya AI', icon: Sparkles },
     { id: 'analytics', label: 'Analytics', icon: BarChartIcon },
     { id: 'board-comparison', label: 'Board Comparison', icon: BarChartIcon },
     { id: 'ai-analytics', label: 'AI Analytics', icon: BrainCircuitIcon },

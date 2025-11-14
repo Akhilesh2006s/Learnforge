@@ -168,22 +168,16 @@ export default function AITutor() {
       <Navigation />
       <div className={`w-full px-2 sm:px-4 lg:px-6 pt-responsive pb-responsive bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen ${isMobile ? 'pb-20' : ''} relative`}>
         
-        {/* Robot GIF - Fixed at Bottom Left */}
-        {!isMobile && (
-          <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
-            <img 
-              src="/ROBOT.gif" 
-              alt="Robot" 
-              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
-            />
-          </div>
-        )}
         
         {/* Header */}
         <div className="mb-responsive">
           <div className="flex-responsive-col items-center sm:items-start space-x-responsive space-y-responsive sm:space-y-0 mb-responsive">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl">
-              <Zap className="w-6 h-6 text-white" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl overflow-hidden">
+              <img 
+                src="/ROBOT.gif" 
+                alt="Vidya AI" 
+                className="w-full h-full object-cover rounded-full"
+              />
             </div>
             <div className="text-center sm:text-left">
               <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Vidya AI</h1>

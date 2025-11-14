@@ -371,13 +371,15 @@ export default function SubjectContent() {
         
         {/* Robot GIF - Fixed at Bottom Left */}
         {!isMobile && (
-          <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
-            <img 
-              src="/ROBOT.gif" 
-              alt="Robot" 
-              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
-            />
-          </div>
+          <Link href="/ai-tutor">
+            <div className="fixed bottom-8 left-4 z-30 cursor-pointer">
+              <img 
+                src="/ROBOT.gif" 
+                alt="Robot - Click to chat with Vidya AI" 
+                className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
+              />
+            </div>
+          </Link>
         )}
         
         {/* Header Section */}

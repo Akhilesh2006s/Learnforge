@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { SuperAdminSidebar, type SuperAdminView } from "@/components/dashboard/SuperAdminSidebar";
 import AdminManagement from "@/components/admin/AdminManagement";
 import SuperAdminAnalyticsDashboard from "./super-admin-analytics";
@@ -8,13 +9,14 @@ import ContentManagement from "@/components/super-admin/content-management";
 import SubjectManagement from "@/components/super-admin/subject-management";
 import ExamManagement from "@/components/super-admin/exam-management";
 import IQRankBoostActivities from "@/components/super-admin/iq-rank-boost-activities";
-import LiveSessions from "@/components/super-admin/live-sessions";
+import AIChat from "@/components/ai-chat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BellIcon, LogOutIcon, UsersIcon, TrendingUpIcon, BookIcon, Presentation, UserPlusIcon, BookPlusIcon, SettingsIcon, DownloadIcon, HomeIcon, CrownIcon, BarChart3Icon, CreditCardIcon, ArrowUpRightIcon, ArrowDownRightIcon, StarIcon, TargetIcon, BrainIcon, ZapIcon, AlertTriangleIcon, TrendingDownIcon, RefreshCw } from "lucide-react";
+import { BellIcon, LogOutIcon, UsersIcon, TrendingUpIcon, BookIcon, Presentation, UserPlusIcon, BookPlusIcon, SettingsIcon, DownloadIcon, HomeIcon, CrownIcon, BarChart3Icon, CreditCardIcon, ArrowUpRightIcon, ArrowDownRightIcon, StarIcon, TargetIcon, BrainIcon, ZapIcon, AlertTriangleIcon, TrendingDownIcon, RefreshCw, Sparkles, MessageSquare, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api-config";
+import { InteractiveBackground, FloatingParticles } from "@/components/background/InteractiveBackground";
 
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
@@ -212,7 +214,7 @@ export default function SuperAdminDashboard() {
     }
 
     return (
-    <div className="space-y-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen p-6">
+    <div className="space-y-8 min-h-screen relative z-10">
       {/* Board Selection - 4 Boxes */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -391,6 +393,27 @@ export default function SuperAdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-violet-500 to-purple-500 border-violet-400 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-violet-100">Vidya AI</p>
+                <p className="text-3xl font-bold text-white">24/7</p>
+                <p className="text-sm text-violet-100">AI Tutor Support</p>
+              </div>
+              <Sparkles className="h-12 w-12 text-white" />
+            </div>
+            <div className="mt-4">
+              <button 
+                onClick={() => setCurrentView('vidya-ai')} 
+                className="text-sm text-white hover:text-violet-100 flex items-center transition-colors"
+              >
+                Manage Vidya AI <ArrowUpRightIcon className="ml-1 h-4 w-4" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
@@ -446,6 +469,20 @@ export default function SuperAdminDashboard() {
               <div>
                 <h3 className="font-semibold text-white">Export Data</h3>
                 <p className="text-sm text-sky-100">Download platform analytics</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-violet-500 to-purple-500 border-violet-400 shadow-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('vidya-ai')}>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Vidya AI</h3>
+                <p className="text-sm text-violet-100">Manage AI tutor</p>
               </div>
             </div>
           </CardContent>
@@ -990,6 +1027,96 @@ export default function SuperAdminDashboard() {
     </div>
   );
 
+  const renderVidyaAIContent = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Vidya AI Management</h2>
+          <p className="text-gray-600 mt-1">Manage and monitor your AI tutor system</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vidya AI Chat Interface */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span>Vidya AI Chat Interface</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AIChat userId="super-admin" context={{}} />
+          </CardContent>
+        </Card>
+
+        {/* AI Statistics */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BrainIcon className="w-5 h-5 text-violet-600" />
+              <span>AI Statistics</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-violet-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">Total Queries</p>
+                <p className="text-2xl font-bold text-violet-600">-</p>
+              </div>
+              <MessageSquare className="w-8 h-8 text-violet-400" />
+            </div>
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">Active Sessions</p>
+                <p className="text-2xl font-bold text-purple-600">-</p>
+              </div>
+              <ZapIcon className="w-8 h-8 text-purple-400" />
+            </div>
+            <div className="flex items-center justify-between p-4 bg-pink-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">Average Response Time</p>
+                <p className="text-2xl font-bold text-pink-600">-</p>
+              </div>
+              <Clock className="w-8 h-8 text-pink-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SettingsIcon className="w-5 h-5 text-violet-600" />
+              <span>AI Configuration</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium">AI Status</span>
+                <Badge className="bg-green-100 text-green-800">Online</Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium">Model Version</span>
+                <span className="text-sm text-gray-600">Latest</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium">Language Support</span>
+                <span className="text-sm text-gray-600">Multi</span>
+              </div>
+            </div>
+            <Button className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700">
+              Configure Settings
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
@@ -1006,8 +1133,8 @@ export default function SuperAdminDashboard() {
         return <ExamManagement />;
       case 'iq-rank-boost':
         return <IQRankBoostActivities />;
-      case 'live-sessions':
-        return <LiveSessions />;
+      case 'vidya-ai':
+        return renderVidyaAIContent();
       case 'analytics':
         return renderAnalyticsContent();
       case 'board-comparison':
@@ -1024,15 +1151,21 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <div className="flex">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Interactive Background */}
+      <div className="fixed inset-0 z-0">
+        <InteractiveBackground />
+        <FloatingParticles />
+      </div>
+      
+      <div className="flex relative z-10">
         <SuperAdminSidebar 
           currentView={currentView} 
           onViewChange={setCurrentView} 
           user={user} 
         />
         
-        <div className="flex-1">
+        <div className="flex-1 relative z-10">
           <div className="bg-white/60 backdrop-blur-xl shadow-xl border-b border-purple-200/30">
             <div className="px-6 py-4">
               <div className="flex items-center justify-between">
@@ -1053,7 +1186,7 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
           
-          <div className="p-6">
+          <div className="p-6 relative z-10">
             {renderContent()}
           </div>
         </div>

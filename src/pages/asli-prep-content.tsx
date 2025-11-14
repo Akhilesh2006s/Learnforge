@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 import Navigation from '@/components/navigation';
 import AsliPrepContent from '@/components/student/asli-prep-content';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,13 +16,15 @@ export default function AsliPrepContentPage() {
           
           {/* Robot GIF - Fixed at Bottom Left */}
           {!isMobile && (
-            <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
-              <img 
-                src="/ROBOT.gif" 
-                alt="Robot" 
-                className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
-              />
-            </div>
+            <Link href="/ai-tutor">
+              <div className="fixed bottom-8 left-4 z-30 cursor-pointer">
+                <img 
+                  src="/ROBOT.gif" 
+                  alt="Robot - Click to chat with Vidya AI" 
+                  className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
+                />
+              </div>
+            </Link>
           )}
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-2">

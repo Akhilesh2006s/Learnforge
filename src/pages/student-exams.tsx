@@ -481,11 +481,14 @@ export default function StudentExams() {
         
         {/* Robot GIF - Fixed at Bottom Left */}
         {!isMobile && (
-          <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
+          <div 
+            className="fixed bottom-8 left-4 z-30 cursor-pointer"
+            onClick={() => setLocation('/ai-tutor')}
+          >
             <img 
               src="/ROBOT.gif" 
-              alt="Robot" 
-              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
+              alt="Robot - Click to chat with Vidya AI" 
+              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
             />
           </div>
         )}

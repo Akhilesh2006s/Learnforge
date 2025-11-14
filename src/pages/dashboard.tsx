@@ -37,6 +37,7 @@ import YouTubePlayer from '@/components/youtube-player';
 import DriveViewer from '@/components/drive-viewer';
 import VideoModal from '@/components/video-modal';
 import { API_BASE_URL } from '@/lib/api-config';
+import { InteractiveBackground, FloatingParticles } from "@/components/background/InteractiveBackground";
 
 // Mock user ID - in a real app, this would come from authentication
 const MOCK_USER_ID = "user-1";
@@ -693,21 +694,29 @@ export default function Dashboard() {
   return (
     <>
       <Navigation />
-      <div className={`w-full px-2 sm:px-4 lg:px-6 pt-responsive pb-responsive bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen ${isMobile ? 'pb-20' : ''} relative`}>
+      <div className={`w-full px-2 sm:px-4 lg:px-6 pt-responsive pb-responsive bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen ${isMobile ? 'pb-20' : ''} relative overflow-hidden`}>
+        {/* Interactive Background */}
+        <div className="fixed inset-0 z-0">
+          <InteractiveBackground />
+          <FloatingParticles />
+        </div>
         
         {/* Robot GIF - Fixed at Bottom Left */}
         {!isMobile && (
-          <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
+          <div 
+            className="fixed bottom-8 left-4 z-30 cursor-pointer"
+            onClick={() => setLocation('/ai-tutor')}
+          >
             <img 
               src="/ROBOT.gif" 
-              alt="Robot" 
-              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
+              alt="Robot - Click to chat with Vidya AI" 
+              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
             />
           </div>
         )}
         
         {/* Welcome Section */}
-        <div className="mb-responsive">
+        <div className="mb-responsive relative z-10">
           <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-responsive p-responsive text-white relative overflow-hidden shadow-xl">
             <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
             <div className="relative z-10">
@@ -746,7 +755,7 @@ export default function Dashboard() {
 
         {/* Teacher Remarks Section */}
         {remarks.length > 0 && (
-          <div className="mb-responsive">
+          <div className="mb-responsive relative z-10">
             <Card className="bg-white/60 backdrop-blur-xl border-white/20 shadow-xl">
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -804,7 +813,7 @@ export default function Dashboard() {
         )}
 
         {/* Quick Stats */}
-        <div className="grid-responsive-3 gap-responsive mb-responsive">
+        <div className="grid-responsive-3 gap-responsive mb-responsive relative z-10">
           <div className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300">
             <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
             <div className="relative z-10">
@@ -853,7 +862,7 @@ export default function Dashboard() {
 
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
           
           {/* Left Column: Learning Path & Content */}
           <div className="lg:col-span-2 space-y-6">

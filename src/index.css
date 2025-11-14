@@ -37,6 +37,8 @@
   --sidebar-accent-foreground: #1f2937; /* Dark text on sidebar accent */
   --sidebar-border: #e2e8f0; /* Light gray sidebar borders */
   --sidebar-ring: #3b82f6; /* Blue for sidebar focus */
+  --hero-gradient-start: 340 100% 97%;
+  --hero-gradient-end: 350 100% 92%;
   --font-instrument-serif: "Instrument Serif", serif; /* Instrument Serif font family configuration */
   /* Added Figtree as the primary font variable */
   --font-figtree: "Figtree", sans-serif; /* Figtree font family configuration */
@@ -76,6 +78,8 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #a855f7;
+  --hero-gradient-start: 340 30% 15%;
+  --hero-gradient-end: 350 30% 20%;
   --font-instrument-serif: "Instrument Serif", serif; /* Instrument Serif font family configuration */
   /* Added Figtree font variable for dark mode consistency */
   --font-figtree: "Figtree", sans-serif; /* Figtree font family configuration */

@@ -179,8 +179,21 @@ const TeacherDashboard = () => {
 
   const [isGeneratingLessonPlan, setIsGeneratingLessonPlan] = useState(false);
   const [generatedLessonPlan, setGeneratedLessonPlan] = useState('');
-  const [vidyaAiTab, setVidyaAiTab] = useState<'assistant' | 'lesson-plans' | 'grading' | 'tutor' | 'parent-comm'>('assistant');
+  const [vidyaAiTab, setVidyaAiTab] = useState<'assistant' | 'lesson-plans' | 'grading' | 'tutor' | 'parent-comm' | 'quiz-generator'>('assistant');
   const [teacherId, setTeacherId] = useState<string>('');
+  
+  // Quiz Generator form state
+  const [quizForm, setQuizForm] = useState({
+    subject: '',
+    topic: '',
+    gradeLevel: '',
+    questionCount: '10',
+    difficulty: 'medium',
+    assignedClasses: [] as string[]
+  });
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [generatedQuiz, setGeneratedQuiz] = useState<any>(null);
+  const [isSavingQuiz, setIsSavingQuiz] = useState(false);
   
   // Grading form state
   const [gradingForm, setGradingForm] = useState({
@@ -619,6 +632,172 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleGenerateQuiz = async () => {
+    if (!quizForm.subject || !quizForm.topic || !quizForm.gradeLevel || !quizForm.questionCount) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsGeneratingQuiz(true);
+    setGeneratedQuiz(null);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/teacher/ai/test-questions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          subject: quizForm.subject,
+          topic: quizForm.topic,
+          gradeLevel: quizForm.gradeLevel,
+          questionCount: parseInt(quizForm.questionCount),
+          difficulty: quizForm.difficulty
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Parse the generated questions
+        try {
+          const questionsData = typeof result.data.testQuestions === 'string' 
+            ? JSON.parse(result.data.testQuestions) 
+            : result.data.testQuestions;
+          setGeneratedQuiz({
+            ...result.data,
+            parsedQuestions: questionsData
+          });
+        } catch (parseError) {
+          // If parsing fails, store as text
+          setGeneratedQuiz({
+            ...result.data,
+            rawText: typeof result.data.testQuestions === 'string' 
+              ? result.data.testQuestions 
+              : JSON.stringify(result.data.testQuestions)
+          });
+        }
+      } else {
+        const error = await response.json();
+        alert(`Failed to generate quiz: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to generate quiz:', error);
+      alert('Failed to generate quiz. Please try again.');
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  const handleSaveQuiz = async () => {
+    if (!generatedQuiz || !generatedQuiz.parsedQuestions) {
+      alert('No quiz to save. Please generate a quiz first.');
+      return;
+    }
+
+    setIsSavingQuiz(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Find the subject ID from teacherSubjects
+      const selectedSubject = teacherSubjects.find((s: any) => 
+        s.name?.toLowerCase() === quizForm.subject.toLowerCase()
+      );
+      
+      if (!selectedSubject) {
+        alert('Subject not found. Please select a valid subject.');
+        setIsSavingQuiz(false);
+        return;
+      }
+
+      // Format questions for the API
+      const formattedQuestions = generatedQuiz.parsedQuestions.questions?.map((q: any) => ({
+        questionText: q.question || q.questionText,
+        questionType: q.type === 'multiple-choice' ? 'mcq' : 'mcq',
+        options: q.options?.map((opt: string | { text: string; isCorrect?: boolean }) => {
+          if (typeof opt === 'string') {
+            return { text: opt, isCorrect: opt === q.correctAnswer };
+          }
+          return { text: opt.text, isCorrect: opt.isCorrect || false };
+        }) || [],
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || '',
+        marks: 1,
+        negativeMarks: 0,
+        subject: quizForm.subject.toLowerCase()
+      })) || [];
+
+      const quizData = {
+        title: `Quiz: ${quizForm.topic} - ${quizForm.subject}`,
+        description: `AI-generated quiz for ${quizForm.subject} - ${quizForm.topic} (${quizForm.gradeLevel})`,
+        subject: selectedSubject._id || selectedSubject.id,
+        duration: 60,
+        difficulty: quizForm.difficulty,
+        questions: formattedQuestions,
+        assignedClasses: quizForm.assignedClasses
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/teacher/quizzes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(quizData)
+      });
+
+      if (response.ok) {
+        const savedQuiz = await response.json();
+        
+        // If classes are assigned, assign the quiz to those classes
+        if (quizForm.assignedClasses.length > 0 && savedQuiz._id) {
+          try {
+            const assignResponse = await fetch(`${API_BASE_URL}/api/teacher/quizzes/${savedQuiz._id}/assign`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                classIds: quizForm.assignedClasses
+              })
+            });
+
+            if (assignResponse.ok) {
+              alert(`Quiz saved and assigned to ${quizForm.assignedClasses.length} class(es) successfully!`);
+            } else {
+              alert('Quiz saved but failed to assign to classes. You can assign it later.');
+            }
+          } catch (assignError) {
+            console.error('Failed to assign quiz:', assignError);
+            alert('Quiz saved but failed to assign to classes. You can assign it later.');
+          }
+        } else {
+          alert('Quiz saved successfully!');
+        }
+        
+        setGeneratedQuiz(null);
+        setQuizForm({
+          subject: '',
+          topic: '',
+          gradeLevel: '',
+          questionCount: '10',
+          difficulty: 'medium',
+          assignedClasses: []
+        });
+      } else {
+        const error = await response.json();
+        alert(`Failed to save quiz: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to save quiz:', error);
+      alert('Failed to save quiz. Please try again.');
+    } finally {
+      setIsSavingQuiz(false);
+    }
+  };
+
   const handleGradeWork = async () => {
     if (!gradingForm.studentWork && !gradingForm.uploadedFile) {
       alert('Please provide student work or upload a file');
@@ -1043,6 +1222,16 @@ const TeacherDashboard = () => {
                     >
                       Parent Comm
                     </button>
+                    <button
+                      onClick={() => setVidyaAiTab('quiz-generator')}
+                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                        vidyaAiTab === 'quiz-generator'
+                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Quiz Generator
+                    </button>
                   </div>
                 </div>
 
@@ -1363,6 +1552,239 @@ const TeacherDashboard = () => {
                       <h3 className="text-lg font-semibold text-gray-600 mb-2">Parent Communication Coming Soon</h3>
                       <p className="text-gray-500">Automated parent communication tools will be available here</p>
                     </div>
+                  </div>
+                )}
+
+                {vidyaAiTab === 'quiz-generator' && (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900">AI Quiz Generator</h4>
+                    </div>
+                    <p className="text-gray-600 mb-6">Generate customized quizzes with AI-powered questions for your students</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Class *</Label>
+                        <select 
+                          value={quizForm.gradeLevel}
+                          onChange={(e) => setQuizForm({...quizForm, gradeLevel: e.target.value, subject: '', topic: ''})}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="">Select class</option>
+                          <option value="Class 11">Class 11</option>
+                          <option value="Class 12">Class 12</option>
+                          <option value="Dropper Batch">Dropper Batch</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Subject *</Label>
+                        <select 
+                          value={quizForm.subject}
+                          onChange={(e) => setQuizForm({...quizForm, subject: e.target.value, topic: ''})}
+                          disabled={!quizForm.gradeLevel}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
+                        >
+                          <option value="">Select subject</option>
+                          {quizForm.gradeLevel && (
+                            <>
+                              <option value="Physics">Physics</option>
+                              <option value="Chemistry">Chemistry</option>
+                              <option value="Mathematics">Mathematics</option>
+                              <option value="Biology">Biology</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Topic *</Label>
+                        <input
+                          type="text"
+                          value={quizForm.topic}
+                          onChange={(e) => setQuizForm({...quizForm, topic: e.target.value})}
+                          disabled={!quizForm.subject}
+                          placeholder="e.g., Mechanics, Organic Chemistry, Calculus"
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
+                        />
+                      </div>
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Number of Questions *</Label>
+                        <select
+                          value={quizForm.questionCount}
+                          onChange={(e) => setQuizForm({...quizForm, questionCount: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="5">5 Questions</option>
+                          <option value="10">10 Questions</option>
+                          <option value="15">15 Questions</option>
+                          <option value="20">20 Questions</option>
+                          <option value="25">25 Questions</option>
+                          <option value="30">30 Questions</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level *</Label>
+                        <select
+                          value={quizForm.difficulty}
+                          onChange={(e) => setQuizForm({...quizForm, difficulty: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label className="block text-sm font-medium text-gray-700 mb-2">Assign to Classes (Optional)</Label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-xl p-3 bg-white">
+                          {assignedClasses.length === 0 ? (
+                            <p className="text-sm text-gray-500">No classes assigned to you yet.</p>
+                          ) : (
+                            assignedClasses.map((classItem: any) => (
+                              <label key={classItem._id || classItem.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                <input
+                                  type="checkbox"
+                                  checked={quizForm.assignedClasses.includes(classItem._id || classItem.id)}
+                                  onChange={(e) => {
+                                    const classId = classItem._id || classItem.id;
+                                    if (e.target.checked) {
+                                      setQuizForm({
+                                        ...quizForm,
+                                        assignedClasses: [...quizForm.assignedClasses, classId]
+                                      });
+                                    } else {
+                                      setQuizForm({
+                                        ...quizForm,
+                                        assignedClasses: quizForm.assignedClasses.filter(id => id !== classId)
+                                      });
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                />
+                                <span className="text-sm text-gray-700">
+                                  {classItem.classNumber}{classItem.section ? ` - Section ${classItem.section}` : ''}
+                                </span>
+                              </label>
+                            ))
+                          )}
+                        </div>
+                        {quizForm.assignedClasses.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {quizForm.assignedClasses.length} class(es) selected
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleGenerateQuiz}
+                      disabled={isGeneratingQuiz || !quizForm.subject || !quizForm.topic || !quizForm.gradeLevel}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2 rounded-xl disabled:opacity-50 mb-4"
+                    >
+                      {isGeneratingQuiz ? (
+                        <>
+                          <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                          Generating Quiz...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate Quiz
+                        </>
+                      )}
+                    </Button>
+
+                    {generatedQuiz && (
+                      <div className="mt-6 space-y-4">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg max-h-96 overflow-y-auto">
+                          <div className="flex items-center justify-between mb-4">
+                            <h5 className="text-lg font-semibold text-gray-900">Generated Quiz Questions:</h5>
+                            <Button
+                              onClick={handleSaveQuiz}
+                              disabled={isSavingQuiz}
+                              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                            >
+                              {isSavingQuiz ? (
+                                <>
+                                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <ClipboardCheck className="w-4 h-4 mr-2" />
+                                  Save Quiz
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {generatedQuiz.parsedQuestions?.questions ? (
+                            <div className="space-y-6">
+                              {generatedQuiz.parsedQuestions.questions.map((q: any, index: number) => (
+                                <div key={index} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                                  <div className="flex items-start space-x-2 mb-3">
+                                    <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
+                                      {index + 1}
+                                    </span>
+                                    <p className="text-gray-800 font-medium flex-1">{q.question || q.questionText}</p>
+                                  </div>
+                                  
+                                  {q.options && q.options.length > 0 && (
+                                    <div className="ml-8 space-y-2 mb-3">
+                                      {q.options.map((option: string | { text: string; isCorrect?: boolean }, optIndex: number) => {
+                                        const optText = typeof option === 'string' ? option : option.text;
+                                        const isCorrect = typeof option === 'string' 
+                                          ? optText === q.correctAnswer 
+                                          : option.isCorrect;
+                                        return (
+                                          <div 
+                                            key={optIndex} 
+                                            className={`p-2 rounded-lg border ${
+                                              isCorrect 
+                                                ? 'bg-green-50 border-green-300 text-green-800' 
+                                                : 'bg-white border-gray-200 text-gray-700'
+                                            }`}
+                                          >
+                                            <span className="font-semibold mr-2">{String.fromCharCode(65 + optIndex)}.</span>
+                                            {optText}
+                                            {isCorrect && (
+                                              <span className="ml-2 text-green-600 font-semibold">✓ Correct</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  
+                                  {q.explanation && (
+                                    <div className="ml-8 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                      <p className="text-sm text-blue-800">
+                                        <span className="font-semibold">Explanation: </span>
+                                        {q.explanation}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : generatedQuiz.rawText ? (
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                              <div className="prose prose-sm max-w-none">
+                                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                                  {generatedQuiz.rawText}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-500">
+                              No questions generated. Please try again.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>

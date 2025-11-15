@@ -25,12 +25,16 @@ import {
   Video,
   Youtube,
   Filter,
-  X
+  X,
+  FileText as FileTextIcon,
+  Video as VideoIcon,
+  Image as ImageIcon,
+  File
 } from 'lucide-react';
 import Navigation from '@/components/navigation';
 import VideoModal from '@/components/video-modal';
 import CalendarView from '@/components/student/calendar-view';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { API_BASE_URL } from '@/lib/api-config';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -86,6 +90,7 @@ interface ContentItem {
 
 export default function SubjectContent() {
   const [, params] = useRoute('/subject/:id');
+  const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
   const [subject, setSubject] = useState<Subject | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,6 +102,13 @@ export default function SubjectContent() {
   const [loadingContents, setLoadingContents] = useState(false);
   const [completedContentIds, setCompletedContentIds] = useState<Set<string>>(new Set());
   const [selectedContentType, setSelectedContentType] = useState<string | null>(null);
+  const [selectedBrowseType, setSelectedBrowseType] = useState<'notes' | 'videos' | 'pdfs' | 'images' | null>(null);
+  const [contentTypeCounts, setContentTypeCounts] = useState({
+    notes: 0,
+    videos: 0,
+    pdfs: 0,
+    images: 0
+  });
 
   useEffect(() => {
     if (params?.id) {
@@ -105,6 +117,45 @@ export default function SubjectContent() {
       loadCompletedContent(params.id);
     }
   }, [params?.id]);
+
+  // Calculate content type counts from contents
+  useEffect(() => {
+    const counts = {
+      notes: 0,
+      videos: 0,
+      pdfs: 0,
+      images: 0
+    };
+
+    contents.forEach((content) => {
+      // Videos
+      if (content.type === 'Video') {
+        counts.videos++;
+      }
+      // Notes (TextBook, Workbook, Material)
+      else if (content.type === 'TextBook' || content.type === 'Workbook' || content.type === 'Material') {
+        counts.notes++;
+        // Check if it's a PDF
+        if (content.fileUrl && (content.fileUrl.toLowerCase().endsWith('.pdf') || content.fileUrl.includes('pdf'))) {
+          counts.pdfs++;
+        }
+      }
+      // Audio can be counted as notes
+      else if (content.type === 'Audio') {
+        counts.notes++;
+      }
+
+      // Check for images from fileUrl
+      if (content.fileUrl) {
+        const url = content.fileUrl.toLowerCase();
+        if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
+          counts.images++;
+        }
+      }
+    });
+
+    setContentTypeCounts(counts);
+  }, [contents]);
 
   // Load completed content from localStorage
   const loadCompletedContent = (subjectId: string) => {
@@ -385,15 +436,32 @@ export default function SubjectContent() {
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
-            <Link href="/learning-paths">
-              <Button 
-                variant="outline" 
-                className="mr-4 bg-white/90 backdrop-blur-sm border-gray-300 shadow-sm hover:bg-white hover:shadow-md transition-all"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Learning Paths
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="mr-4 bg-white/90 backdrop-blur-sm border-gray-300 shadow-sm hover:bg-white hover:shadow-md transition-all"
+              onClick={() => {
+                // Navigate to dashboard first
+                setLocation('/dashboard');
+                // Wait for navigation and page load, then scroll to learning paths section
+                setTimeout(() => {
+                  const section = document.getElementById('learning-paths-section');
+                  if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    // If section not found, try again after a longer delay
+                    setTimeout(() => {
+                      const section = document.getElementById('learning-paths-section');
+                      if (section) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }, 500);
+                  }
+                }, 300);
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Learning Paths
+            </Button>
           </div>
           
           <div className="gradient-primary rounded-2xl p-8 text-white relative overflow-hidden">
@@ -459,6 +527,95 @@ export default function SubjectContent() {
             </div>
           </div>
         </div>
+
+        {/* Digital Library - Browse by Type */}
+        {showCalendar && (
+          <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Digital Library</h2>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Browse by Type</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              {/* Notes Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                  selectedBrowseType === 'notes' ? 'ring-2 ring-purple-500' : ''
+                }`}
+                onClick={() => {
+                  const newType = selectedBrowseType === 'notes' ? null : 'notes';
+                  setSelectedBrowseType(newType);
+                  setSelectedContentType(null);
+                }}
+              >
+                <CardContent className="p-6 flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                    <FileTextIcon className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Notes</CardTitle>
+                  <p className="text-sm text-gray-500">{contentTypeCounts.notes} files</p>
+                </CardContent>
+              </Card>
+
+              {/* Videos Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                  selectedBrowseType === 'videos' ? 'ring-2 ring-purple-500' : ''
+                }`}
+                onClick={() => {
+                  const newType = selectedBrowseType === 'videos' ? null : 'videos';
+                  setSelectedBrowseType(newType);
+                  setSelectedContentType(null);
+                }}
+              >
+                <CardContent className="p-6 flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                    <VideoIcon className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Videos</CardTitle>
+                  <p className="text-sm text-gray-500">{contentTypeCounts.videos} files</p>
+                </CardContent>
+              </Card>
+
+              {/* PDFs Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                  selectedBrowseType === 'pdfs' ? 'ring-2 ring-purple-500' : ''
+                }`}
+                onClick={() => {
+                  const newType = selectedBrowseType === 'pdfs' ? null : 'pdfs';
+                  setSelectedBrowseType(newType);
+                  setSelectedContentType(null);
+                }}
+              >
+                <CardContent className="p-6 flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                    <File className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-1">PDFs</CardTitle>
+                  <p className="text-sm text-gray-500">{contentTypeCounts.pdfs} files</p>
+                </CardContent>
+              </Card>
+
+              {/* Images Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                  selectedBrowseType === 'images' ? 'ring-2 ring-purple-500' : ''
+                }`}
+                onClick={() => {
+                  const newType = selectedBrowseType === 'images' ? null : 'images';
+                  setSelectedBrowseType(newType);
+                  setSelectedContentType(null);
+                }}
+              >
+                <CardContent className="p-6 flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                    <ImageIcon className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Images</CardTitle>
+                  <p className="text-sm text-gray-500">{contentTypeCounts.images} files</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Calendar View */}
         {showCalendar ? (
@@ -530,9 +687,35 @@ export default function SubjectContent() {
               </div>
             ) : (
               <CalendarView 
-                contents={selectedContentType 
-                  ? contents.filter(c => c.type === selectedContentType)
-                  : contents}
+                contents={(() => {
+                  let filtered = contents;
+                  
+                  // Apply browse type filter
+                  if (selectedBrowseType === 'notes') {
+                    filtered = filtered.filter(c => 
+                      c.type === 'TextBook' || c.type === 'Workbook' || c.type === 'Material' || c.type === 'Audio'
+                    );
+                  } else if (selectedBrowseType === 'videos') {
+                    filtered = filtered.filter(c => c.type === 'Video');
+                  } else if (selectedBrowseType === 'pdfs') {
+                    filtered = filtered.filter(c => 
+                      c.fileUrl && (c.fileUrl.toLowerCase().endsWith('.pdf') || c.fileUrl.includes('pdf'))
+                    );
+                  } else if (selectedBrowseType === 'images') {
+                    filtered = filtered.filter(c => {
+                      if (!c.fileUrl) return false;
+                      const url = c.fileUrl.toLowerCase();
+                      return url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
+                    });
+                  }
+                  
+                  // Apply content type filter (from dropdown)
+                  if (selectedContentType) {
+                    filtered = filtered.filter(c => c.type === selectedContentType);
+                  }
+                  
+                  return filtered;
+                })()}
                 onMarkAsDone={handleMarkAsDone}
                 completedItems={Array.from(completedContentIds)}
               />

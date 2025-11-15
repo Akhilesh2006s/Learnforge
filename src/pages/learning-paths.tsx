@@ -20,7 +20,19 @@ import {
   Video,
   BookOpen as BookIcon,
   User,
-  Gamepad2
+  Gamepad2,
+  Calculator,
+  Atom,
+  FlaskConical,
+  Microscope,
+  File,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  FileText as FileTextIcon,
+  X,
+  Download,
+  ClipboardList,
+  Headphones
 } from "lucide-react";
 import { Link } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,6 +45,21 @@ export default function LearningPaths() {
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
+  const [activeTab, setActiveTab] = useState<'subjects' | 'quizzes'>('subjects');
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+  const [contentTypeCounts, setContentTypeCounts] = useState({
+    TextBook: 0,
+    Workbook: 0,
+    Material: 0,
+    Video: 0,
+    Audio: 0,
+    Homework: 0
+  });
+  const [isLoadingContentCounts, setIsLoadingContentCounts] = useState(true);
+  const [selectedContentType, setSelectedContentType] = useState<'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio' | 'Homework' | null>(null);
+  const [filteredContent, setFilteredContent] = useState<any[]>([]);
+  const [isLoadingFilteredContent, setIsLoadingFilteredContent] = useState(false);
 
   // Fetch user data
   useEffect(() => {
@@ -382,6 +409,131 @@ export default function LearningPaths() {
     fetchSubjects();
   }, []);
 
+  // Fetch assigned quizzes
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      try {
+        setIsLoadingQuizzes(true);
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/student/quizzes`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setQuizzes(data.data || []);
+        } else {
+          setQuizzes([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch quizzes:', error);
+        setQuizzes([]);
+      } finally {
+        setIsLoadingQuizzes(false);
+      }
+    };
+
+    fetchQuizzes();
+  }, []);
+
+  // Fetch content type counts
+  useEffect(() => {
+    console.log('Fetching content counts for Digital Library');
+    const fetchContentCounts = async () => {
+      try {
+        setIsLoadingContentCounts(true);
+        const token = localStorage.getItem('authToken');
+        
+        // Fetch all content to count by type
+        const response = await fetch(`${API_BASE_URL}/api/student/asli-prep-content`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const allContent = data.data || data || [];
+          
+          // Count by type
+          const counts = {
+            TextBook: 0,
+            Workbook: 0,
+            Material: 0,
+            Video: 0,
+            Audio: 0,
+            Homework: 0
+          };
+          
+          allContent.forEach((content: any) => {
+            const contentType = content.type;
+            if (counts.hasOwnProperty(contentType)) {
+              counts[contentType as keyof typeof counts]++;
+            }
+          });
+          
+          setContentTypeCounts(counts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch content counts:', error);
+      } finally {
+        setIsLoadingContentCounts(false);
+      }
+    };
+
+    fetchContentCounts();
+  }, []);
+
+  // Fetch filtered content when type is selected
+  useEffect(() => {
+    const fetchFilteredContent = async () => {
+      if (!selectedContentType) {
+        setFilteredContent([]);
+        return;
+      }
+
+      setIsLoadingFilteredContent(true);
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        // Fetch all content
+        const response = await fetch(`${API_BASE_URL}/api/student/asli-prep-content`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          let allContent = data.data || data || [];
+          
+          // Filter by the selected content type
+          allContent = allContent.filter((c: any) => c.type === selectedContentType);
+          
+          // Populate subject names if needed
+          const contentWithSubjects = allContent.map((content: any) => {
+            // Subject should already be populated from the API
+            return content;
+          });
+          
+          setFilteredContent(contentWithSubjects);
+        }
+      } catch (error) {
+        console.error('Failed to fetch filtered content:', error);
+        setFilteredContent([]);
+      } finally {
+        setIsLoadingFilteredContent(false);
+      }
+    };
+
+    fetchFilteredContent();
+  }, [selectedContentType]);
+
   const [learningPaths, setLearningPaths] = useState<any[]>([]);
   const [isLoadingPaths, setIsLoadingPaths] = useState(true);
 
@@ -537,10 +689,37 @@ export default function LearningPaths() {
           </div>
         </div>
 
-        {/* Available Subjects */}
+        {/* Tabs */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Subjects</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
+            <button
+              onClick={() => setActiveTab('subjects')}
+              className={`flex-1 px-6 py-3 text-sm font-medium rounded-md transition-all ${
+                activeTab === 'subjects'
+                  ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Browse by Subject
+            </button>
+            <button
+              onClick={() => setActiveTab('quizzes')}
+              className={`flex-1 px-6 py-3 text-sm font-medium rounded-md transition-all ${
+                activeTab === 'quizzes'
+                  ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              My Quizzes
+            </button>
+          </div>
+        </div>
+
+        {/* Browse by Subject Tab */}
+        {activeTab === 'subjects' && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Browse by Subject</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {isLoadingSubjects ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-64 w-full" />
@@ -554,9 +733,13 @@ export default function LearningPaths() {
             ) : (
               subjects.map((subject: any) => {
                 const getSubjectIcon = (subjectName: string) => {
-                  if (subjectName.toLowerCase().includes('math')) return Target;
-                  if (subjectName.toLowerCase().includes('science')) return Zap;
-                  if (subjectName.toLowerCase().includes('english')) return BookIcon;
+                  const name = subjectName.toLowerCase();
+                  if (name.includes('math') || name.includes('mathematics')) return Calculator;
+                  if (name.includes('physics')) return Atom;
+                  if (name.includes('chemistry')) return FlaskConical;
+                  if (name.includes('biology')) return Microscope;
+                  if (name.includes('english')) return BookIcon;
+                  if (name.includes('science')) return Zap;
                   return BookOpen;
                 };
                 
@@ -570,100 +753,339 @@ export default function LearningPaths() {
                 });
                 
                 return (
-                  <Card key={subject._id || subject.id} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {subject.totalContent || 0} items
-                        </Badge>
+                  <Card 
+                    key={subject._id || subject.id} 
+                    className="hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200"
+                    onClick={() => window.location.href = `/subject/${subject._id || subject.id}`}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center text-center">
+                      <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                        <Icon className="w-10 h-10 text-white" />
                       </div>
-                      <CardTitle className="text-lg">{subject.name}</CardTitle>
-                      <p className="text-gray-600 text-sm">{subject.description || `Learn ${subject.name} with videos, quizzes, and assessments`}</p>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Teacher Information */}
-                      {assignedTeachers.length > 0 ? (
-                        <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-                          <p className="text-xs font-semibold text-purple-700 mb-2 flex items-center">
-                            <Users className="w-3 h-3 mr-1" />
-                            Assigned Teachers ({assignedTeachers.length})
-                          </p>
-                          <div className="space-y-2">
-                            {assignedTeachers.map((teacher: any, idx: number) => (
-                              <div key={teacher._id || idx} className="bg-white rounded p-2 border border-purple-100">
-                                <p className="text-sm font-medium text-purple-900">{teacher.name || 'Unknown Teacher'}</p>
-                                {teacher.email && (
-                                  <p className="text-xs text-purple-600 mt-0.5">{teacher.email}</p>
-                                )}
-                                {teacher.department && (
-                                  <p className="text-xs text-purple-500 mt-0.5">Dept: {teacher.department}</p>
-                                )}
-                                {teacher.qualifications && (
-                                  <p className="text-xs text-purple-500 mt-0.5">{teacher.qualifications}</p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                          <p className="text-xs text-gray-500">No teacher assigned yet</p>
-                        </div>
-                      )}
-
-                      {/* Content Stats */}
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-blue-50 rounded-lg p-2">
-                          <Video className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-blue-800">{subject.videos?.length || 0}</p>
-                          <p className="text-xs text-blue-600">Videos</p>
-                        </div>
-                        <div className="bg-green-50 rounded-lg p-2">
-                          <FileText className="w-4 h-4 text-green-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-green-800">{subject.quizzes?.length || 0}</p>
-                          <p className="text-xs text-green-600">Quizzes</p>
-                        </div>
-                        <div className="bg-orange-50 rounded-lg p-2">
-                          <BarChart3 className="w-4 h-4 text-orange-600 mx-auto mb-1" />
-                          <p className="text-xs font-medium text-orange-800">{subject.assessments?.length || 0}</p>
-                          <p className="text-xs text-orange-600">Tests</p>
-                        </div>
-                      </div>
-
-                      {/* Recent Content Preview */}
-                      {subject.videos?.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">Recent Videos</p>
-                          <div className="space-y-1">
-                            {subject.videos.slice(0, 2).map((video: any, index: number) => (
-                              <div key={index} className="flex items-center space-x-2 text-xs text-gray-600">
-                                <Play className="w-3 h-3 text-blue-500" />
-                                <span className="truncate">{video.title}</span>
-                              </div>
-                            ))}
-                            {subject.videos.length > 2 && (
-                              <p className="text-xs text-gray-500">+{subject.videos.length - 2} more videos</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      <Link href={`/subject/${subject._id || subject.id}`}>
-                        <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
-                          Start Learning
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
+                      <CardTitle className="text-lg font-semibold text-gray-900">{subject.name}</CardTitle>
                     </CardContent>
                   </Card>
                 );
               })
             )}
           </div>
+        </div>
+        )}
+
+        {/* My Quizzes Tab */}
+        {activeTab === 'quizzes' && (
+        <div className="mb-8 max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">My Quizzes</h2>
+          {isLoadingQuizzes ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 w-full" />
+              ))}
+            </div>
+          ) : quizzes.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Quizzes Assigned</h3>
+              <p className="text-gray-500">Your teacher hasn't assigned any quizzes yet. Check back later!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {quizzes.map((quiz: any) => (
+                <Card key={quiz._id} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                      <div className="w-12 h-12 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg">
+                        <FileText className="w-6 h-6 text-white" />
+                        </div>
+                      {quiz.hasAttempted && (
+                        <Badge className="bg-green-100 text-green-700 border-green-300">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Completed
+                        </Badge>
+                      )}
+                      </div>
+                    <CardTitle className="text-lg">{quiz.title}</CardTitle>
+                    <p className="text-gray-600 text-sm">{quiz.description || `Quiz on ${quiz.subject}`}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="bg-purple-50 rounded-lg p-2">
+                        <Clock className="w-4 h-4 text-purple-600 mx-auto mb-1" />
+                        <p className="text-xs font-medium text-purple-800">{quiz.duration} min</p>
+                        <p className="text-xs text-purple-600">Duration</p>
+                      </div>
+                      <div className="bg-pink-50 rounded-lg p-2">
+                        <Target className="w-4 h-4 text-pink-600 mx-auto mb-1" />
+                        <p className="text-xs font-medium text-pink-800">{quiz.questionCount}</p>
+                        <p className="text-xs text-pink-600">Questions</p>
+                      </div>
+                    </div>
+                    
+                    {quiz.hasAttempted && quiz.bestScore !== null && (
+                      <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-green-800">Best Score:</span>
+                          <span className="text-lg font-bold text-green-900">{quiz.bestScore}/{quiz.totalPoints}</span>
+                        </div>
+                        {quiz.completedAt && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Completed: {new Date(quiz.completedAt).toLocaleDateString()}
+                          </p>
+                                )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs">
+                        {quiz.difficulty}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {quiz.subject}
+                      </Badge>
+                              </div>
+
+                    <Link href={`/student-exams?quiz=${quiz._id}`}>
+                      <Button className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 hover:from-pink-600 hover:via-purple-600 hover:to-pink-700 text-white shadow-lg">
+                        {quiz.hasAttempted ? 'Retake Quiz' : 'Start Quiz'}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+                            ))}
+                          </div>
+          )}
+                        </div>
+                      )}
+
+        {/* Digital Library - Browse by Type - Always Visible */}
+        {(() => {
+          console.log('Digital Library section rendering - visible on page');
+          return null;
+        })()}
+        <div className="mb-8 max-w-7xl mx-auto px-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Digital Library</h2>
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">Browse by Type</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* TextBook Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'TextBook' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'TextBook' ? null : 'TextBook')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <BookOpen className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">TextBook</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.TextBook} files`}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Workbook Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'Workbook' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'Workbook' ? null : 'Workbook')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <FileTextIcon className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Workbook</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.Workbook} files`}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Material Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'Material' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'Material' ? null : 'Material')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <File className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Material</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.Material} files`}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Video Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'Video' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'Video' ? null : 'Video')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <VideoIcon className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Video</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.Video} files`}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Audio Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'Audio' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'Audio' ? null : 'Audio')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <Headphones className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Audio</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.Audio} files`}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Homework Card */}
+            <Card 
+              className={`hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer bg-white border border-gray-200 ${
+                selectedContentType === 'Homework' ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedContentType(selectedContentType === 'Homework' ? null : 'Homework')}
+            >
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md mb-4">
+                  <ClipboardList className="w-10 h-10 text-white" strokeWidth={2.5} fill="none" />
+                </div>
+                <CardTitle className="text-lg font-semibold text-gray-900 mb-1">Homework</CardTitle>
+                <p className="text-sm text-gray-500">
+                  {isLoadingContentCounts ? '...' : `${contentTypeCounts.Homework} files`}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filtered Content Display */}
+          {selectedContentType && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  All {selectedContentType}
+                </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedContentType(null)}
+                  className="flex items-center space-x-2"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Clear Filter</span>
+                </Button>
+                              </div>
+
+              {isLoadingFilteredContent ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-48 w-full" />
+                  ))}
+                </div>
+              ) : filteredContent.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No Content Found</h3>
+                  <p className="text-gray-500">No {selectedContentType} available at the moment.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredContent.map((content: any) => (
+                    <Card key={content._id} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
+                      <CardHeader>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="w-12 h-12 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg">
+                            {selectedContentType === 'TextBook' ? (
+                              <BookOpen className="w-6 h-6 text-white" />
+                            ) : selectedContentType === 'Workbook' ? (
+                              <FileTextIcon className="w-6 h-6 text-white" />
+                            ) : selectedContentType === 'Material' ? (
+                              <File className="w-6 h-6 text-white" />
+                            ) : selectedContentType === 'Video' ? (
+                              <VideoIcon className="w-6 h-6 text-white" />
+                            ) : selectedContentType === 'Audio' ? (
+                              <Headphones className="w-6 h-6 text-white" />
+                            ) : selectedContentType === 'Homework' ? (
+                              <ClipboardList className="w-6 h-6 text-white" />
+                            ) : (
+                              <FileTextIcon className="w-6 h-6 text-white" />
+                            )}
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {content.type}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-lg">{content.title}</CardTitle>
+                        {content.description && (
+                          <p className="text-gray-600 text-sm mt-2">{content.description}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {content.subject && (
+                          <div className="flex items-center space-x-2">
+                            <BookOpen className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {typeof content.subject === 'object' ? content.subject.name : 'Subject'}
+                            </span>
+                          </div>
+                        )}
+                        {content.date && (
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {new Date(content.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => window.open(content.fileUrl, '_blank')}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            View
+                        </Button>
+                          {content.fileUrl && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = content.fileUrl;
+                                link.download = content.title;
+                                link.click();
+                              }}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                    </CardContent>
+                  </Card>
+                  ))}
+                </div>
+            )}
+          </div>
+          )}
         </div>
 
         {/* Recommended Learning Paths */}

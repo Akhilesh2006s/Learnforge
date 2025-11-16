@@ -101,56 +101,28 @@ export default function SubjectContent() {
   useEffect(() => {
     if (params?.id) {
       fetchSubjectContent(params.id);
-      // Load completed content from Railway backend
+      // Load completed content from localStorage
       loadCompletedContent(params.id);
     }
   }, [params?.id]);
 
-  // Load completed content from Railway backend
-  const loadCompletedContent = async (subjectId: string) => {
+  // Load completed content from localStorage
+  const loadCompletedContent = (subjectId: string) => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await fetch(`${API_BASE_URL}/api/student/content/completed/${subjectId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const completedIds = data.completedIds || data.data || [];
+      const stored = localStorage.getItem(`completed_content_${subjectId}`);
+      if (stored) {
+        const completedIds = JSON.parse(stored);
         setCompletedContentIds(new Set(completedIds));
-      } else {
-        console.warn('Failed to load completed content from backend, using empty set');
-        setCompletedContentIds(new Set());
       }
     } catch (error) {
       console.error('Failed to load completed content:', error);
-      setCompletedContentIds(new Set());
     }
   };
 
-  // Save completed content to Railway backend
-  const saveCompletedContent = async (contentId: string, completed: boolean) => {
+  // Save completed content to localStorage
+  const saveCompletedContent = (subjectId: string, completedIds: Set<string>) => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await fetch(`${API_BASE_URL}/api/student/content/${contentId}/complete`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ completed })
-      });
-
-      if (!response.ok) {
-        console.error('Failed to save content completion to backend');
-      }
+      localStorage.setItem(`completed_content_${subjectId}`, JSON.stringify(Array.from(completedIds)));
     } catch (error) {
       console.error('Failed to save completed content:', error);
     }
@@ -163,21 +135,19 @@ export default function SubjectContent() {
   };
 
   // Handle mark as done
-  const handleMarkAsDone = async (contentId: string) => {
-    const isCurrentlyCompleted = completedContentIds.has(contentId);
+  const handleMarkAsDone = (contentId: string) => {
     const newCompleted = new Set(completedContentIds);
-    
-    if (isCurrentlyCompleted) {
+    if (newCompleted.has(contentId)) {
       newCompleted.delete(contentId);
     } else {
       newCompleted.add(contentId);
     }
-    
-    // Optimistically update UI
     setCompletedContentIds(newCompleted);
     
-    // Save to Railway backend
-    await saveCompletedContent(contentId, !isCurrentlyCompleted);
+    // Save to localStorage
+    if (params?.id) {
+      saveCompletedContent(params.id, newCompleted);
+    }
 
     // Update subject progress
     const progress = calculateProgress(contents.length, newCompleted.size);
@@ -296,8 +266,15 @@ export default function SubjectContent() {
           } : 'No content');
           setContents(contentsList);
           
-          // Progress will be updated when loadCompletedContent completes
-          // This is handled in the useEffect hook
+          // Update progress after loading contents
+          // Load completed items and calculate progress
+          if (params?.id) {
+            const stored = localStorage.getItem(`completed_content_${params.id}`);
+            const completedIds = stored ? JSON.parse(stored) : [];
+            const progress = calculateProgress(contentsList.length, completedIds.length);
+            setSubject(prev => prev ? { ...prev, progress } : prev);
+            setCompletedContentIds(new Set(completedIds));
+          }
         }
       } else {
         console.warn('⚠️ Contents API failed:', contentsResponse.status);
@@ -394,15 +371,13 @@ export default function SubjectContent() {
         
         {/* Robot GIF - Fixed at Bottom Left */}
         {!isMobile && (
-          <Link href="/ai-tutor">
-            <div className="fixed bottom-8 left-4 z-30 cursor-pointer">
-              <img 
-                src="/ROBOT.gif" 
-                alt="Robot - Click to chat with Vidya AI" 
-                className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
-              />
-            </div>
-          </Link>
+          <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
+            <img 
+              src="/ROBOT.gif" 
+              alt="Robot" 
+              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
+            />
+          </div>
         )}
         
         {/* Header Section */}

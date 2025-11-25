@@ -594,7 +594,13 @@ export default function ContentManagement() {
                     variant="outline"
                     size="sm"
                     className="flex-1 bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
-                    onClick={() => window.open(content.fileUrl, '_blank')}
+                    onClick={() => {
+                      // Handle both relative paths and full URLs
+                      const fileUrl = content.fileUrl.startsWith('http') 
+                        ? content.fileUrl 
+                        : `${API_BASE_URL}${content.fileUrl}`;
+                      window.open(fileUrl, '_blank');
+                    }}
                   >
                     <Eye className="w-4 h-4 mr-1" />
                     View
@@ -603,7 +609,13 @@ export default function ContentManagement() {
                     variant="outline"
                     size="sm"
                     className="bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
-                    onClick={() => window.open(content.fileUrl, '_blank')}
+                    onClick={() => {
+                      // Handle both relative paths and full URLs
+                      const fileUrl = content.fileUrl.startsWith('http') 
+                        ? content.fileUrl 
+                        : `${API_BASE_URL}${content.fileUrl}`;
+                      window.open(fileUrl, '_blank');
+                    }}
                   >
                     <Download className="w-4 h-4" />
                   </Button>

@@ -1,15 +1,49 @@
 // Centralized API URL Management
-// Production Backend - Railway deployment
+// Production Backend
 
-// Railway production URL
-const RAILWAY_URL = 'https://asli-stud-back-production.up.railway.app';
+// In production (Vercel), use relative URLs to proxy through Vercel
+// This avoids mixed content issues (HTTPS frontend → HTTP backend)
+// Vercel rewrites /api/* to http://165.232.181.99:3001/api/*
+const isProduction = import.meta.env.PROD || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost'));
+const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
 
-// Always use Railway URL - no localhost fallback
-// Override with VITE_API_URL environment variable if needed
-export const API_BASE_URL = import.meta.env.VITE_API_URL || RAILWAY_URL;
+// Local development URL
+const LOCAL_URL = 'http://localhost:5000';
+
+// Production URLs
+const DIGITAL_OCEAN_URL = 'http://165.232.181.99:3001';
+
+// Use environment variable if set, otherwise determine based on environment
+const envUrl = import.meta.env.VITE_API_URL;
+const isLocalhostUrl = envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'));
+
+let finalUrl: string;
+
+if (envUrl && !isLocalhostUrl) {
+  // Use environment variable if provided (and not localhost)
+  finalUrl = envUrl;
+} else if (isProduction && isVercel) {
+  // On Vercel: use relative URL to proxy through Vercel (avoids mixed content)
+  finalUrl = '';
+} else if (isProduction) {
+  // Production but not Vercel: use Digital Ocean URL directly
+  finalUrl = DIGITAL_OCEAN_URL;
+} else {
+  // Local development
+  finalUrl = envUrl || LOCAL_URL;
+}
+
+export const API_BASE_URL = finalUrl;
 
 // Log current configuration
-console.log(`🔌 API Base URL: ${API_BASE_URL} (RAILWAY)`);
+const getBackendType = (url: string) => {
+  if (!url || url === '') return 'VERCEL_PROXY';
+  if (url.includes('localhost')) return 'LOCAL';
+  if (url.includes('railway')) return 'RAILWAY';
+  if (url.includes('165.232.181.99')) return 'DIGITAL_OCEAN';
+  return 'PRODUCTION';
+};
+console.log(`🔌 API Base URL: ${API_BASE_URL || '(relative - proxied through Vercel)'} (${getBackendType(API_BASE_URL)})`);
 
 // Helper function for making API calls
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {

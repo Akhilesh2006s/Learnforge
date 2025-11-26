@@ -218,6 +218,22 @@ const TeacherDashboard = () => {
   const [isGrading, setIsGrading] = useState(false);
   const [gradingResult, setGradingResult] = useState<string>('');
 
+  // Homework creation form state
+  const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
+  const [isCreatingHomework, setIsCreatingHomework] = useState(false);
+  const [homeworkForm, setHomeworkForm] = useState({
+    title: '',
+    description: '',
+    subject: '',
+    classNumber: '',
+    topic: '',
+    date: new Date().toISOString().split('T')[0],
+    deadline: '',
+    fileUrl: ''
+  });
+  const [selectedHomeworkFile, setSelectedHomeworkFile] = useState<File | null>(null);
+  const [isUploadingHomeworkFile, setIsUploadingHomeworkFile] = useState(false);
+
   useEffect(() => {
     fetchTeacherData();
   }, []);
@@ -887,6 +903,111 @@ const TeacherDashboard = () => {
       alert('Failed to generate quiz. Please try again.');
     } finally {
       setIsGeneratingQuiz(false);
+    }
+  };
+
+  // Handle homework file upload
+  const handleHomeworkFileUpload = async (file: File): Promise<string> => {
+    setIsUploadingHomeworkFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('File upload failed');
+      }
+
+      const data = await response.json();
+      return data.url || data.fileUrl;
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    } finally {
+      setIsUploadingHomeworkFile(false);
+    }
+  };
+
+  // Handle homework creation
+  const handleCreateHomework = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!homeworkForm.title || !homeworkForm.subject || !homeworkForm.date || !homeworkForm.deadline) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    if (!homeworkForm.fileUrl && !selectedHomeworkFile) {
+      alert('Please provide a file URL or upload a file');
+      return;
+    }
+
+    setIsCreatingHomework(true);
+    try {
+      let fileUrl = homeworkForm.fileUrl;
+      
+      // Upload file if selected
+      if (selectedHomeworkFile && !fileUrl) {
+        fileUrl = await handleHomeworkFileUpload(selectedHomeworkFile);
+      }
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/teacher/homework`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: homeworkForm.title,
+          description: homeworkForm.description,
+          subject: homeworkForm.subject,
+          classNumber: homeworkForm.classNumber || undefined,
+          topic: homeworkForm.topic || undefined,
+          date: homeworkForm.date,
+          deadline: homeworkForm.deadline,
+          fileUrl: fileUrl
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          alert('Homework created successfully!');
+          setIsHomeworkModalOpen(false);
+          setHomeworkForm({
+            title: '',
+            description: '',
+            subject: '',
+            classNumber: '',
+            topic: '',
+            date: new Date().toISOString().split('T')[0],
+            deadline: '',
+            fileUrl: ''
+          });
+          setSelectedHomeworkFile(null);
+          // Refresh homework submissions
+          fetchHomeworkSubmissions();
+        } else {
+          alert(data.message || 'Failed to create homework');
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to create homework');
+      }
+    } catch (error) {
+      console.error('Create homework error:', error);
+      alert('Failed to create homework. Please try again.');
+    } finally {
+      setIsCreatingHomework(false);
     }
   };
 
@@ -3366,14 +3487,23 @@ const TeacherDashboard = () => {
                     <div className="space-y-8">
                       {/* Header */}
                       <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <FileText className="w-6 h-6 text-white" />
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                              <FileText className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Homework Submissions</h2>
+                              <p className="text-gray-600">View and manage student homework submissions</p>
+                            </div>
                           </div>
-                          <div>
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Homework Submissions</h2>
-                            <p className="text-gray-600">View and manage student homework submissions</p>
-                          </div>
+                          <Button
+                            onClick={() => setIsHomeworkModalOpen(true)}
+                            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Homework
+                          </Button>
                         </div>
                       </div>
 
@@ -4216,6 +4346,198 @@ const TeacherDashboard = () => {
               Close
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Homework Modal */}
+      <Dialog open={isHomeworkModalOpen} onOpenChange={setIsHomeworkModalOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Create Homework</DialogTitle>
+            <DialogDescription>
+              Create homework assignment for your assigned classes and students
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateHomework} className="space-y-4">
+            <div>
+              <Label htmlFor="homework-title">Title *</Label>
+              <Input
+                id="homework-title"
+                value={homeworkForm.title}
+                onChange={(e) => setHomeworkForm({ ...homeworkForm, title: e.target.value })}
+                placeholder="Enter homework title"
+                required
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="homework-description">Description</Label>
+              <Textarea
+                id="homework-description"
+                value={homeworkForm.description}
+                onChange={(e) => setHomeworkForm({ ...homeworkForm, description: e.target.value })}
+                placeholder="Enter homework description"
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="homework-subject">Subject *</Label>
+                <Select
+                  value={homeworkForm.subject}
+                  onValueChange={(value) => setHomeworkForm({ ...homeworkForm, subject: value })}
+                >
+                  <SelectTrigger id="homework-subject" className="mt-1">
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teacherSubjects.map((subject) => (
+                      <SelectItem key={subject._id || subject.id} value={subject._id || subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="homework-class">Class (Optional)</Label>
+                <Select
+                  value={homeworkForm.classNumber || 'all'}
+                  onValueChange={(value) => setHomeworkForm({ ...homeworkForm, classNumber: value === 'all' ? '' : value })}
+                >
+                  <SelectTrigger id="homework-class" className="mt-1">
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Classes</SelectItem>
+                    {assignedClasses.map((classItem) => (
+                      <SelectItem key={classItem._id || classItem.id} value={classItem.classNumber || classItem.name}>
+                        {classItem.name || classItem.classNumber}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="homework-topic">Topic (Optional)</Label>
+              <Input
+                id="homework-topic"
+                value={homeworkForm.topic}
+                onChange={(e) => setHomeworkForm({ ...homeworkForm, topic: e.target.value })}
+                placeholder="e.g., Algebra, Mechanics"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="homework-date">Date *</Label>
+                <Input
+                  id="homework-date"
+                  type="date"
+                  value={homeworkForm.date}
+                  onChange={(e) => setHomeworkForm({ ...homeworkForm, date: e.target.value })}
+                  required
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="homework-deadline">Deadline *</Label>
+                <Input
+                  id="homework-deadline"
+                  type="date"
+                  value={homeworkForm.deadline}
+                  onChange={(e) => setHomeworkForm({ ...homeworkForm, deadline: e.target.value })}
+                  min={homeworkForm.date}
+                  required
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="homework-file">File *</Label>
+              <div className="space-y-2">
+                <Input
+                  id="homework-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedHomeworkFile(file);
+                      setHomeworkForm({ ...homeworkForm, fileUrl: '' });
+                    }
+                  }}
+                  className="cursor-pointer mt-1"
+                />
+                {selectedHomeworkFile && (
+                  <p className="text-xs text-green-600">
+                    Selected: {selectedHomeworkFile.name} ({(selectedHomeworkFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+                <div className="text-xs text-gray-500">
+                  <p className="font-semibold mb-1">Or enter a URL:</p>
+                  <Input
+                    id="homework-fileUrl"
+                    value={homeworkForm.fileUrl}
+                    onChange={(e) => {
+                      setHomeworkForm({ ...homeworkForm, fileUrl: e.target.value });
+                      if (e.target.value) setSelectedHomeworkFile(null);
+                    }}
+                    placeholder="https://example.com/homework.pdf or Google Drive link"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Accepted formats: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsHomeworkModalOpen(false);
+                  setHomeworkForm({
+                    title: '',
+                    description: '',
+                    subject: '',
+                    classNumber: '',
+                    topic: '',
+                    date: new Date().toISOString().split('T')[0],
+                    deadline: '',
+                    fileUrl: ''
+                  });
+                  setSelectedHomeworkFile(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isCreatingHomework || isUploadingHomeworkFile}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              >
+                {isCreatingHomework || isUploadingHomeworkFile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {isUploadingHomeworkFile ? 'Uploading...' : 'Creating...'}
+                  </>
+                ) : (
+                  'Create Homework'
+                )}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 

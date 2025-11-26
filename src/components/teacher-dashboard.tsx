@@ -998,11 +998,13 @@ const TeacherDashboard = () => {
                           </SelectTrigger>
                           <SelectContent>
                             {teacher?.subjects?.length && teacher.subjects.length > 0 ? (
-                              teacher.subjects.map(subject => (
-                                <SelectItem key={subject.id || subject._id} value={subject.id || subject._id || ''}>
-                                  {subject.name}
-                                </SelectItem>
-                              ))
+                              teacher.subjects
+                                .filter(subject => (subject.id || subject._id))
+                                .map(subject => (
+                                  <SelectItem key={subject.id || subject._id} value={subject.id || subject._id || 'unknown'}>
+                                    {subject.name}
+                                  </SelectItem>
+                                ))
                             ) : (
                               <SelectItem value="no-subjects" disabled>No subjects assigned</SelectItem>
                             )}
@@ -1633,11 +1635,13 @@ const TeacherDashboard = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {teacher?.subjects?.length && teacher.subjects.length > 0 ? (
-                        teacher.subjects.map(subject => (
-                          <SelectItem key={subject.id || subject._id} value={subject.name || ''}>
-                            {subject.name}
-                          </SelectItem>
-                        ))
+                        teacher.subjects
+                          .filter(subject => subject.name)
+                          .map(subject => (
+                            <SelectItem key={subject.id || subject._id} value={subject.name || 'unknown'}>
+                              {subject.name}
+                            </SelectItem>
+                          ))
                       ) : (
                         <SelectItem value="no-subjects" disabled>No subjects assigned</SelectItem>
                       )}

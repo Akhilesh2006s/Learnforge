@@ -15,7 +15,7 @@ interface Content {
   _id: string;
   title: string;
   description?: string;
-  type: 'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio' | 'Homework';
+  type: 'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio';
   board: string;
   subject: {
     _id: string;
@@ -27,7 +27,6 @@ interface Content {
   fileUrl: string;
   thumbnailUrl?: string;
   duration?: number;
-  deadline?: string;
   createdAt: string;
 }
 
@@ -50,15 +49,14 @@ export default function ContentManagement() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'Video' as 'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio' | 'Homework',
+    type: 'Video' as 'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio',
     board: 'CBSE_AP',
     subject: '',
     topic: '',
     date: '',
     fileUrl: '',
     thumbnailUrl: '',
-    duration: '',
-    deadline: ''
+    duration: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
@@ -272,15 +270,6 @@ export default function ContentManagement() {
       return;
     }
 
-    // Validate deadline for homework
-    if (formData.type === 'Homework' && !formData.deadline) {
-      toast({
-        title: 'Validation Error',
-        description: 'Deadline is required for Homework content',
-        variant: 'destructive'
-      });
-      return;
-    }
 
     let fileUrl = formData.fileUrl;
     let thumbnailUrl = formData.thumbnailUrl;
@@ -328,7 +317,6 @@ export default function ContentManagement() {
         thumbnailUrl: thumbnailUrl || undefined,
         duration: formData.duration ? Number(formData.duration) : 0,
         size: fileSize,
-        deadline: formData.type === 'Homework' && formData.deadline ? formData.deadline : undefined
       };
 
       console.log('📤 Uploading content with data:', {
@@ -368,7 +356,6 @@ export default function ContentManagement() {
           fileUrl: '',
           thumbnailUrl: '',
           duration: '',
-          deadline: ''
         });
         setSelectedFile(null);
         setSelectedThumbnail(null);
@@ -441,8 +428,6 @@ export default function ContentManagement() {
         return <File className="w-4 h-4" />;
       case 'Audio':
         return <File className="w-4 h-4" />;
-      case 'Homework':
-        return <FileText className="w-4 h-4" />;
       default:
         return <File className="w-4 h-4" />;
     }
@@ -460,8 +445,6 @@ export default function ContentManagement() {
         return 'bg-green-100 text-green-700';
       case 'Audio':
         return 'bg-yellow-100 text-yellow-700';
-      case 'Homework':
-        return 'bg-orange-100 text-orange-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -580,14 +563,6 @@ export default function ContentManagement() {
                       <span>{content.duration} min</span>
                     </div>
                   )}
-                  {content.deadline && content.type === 'Homework' && (
-                    <div className="flex items-center text-white">
-                      <span className="font-medium mr-2">Deadline:</span>
-                      <span className="text-yellow-200 font-semibold">
-                        {new Date(content.deadline).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <div className="mt-4 flex space-x-2">
                   <Button
@@ -704,7 +679,6 @@ export default function ContentManagement() {
                     <SelectItem value="Material">Material</SelectItem>
                     <SelectItem value="Video">Video</SelectItem>
                     <SelectItem value="Audio">Audio</SelectItem>
-                    <SelectItem value="Homework">Homework</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -754,19 +728,6 @@ export default function ContentManagement() {
                   required
                 />
               </div>
-              {formData.type === 'Homework' && (
-                <div>
-                  <Label htmlFor="deadline">Deadline *</Label>
-                  <Input
-                    id="deadline"
-                    type="date"
-                    value={formData.deadline}
-                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                    required
-                    min={formData.date} // Deadline should be after or equal to upload date
-                  />
-                </div>
-              )}
             </div>
 
             <div>
@@ -821,7 +782,7 @@ export default function ContentManagement() {
                 <Input
                   id="file"
                   type="file"
-                  accept={formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material' || formData.type === 'Homework'
+                  accept={formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
                     ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.ods,.odp'
                     : formData.type === 'Video'
                     ? '.mp4,.mpeg,.mov,.avi,.webm,.mkv'
@@ -854,7 +815,7 @@ export default function ContentManagement() {
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material' || formData.type === 'Homework'
+                  {formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
                     ? 'Accepted formats: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX'
                     : formData.type === 'Video'
                     ? 'Accepted formats: MP4, MPEG, MOV, AVI, WEBM, MKV'

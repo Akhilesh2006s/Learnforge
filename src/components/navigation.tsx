@@ -143,14 +143,14 @@ export default function Navigation() {
                     <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
                       <img 
                         src="/logo.jpg" 
-                        alt="Asli Stud Logo" 
+                        alt="ASLILEARN Logo" 
                         className="w-full h-full object-contain p-1"
                       />
                     </div>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                      Asli Stud
+                      ASLILEARN
                     </span>
                     <span className="text-xs text-gray-600 font-medium -mt-1">AI-Powered Learning</span>
                   </div>
@@ -234,14 +234,14 @@ export default function Navigation() {
                             <div className="w-full h-full rounded-lg bg-white flex items-center justify-center overflow-hidden">
                               <img 
                                 src="/logo.jpg" 
-                                alt="Asli Stud Logo" 
+                                alt="ASLILEARN Logo" 
                                 className="w-full h-full object-contain p-1"
                               />
                             </div>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent">
-                              Asli Stud
+                              ASLILEARN
                             </span>
                             <span className="text-xs text-gray-600 font-medium">AI-Powered Learning</span>
                           </div>

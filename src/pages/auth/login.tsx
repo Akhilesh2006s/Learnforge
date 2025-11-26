@@ -170,7 +170,7 @@ const Login = () => {
                 >
                   <img 
                     src="/logo.jpg" 
-                    alt="Asli Stud Logo" 
+                    alt="ASLILEARN Logo" 
                     className="w-32 h-32 mx-auto mb-4 object-contain rounded-2xl shadow-2xl ring-4 ring-white/20"
                   />
                 </motion.div>
@@ -180,7 +180,7 @@ const Login = () => {
                   transition={{ delay: 0.7 }}
                   className="text-5xl font-bold text-blue-900 mb-2 bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent"
                 >
-                  Asli Stud
+                  ASLILEARN
                 </motion.h1>
                 <motion.p 
                   initial={{ y: 20, opacity: 0 }}
@@ -218,7 +218,7 @@ const Login = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-sky-300 to-blue-400 rounded-2xl blur-lg opacity-30"></div>
                   <img 
                     src="/logo.jpg" 
-                    alt="Asli Stud Logo" 
+                    alt="ASLILEARN Logo" 
                     className="w-full h-full object-contain rounded-2xl shadow-xl relative z-10 ring-2 ring-sky-200"
                   />
                 </motion.div>

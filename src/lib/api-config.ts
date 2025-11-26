@@ -1,58 +1,37 @@
 // Centralized API URL Management
 // Production Backend
 
-// In production (Vercel), use relative URLs to proxy through Vercel
-// This avoids mixed content issues (HTTPS frontend → HTTP backend)
-// Vercel rewrites /api/* to http://165.232.181.99:3001/api/*
-const isProduction = import.meta.env.PROD || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost'));
-const isVercel = typeof window !== 'undefined' && (
-  window.location.hostname.includes('vercel.app') ||
-  window.location.hostname.includes('vercel') ||
-  window.location.protocol === 'https:'
-);
+// Production server URL (using HTTPS for Vercel deployment)
+// Point to the public API domain (served via Nginx proxy on the droplet)
+const PRODUCTION_URL = 'https://api.aslilearn.ai';
 
-// Local development URL
+// Local development URL (for reference)
 const LOCAL_URL = 'http://localhost:5000';
 
-// Production URLs
-const DIGITAL_OCEAN_URL = 'http://165.232.181.99:3001';
-
-// Use environment variable if set, otherwise determine based on environment
+// Use production URL by default
+// VITE_API_URL environment variable can override this
+// However, in production (Vercel):
+// - Ignore localhost URLs (will cause connection errors)
+// - Force HTTP URLs to HTTPS (to prevent mixed content errors)
 const envUrl = import.meta.env.VITE_API_URL;
+const isProduction = import.meta.env.PROD || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost'));
 const isLocalhostUrl = envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'));
+const isHttpUrl = envUrl && envUrl.startsWith('http://') && !envUrl.includes('localhost');
 
-let finalUrl: string;
-
-if (envUrl && !isLocalhostUrl) {
-  // Use environment variable if provided (and not localhost)
-  // But if on Vercel (HTTPS), force relative URL to avoid mixed content
-  if (isVercel && envUrl.startsWith('http://')) {
-    finalUrl = ''; // Use proxy instead
-  } else {
-    finalUrl = envUrl;
+// In production: ignore localhost, convert HTTP to HTTPS, otherwise use envUrl or default
+let finalUrl = envUrl || PRODUCTION_URL;
+if (isProduction) {
+  if (isLocalhostUrl) {
+    finalUrl = PRODUCTION_URL; // Ignore localhost in production
+  } else if (isHttpUrl) {
+    finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS in production
   }
-} else if (isProduction && isVercel) {
-  // On Vercel (HTTPS): use relative URL to proxy through Vercel (avoids mixed content)
-  finalUrl = '';
-} else if (isProduction) {
-  // Production but not Vercel: use Digital Ocean URL directly
-  finalUrl = DIGITAL_OCEAN_URL;
-} else {
-  // Local development
-  finalUrl = envUrl || LOCAL_URL;
 }
 
 export const API_BASE_URL = finalUrl;
 
 // Log current configuration
-const getBackendType = (url: string) => {
-  if (!url || url === '') return 'VERCEL_PROXY';
-  if (url.includes('localhost')) return 'LOCAL';
-  if (url.includes('railway')) return 'RAILWAY';
-  if (url.includes('165.232.181.99')) return 'DIGITAL_OCEAN';
-  return 'PRODUCTION';
-};
-console.log(`🔌 API Base URL: ${API_BASE_URL || '(relative - proxied through Vercel)'} (${getBackendType(API_BASE_URL)})`);
+console.log(`🔌 API Base URL: ${API_BASE_URL} (${API_BASE_URL.includes('localhost') ? 'LOCAL' : 'RAILWAY'})`);
 
 // Helper function for making API calls
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {

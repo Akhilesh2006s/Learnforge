@@ -1306,7 +1306,7 @@ const TeacherDashboard = () => {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">ASLI STUD</h1>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">ASLILEARN</h1>
                 <p className="text-xs text-gray-600 font-medium">Teacher Portal</p>
               </div>
             </div>

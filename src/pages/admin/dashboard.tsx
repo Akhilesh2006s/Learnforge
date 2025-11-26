@@ -248,7 +248,7 @@ const AdminDashboard = () => {
                 <span className="text-white font-bold text-responsive-sm">AS</span>
               </div>
               <div>
-                <h1 className="text-responsive-base font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLI STUD</h1>
+                <h1 className="text-responsive-base font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLILEARN</h1>
                 <p className="text-responsive-xs text-gray-600 font-medium">Admin Panel</p>
               </div>
             </div>
@@ -265,7 +265,7 @@ const AdminDashboard = () => {
                       <span className="text-white font-bold text-responsive-lg">AS</span>
                     </div>
                     <div>
-                      <h1 className="text-responsive-lg font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLI STUD</h1>
+                      <h1 className="text-responsive-lg font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLILEARN</h1>
                       <p className="text-responsive-xs text-gray-600 font-medium">Admin Panel</p>
                     </div>
                   </div>
@@ -423,7 +423,7 @@ const AdminDashboard = () => {
               <span className="text-white font-bold text-xl">AS</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLI STUD</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLILEARN</h1>
               <p className="text-xs text-gray-600 font-medium">Admin Panel</p>
             </div>
           </div>

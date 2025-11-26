@@ -18,20 +18,39 @@ const isProduction = import.meta.env.PROD || (typeof window !== 'undefined' && !
 const isLocalhostUrl = envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'));
 const isHttpUrl = envUrl && envUrl.startsWith('http://') && !envUrl.includes('localhost');
 
-// In production: ignore localhost, convert HTTP to HTTPS, otherwise use envUrl or default
+const allowHttpApi = import.meta.env.VITE_ALLOW_HTTP === 'true';
+
+const isIpAddress = (url?: string) => {
+  if (!url) return false;
+  try {
+    const { hostname } = new URL(url);
+    return /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+  } catch {
+    return false;
+  }
+};
+
+// In production: ignore localhost, optionally convert HTTP to HTTPS, otherwise use envUrl or default
 let finalUrl = envUrl || PRODUCTION_URL;
 if (isProduction) {
   if (isLocalhostUrl) {
     finalUrl = PRODUCTION_URL; // Ignore localhost in production
-  } else if (isHttpUrl) {
-    finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS in production
+  } else if (isHttpUrl && !allowHttpApi && !isIpAddress(envUrl)) {
+    finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS for domains
+  } else if (envUrl) {
+    finalUrl = envUrl; // Respect explicit env URL (e.g., droplet IP over HTTP)
   }
 }
 
 export const API_BASE_URL = finalUrl;
 
 // Log current configuration
-console.log(`🔌 API Base URL: ${API_BASE_URL} (${API_BASE_URL.includes('localhost') ? 'LOCAL' : 'RAILWAY'})`);
+const envLabel = API_BASE_URL.includes('localhost')
+  ? 'LOCAL'
+  : isIpAddress(API_BASE_URL)
+    ? 'DIRECT_IP'
+    : 'PRODUCTION';
+console.log(`🔌 API Base URL: ${API_BASE_URL} (${envLabel})`);
 
 // Helper function for making API calls
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {

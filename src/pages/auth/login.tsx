@@ -180,7 +180,7 @@ const Login = () => {
                   transition={{ delay: 0.7 }}
                   className="text-5xl font-bold text-blue-900 mb-2 bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent"
                 >
-                  ASLILEARN
+                  ASLILEARN AI
                 </motion.h1>
                 <motion.p 
                   initial={{ y: 20, opacity: 0 }}

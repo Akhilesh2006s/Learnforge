@@ -310,3 +310,26 @@
 .animate-color-change {
   animation: colorChange 4s ease-in-out infinite;
 }
+
+/* Blue-only color animation (navbar logo) */
+@keyframes blueGlow {
+  0% {
+    color: #0ea5e9; /* sky-500 */
+  }
+  25% {
+    color: #2563eb; /* blue-600 */
+  }
+  50% {
+    color: #38bdf8; /* sky-400 */
+  }
+  75% {
+    color: #1d4ed8; /* blue-700 */
+  }
+  100% {
+    color: #0ea5e9;
+  }
+}
+
+.animate-blue-glow {
+  animation: blueGlow 3.5s ease-in-out infinite;
+}

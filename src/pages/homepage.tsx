@@ -18,8 +18,8 @@ const Navbar = () => {
               alt="AsliLearn Logo" 
               className="w-12 h-12 object-contain"
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              AsliLearn
+            <span className="text-2xl md:text-3xl font-extrabold text-blue-600 animate-blue-glow">
+              ASLILEARN AI
             </span>
           </Link>
 
@@ -52,6 +52,23 @@ const Index = () => {
     document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const renderAnimatedHeading = (text = "Learn Smarter,") => (
+    <span className="inline-block">
+      {text.split("").map((char, index) => (
+        <span
+          key={`${char}-${index}`}
+          className="animate-color-change inline-block"
+          style={{
+            animationDelay: `${index * 0.1}s`,
+            animationDuration: "4s",
+          }}
+        >
+          {char === " " ? "\u00A0" : char}
+        </span>
+      ))}
+    </span>
+  );
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-sky-100 via-blue-50 to-cyan-50 relative overflow-hidden">
       <Navbar />
@@ -70,20 +87,7 @@ const Index = () => {
 
             {/* Main Heading */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="inline-block">
-                  {"Learn Smarter,".split("").map((char, index) => (
-                    <span
-                      key={index}
-                      className="animate-color-change inline-block"
-                      style={{
-                        animationDelay: `${index * 0.1}s`,
-                        animationDuration: '4s'
-                      }}
-                    >
-                      {char === " " ? "\u00A0" : char}
-                    </span>
-                  ))}
-                </span>
+                {renderAnimatedHeading()}
                 <br />
                 <span className="text-gray-900">Achieve Faster!</span>
             </h1>
@@ -141,6 +145,11 @@ const Index = () => {
                   alt="Students Learning Together" 
                   className="w-full h-auto object-cover rounded-2xl"
                 />
+              </div>
+              <div className="mt-8 text-center">
+                <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-gray-900">
+                  {renderAnimatedHeading("ASLILEARN AI")}
+                </h2>
               </div>
             </div>
           </div>
@@ -416,7 +425,7 @@ const Index = () => {
                 <CardTitle className="text-2xl font-bold text-gray-900">Premium Student</CardTitle>
                 <p className="text-gray-600 text-sm mt-2">Most popular for serious learners</p>
                 <div className="mt-6">
-                  <div className="text-4xl font-bold text-gray-900">₹499</div>
+                  <div className="text-4xl font-bold text-gray-900">₹99</div>
                   <div className="text-gray-600 text-sm">/month</div>
                   <div className="mt-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold inline-block">
                     Save ₹1,188 yearly
@@ -472,7 +481,7 @@ const Index = () => {
                 <CardTitle className="text-2xl font-bold text-gray-900">Elite Pro</CardTitle>
                 <p className="text-gray-600 text-sm mt-2">For competitive exam aspirants</p>
                 <div className="mt-6">
-                  <div className="text-4xl font-bold text-gray-900">₹999</div>
+                  <div className="text-4xl font-bold text-gray-900">₹149</div>
                   <div className="text-gray-600 text-sm">/month</div>
                   <div className="mt-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold inline-block">
                     Save ₹2,388 yearly

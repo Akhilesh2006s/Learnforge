@@ -79,7 +79,7 @@ export default function AITutor() {
   }, []);
 
   // Fetch user's chat sessions
-  const { data: chatSessions = [], isLoading: sessionsLoading } = useQuery({
+  const { data: chatSessions = [], isLoading: sessionsLoading } = useQuery<any[]>({
     queryKey: ["/api/users", MOCK_USER_ID, "chat-sessions"],
   });
 
@@ -208,6 +208,10 @@ export default function AITutor() {
             <AIChat 
               userId={MOCK_USER_ID}
               className="h-[600px]"
+              context={{
+                studentName: user?.fullName || "Student",
+                currentSubject: user?.educationStream || "General Preparation"
+              }}
             />
           </div>
 

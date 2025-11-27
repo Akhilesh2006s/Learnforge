@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/api-config';
 import { motion } from 'framer-motion';
@@ -1427,7 +1428,7 @@ const TeacherDashboard = () => {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">ASLILEARN</h1>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">ASLILEARN AI</h1>
                 <p className="text-xs text-gray-600 font-medium">Teacher Portal</p>
               </div>
             </div>

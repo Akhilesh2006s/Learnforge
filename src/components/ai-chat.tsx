@@ -20,6 +20,7 @@ interface Message {
 interface AIChatProps {
   userId: string;
   context?: {
+    studentName?: string;
     currentSubject?: string;
     currentTopic?: string;
     recentTest?: string;

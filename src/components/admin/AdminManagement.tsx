@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UsersIcon, UserPlusIcon, EditIcon, TrashIcon, CrownIcon, GraduationCapIcon, BookOpenIcon, EyeIcon, MapPinIcon, PhoneIcon, UserIcon } from "lucide-react";
+import { UsersIcon, UserPlusIcon, EditIcon, TrashIcon, CrownIcon, GraduationCapIcon, BookOpenIcon, EyeIcon, MapPinIcon, PhoneIcon, UserIcon, UploadIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api-config";
 
@@ -91,6 +91,9 @@ export default function AdminManagement() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [adminDetails, setAdminDetails] = useState<any>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [isCSVUploadOpen, setIsCSVUploadOpen] = useState(false);
+  const [isUploadingCSV, setIsUploadingCSV] = useState(false);
+  const [csvUploadProgress, setCsvUploadProgress] = useState({ total: 0, success: 0, failed: 0, errors: [] as string[] });
   const { toast } = useToast();
 
   // Fetch admins from API
@@ -229,6 +232,242 @@ export default function AdminManagement() {
       }
     } finally {
       setIsAddingAdmin(false);
+    }
+  };
+
+  // CSV Parser function
+  const parseCSV = (csvText: string): Array<{
+    name: string;
+    email: string;
+    password: string;
+    board: string;
+    schoolName: string;
+    contactPerson: string;
+    phone: string;
+    place: string;
+    pin: string;
+  }> => {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) {
+      throw new Error('CSV file must have at least a header row and one data row');
+    }
+
+    // Parse header row
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    
+    // Find column indices
+    const nameIndex = headers.findIndex(h => h.includes('full name') || h.includes('name'));
+    const emailIndex = headers.findIndex(h => h.includes('email'));
+    const passwordIndex = headers.findIndex(h => h.includes('password'));
+    const boardIndex = headers.findIndex(h => h.includes('board'));
+    const schoolNameIndex = headers.findIndex(h => h.includes('school name') || h.includes('schoolname'));
+    const contactPersonIndex = headers.findIndex(h => h.includes('contact person') || h.includes('contactperson'));
+    const phoneIndex = headers.findIndex(h => h.includes('phone'));
+    const placeIndex = headers.findIndex(h => h.includes('place'));
+    const pinIndex = headers.findIndex(h => h.includes('pin') || h.includes('pin code'));
+
+    if (nameIndex === -1 || emailIndex === -1 || boardIndex === -1 || schoolNameIndex === -1) {
+      throw new Error('CSV must contain columns: Full Name, Email, Board, and School Name');
+    }
+
+    // Parse data rows
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim());
+      
+      const name = values[nameIndex] || '';
+      const email = values[emailIndex] || '';
+      const password = values[passwordIndex] || '123456'; // Default password
+      const board = values[boardIndex] || '';
+      const schoolName = values[schoolNameIndex] || '';
+      const contactPerson = values[contactPersonIndex] || '';
+      const phone = values[phoneIndex] || '';
+      const place = values[placeIndex] || '';
+      const pin = values[pinIndex] || '';
+
+      // Skip empty rows
+      if (!name && !email && !schoolName) continue;
+
+      // Map board values to expected format
+      const boardLower = board.toLowerCase().trim();
+      let mappedBoard = board.toUpperCase();
+      
+      if (boardLower.includes('cbse')) {
+        if (boardLower.includes('andh') || boardLower.includes('ap') || boardLower.includes('andhra')) {
+          mappedBoard = 'CBSE_AP';
+        } else if (boardLower.includes('tel') || boardLower.includes('ts') || boardLower.includes('telangana')) {
+          mappedBoard = 'CBSE_TS';
+        } else {
+          // Default to CBSE_AP if just "CBSE" is specified
+          mappedBoard = 'CBSE_AP';
+        }
+      } else if (boardLower.includes('state')) {
+        if (boardLower.includes('andh') || boardLower.includes('ap') || boardLower.includes('andhra')) {
+          mappedBoard = 'STATE_AP';
+        } else if (boardLower.includes('tel') || boardLower.includes('ts') || boardLower.includes('telangana')) {
+          mappedBoard = 'STATE_TS';
+        } else {
+          // Default to STATE_AP if just "State" is specified
+          mappedBoard = 'STATE_AP';
+        }
+      } else if (boardLower === 'cbse_ap' || boardLower === 'cbse_ts' || boardLower === 'state_ap' || boardLower === 'state_ts') {
+        // Already in correct format
+        mappedBoard = board.toUpperCase();
+      }
+
+      data.push({
+        name,
+        email,
+        password,
+        board: mappedBoard,
+        schoolName,
+        contactPerson,
+        phone,
+        place,
+        pin
+      });
+    }
+
+    return data;
+  };
+
+  // Handle CSV file upload
+  const handleCSVUpload = async (file: File) => {
+    setIsUploadingCSV(true);
+    setCsvUploadProgress({ total: 0, success: 0, failed: 0, errors: [] });
+
+    try {
+      const text = await file.text();
+      const csvData = parseCSV(text);
+
+      if (csvData.length === 0) {
+        toast({
+          title: "Error",
+          description: "No valid data found in CSV file",
+          variant: "destructive",
+        });
+        setIsUploadingCSV(false);
+        return;
+      }
+
+      setCsvUploadProgress(prev => ({ ...prev, total: csvData.length }));
+
+      const token = localStorage.getItem('authToken');
+      const errors: string[] = [];
+      let successCount = 0;
+      let failedCount = 0;
+
+      // Process each row
+      for (let i = 0; i < csvData.length; i++) {
+        const row = csvData[i];
+        
+        // Validate required fields
+        if (!row.name || !row.email || !row.board || !row.schoolName) {
+          errors.push(`Row ${i + 2}: Missing required fields (Name, Email, Board, or School Name)`);
+          failedCount++;
+          setCsvUploadProgress(prev => ({ ...prev, failed: failedCount, errors }));
+          continue;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(row.email)) {
+          errors.push(`Row ${i + 2}: Invalid email format (${row.email})`);
+          failedCount++;
+          setCsvUploadProgress(prev => ({ ...prev, failed: failedCount, errors }));
+          continue;
+        }
+
+        // Validate board
+        const validBoards = ['CBSE_AP', 'CBSE_TS', 'STATE_AP', 'STATE_TS'];
+        if (!validBoards.includes(row.board)) {
+          errors.push(`Row ${i + 2}: Invalid board (${row.board}). Must be one of: CBSE_AP, CBSE_TS, STATE_AP, STATE_TS`);
+          failedCount++;
+          setCsvUploadProgress(prev => ({ ...prev, failed: failedCount, errors }));
+          continue;
+        }
+
+        try {
+          const payload = {
+            name: row.name,
+            email: row.email,
+            board: row.board,
+            schoolName: row.schoolName,
+            contactPerson: row.contactPerson || '',
+            phone: row.phone || '',
+            place: row.place || '',
+            pin: row.pin || '',
+            permissions: []
+          };
+
+          const response = await fetch(`${API_BASE_URL}/api/super-admin/admins`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            successCount++;
+            setCsvUploadProgress(prev => ({ ...prev, success: successCount }));
+          } else {
+            const errorData = await response.json();
+            const errorMsg = errorData.message || 'Failed to create school';
+            errors.push(`Row ${i + 2}: ${errorMsg} (${row.email})`);
+            failedCount++;
+            setCsvUploadProgress(prev => ({ ...prev, failed: failedCount, errors }));
+          }
+        } catch (error) {
+          errors.push(`Row ${i + 2}: Network error (${row.email})`);
+          failedCount++;
+          setCsvUploadProgress(prev => ({ ...prev, failed: failedCount, errors }));
+        }
+      }
+
+      // Refresh admin list
+      const fetchAdmins = async () => {
+        try {
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${API_BASE_URL}/api/super-admin/admins`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const adminsList = Array.isArray(data) ? data : (data.data || []);
+            setAdmins(adminsList);
+          }
+        } catch (error) {
+          console.error('Error fetching admins:', error);
+        }
+      };
+      await fetchAdmins();
+
+      // Show summary
+      if (successCount > 0) {
+        toast({
+          title: "Bulk Upload Complete",
+          description: `Successfully created ${successCount} school(s). ${failedCount > 0 ? `${failedCount} failed.` : ''}`,
+        });
+      }
+
+      if (failedCount > 0 && errors.length > 0) {
+        console.error('CSV Upload Errors:', errors);
+      }
+
+      setIsCSVUploadOpen(false);
+    } catch (error) {
+      console.error('Error parsing CSV:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to parse CSV file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingCSV(false);
     }
   };
 
@@ -498,14 +737,15 @@ export default function AdminManagement() {
           <p className="text-gray-600">Manage schools and their associated data</p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <UserPlusIcon className="h-4 w-4 mr-2" />
-              Add New School
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <UserPlusIcon className="h-4 w-4 mr-2" />
+                Add New School
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New School</DialogTitle>
             </DialogHeader>
@@ -624,6 +864,84 @@ export default function AdminManagement() {
             </div>
           </DialogContent>
         </Dialog>
+
+          <Dialog open={isCSVUploadOpen} onOpenChange={setIsCSVUploadOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                <UploadIcon className="h-4 w-4 mr-2" />
+                Upload CSV
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Upload Schools from CSV</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="csvFile">Select CSV File</Label>
+                  <Input
+                    id="csvFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleCSVUpload(file);
+                      }
+                    }}
+                    disabled={isUploadingCSV}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    CSV should contain columns: Full Name, Email, Password, Board, School Name, Contact Person, Phone, Place, PIN Code
+                  </p>
+                </div>
+
+                {isUploadingCSV && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Processing...</span>
+                      <span>{csvUploadProgress.success + csvUploadProgress.failed} / {csvUploadProgress.total}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        style={{
+                          width: `${((csvUploadProgress.success + csvUploadProgress.failed) / csvUploadProgress.total) * 100}%`
+                        }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="font-semibold text-green-600">Success: {csvUploadProgress.success}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-red-600">Failed: {csvUploadProgress.failed}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-600">Total: {csvUploadProgress.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {csvUploadProgress.errors.length > 0 && (
+                  <div className="mt-4">
+                    <Label className="text-red-600">Errors ({csvUploadProgress.errors.length}):</Label>
+                    <div className="mt-2 max-h-40 overflow-y-auto border border-red-200 rounded p-2 bg-red-50">
+                      {csvUploadProgress.errors.slice(0, 10).map((error, idx) => (
+                        <p key={idx} className="text-xs text-red-600 mb-1">{error}</p>
+                      ))}
+                      {csvUploadProgress.errors.length > 10 && (
+                        <p className="text-xs text-gray-500">... and {csvUploadProgress.errors.length - 10} more errors</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {/* Edit Admin Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

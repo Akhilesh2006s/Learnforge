@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Video, FileText, File, X, Trash2, Edit, Play, Download, Eye } from 'lucide-react';
+import { Upload, Video, FileText, File, X, Trash2, Edit, Play, Download, Eye, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +25,7 @@ interface Content {
   topic?: string;
   date: string;
   fileUrl: string;
+  fileUrls?: string[];
   thumbnailUrl?: string;
   duration?: number;
   createdAt: string;
@@ -63,6 +64,7 @@ export default function ContentManagement() {
     topic: '',
     date: '',
     fileUrl: '',
+    fileUrls: [] as string[],
     thumbnailUrl: '',
     duration: ''
   });
@@ -369,6 +371,7 @@ export default function ContentManagement() {
 
 
     let fileUrl = formData.fileUrl;
+    let fileUrls = formData.fileUrls;
     let thumbnailUrl = formData.thumbnailUrl;
     let fileSize = 0;
 
@@ -379,14 +382,23 @@ export default function ContentManagement() {
         return; // Error already shown in handleFileUpload
       }
       fileUrl = uploadedUrl;
+      fileUrls = [uploadedUrl]; // Store as array for consistency
       fileSize = selectedFile.size;
-    } else if (!formData.fileUrl) {
+    } else if (formData.fileUrls.length > 0) {
+      // Use multiple URLs if provided
+      fileUrls = formData.fileUrls;
+      fileUrl = formData.fileUrls[0]; // Keep first URL for backward compatibility
+    } else if (!formData.fileUrl && formData.fileUrls.length === 0) {
       toast({
         title: 'Validation Error',
-        description: 'Please either upload a file or provide a file URL',
+        description: 'Please either upload a file or provide at least one file URL',
         variant: 'destructive'
       });
       return;
+    } else if (formData.fileUrl) {
+      // Single URL provided
+      fileUrl = formData.fileUrl;
+      fileUrls = [formData.fileUrl];
     }
 
     // If a thumbnail file is selected, upload it
@@ -402,17 +414,22 @@ export default function ContentManagement() {
       const token = localStorage.getItem('authToken');
       
       // Prepare the request body with all required data
-      const baseRequestBody = {
+      const baseRequestBody: any = {
         title: formData.title.trim(),
         description: formData.description?.trim() || undefined,
         type: formData.type,
         topic: formData.topic?.trim() || undefined,
         date: formData.date, // Date in YYYY-MM-DD format
-        fileUrl: fileUrl,
+        fileUrl: fileUrl, // Keep for backward compatibility
         thumbnailUrl: thumbnailUrl || undefined,
         duration: formData.duration ? Number(formData.duration) : 0,
         size: fileSize,
       };
+
+      // Add multiple file URLs if available
+      if (fileUrls && fileUrls.length > 0) {
+        baseRequestBody.fileUrls = fileUrls;
+      }
 
       if (isAllBoardsSelection) {
         const uploadResults = [];
@@ -521,6 +538,7 @@ export default function ContentManagement() {
         topic: '',
         date: '',
         fileUrl: '',
+        fileUrls: [],
         thumbnailUrl: '',
         duration: '',
       });
@@ -733,36 +751,60 @@ export default function ContentManagement() {
                     </div>
                   )}
                 </div>
-                <div className="mt-4 flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
-                    onClick={() => {
-                      // Handle both relative paths and full URLs
-                      const fileUrl = content.fileUrl.startsWith('http') 
-                        ? content.fileUrl 
-                        : `${API_BASE_URL}${content.fileUrl}`;
-                      window.open(fileUrl, '_blank');
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
-                    onClick={() => {
-                      // Handle both relative paths and full URLs
-                      const fileUrl = content.fileUrl.startsWith('http') 
-                        ? content.fileUrl 
-                        : `${API_BASE_URL}${content.fileUrl}`;
-                      window.open(fileUrl, '_blank');
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
+                <div className="mt-4 space-y-2">
+                  {(content.fileUrls && content.fileUrls.length > 1) ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-white/80 mb-2">Multiple Links ({content.fileUrls.length}):</p>
+                      {content.fileUrls.map((url: string, index: number) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="w-full bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white text-left justify-start"
+                          onClick={() => {
+                            const fileUrl = url.startsWith('http') 
+                              ? url 
+                              : `${API_BASE_URL}${url}`;
+                            window.open(fileUrl, '_blank');
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          <span className="truncate flex-1">Link {index + 1}</span>
+                          <Download className="w-4 h-4 ml-2" />
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
+                        onClick={() => {
+                          const fileUrl = content.fileUrl.startsWith('http') 
+                            ? content.fileUrl 
+                            : `${API_BASE_URL}${content.fileUrl}`;
+                          window.open(fileUrl, '_blank');
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/20 text-white border-white/30 hover:bg-white/30 hover:text-white"
+                        onClick={() => {
+                          const fileUrl = content.fileUrl.startsWith('http') 
+                            ? content.fileUrl 
+                            : `${API_BASE_URL}${content.fileUrl}`;
+                          window.open(fileUrl, '_blank');
+                        }}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -971,49 +1013,117 @@ export default function ContentManagement() {
             </div>
 
             <div>
-              <Label htmlFor="file">File *</Label>
-              <div className="space-y-2">
-                <Input
-                  id="file"
-                  type="file"
-                  accept={formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
-                    ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.ods,.odp'
-                    : formData.type === 'Video'
-                    ? '.mp4,.mpeg,.mov,.avi,.webm,.mkv'
-                    : '.mp3,.wav,.ogg,.aac,.m4a,.webm'
-                  }
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedFile(file);
-                      setFormData({ ...formData, fileUrl: '' }); // Clear URL if file is selected
-                    }
-                  }}
-                  className="cursor-pointer"
-                />
+              <Label htmlFor="file">File Links *</Label>
+              <div className="space-y-3">
                 {selectedFile && (
-                  <p className="text-xs text-green-600">
-                    Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-xs text-green-600 mb-2">
+                      Selected File: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        const fileInput = document.getElementById('file') as HTMLInputElement;
+                        if (fileInput) fileInput.value = '';
+                      }}
+                      className="text-xs"
+                    >
+                      Remove File
+                    </Button>
+                  </div>
                 )}
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="fileUrl"
+                      value={formData.fileUrl}
+                      onChange={(e) => {
+                        setFormData({ ...formData, fileUrl: e.target.value });
+                        if (e.target.value) setSelectedFile(null); // Clear file if URL is entered
+                      }}
+                      placeholder="https://example.com/video.mp4 or Google Drive link"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (formData.fileUrl.trim()) {
+                          setFormData({
+                            ...formData,
+                            fileUrls: [...formData.fileUrls, formData.fileUrl.trim()],
+                            fileUrl: ''
+                          });
+                          setSelectedFile(null);
+                        }
+                      }}
+                      disabled={!formData.fileUrl.trim()}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {formData.fileUrls.length > 0 && (
+                    <div className="space-y-2 mt-2">
+                      {formData.fileUrls.map((url, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md border">
+                          <span className="flex-1 text-sm text-gray-700 truncate">{url}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                fileUrls: formData.fileUrls.filter((_, i) => i !== index)
+                              });
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="text-xs text-gray-500">
-                  <p className="font-semibold mb-1">Or enter a URL:</p>
+                  <p className="font-semibold mb-1">Or upload a file:</p>
                   <Input
-                    id="fileUrl"
-                    value={formData.fileUrl}
+                    id="file"
+                    type="file"
+                    accept={formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
+                      ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.ods,.odp'
+                      : formData.type === 'Video'
+                      ? '.mp4,.mpeg,.mov,.avi,.webm,.mkv'
+                      : '.mp3,.wav,.ogg,.aac,.m4a,.webm'
+                    }
                     onChange={(e) => {
-                      setFormData({ ...formData, fileUrl: e.target.value });
-                      if (e.target.value) setSelectedFile(null); // Clear file if URL is entered
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setFormData({ ...formData, fileUrl: '', fileUrls: [] }); // Clear URLs if file is selected
+                      }
                     }}
-                    placeholder="https://example.com/video.mp4 or Google Drive link"
+                    className="cursor-pointer"
                   />
                 </div>
+                
                 <p className="text-xs text-gray-500 mt-1">
                   {formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
                     ? 'Accepted formats: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX'
                     : formData.type === 'Video'
                     ? 'Accepted formats: MP4, MPEG, MOV, AVI, WEBM, MKV'
                     : 'Accepted formats: MP3, WAV, OGG, AAC, M4A'}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  💡 Tip: You can add multiple links for different parts of the chapter. Click the + button after entering each URL.
                 </p>
               </div>
             </div>

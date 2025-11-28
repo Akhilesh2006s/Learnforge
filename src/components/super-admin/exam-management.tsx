@@ -39,6 +39,8 @@ interface Exam {
   endDate: string;
   isActive: boolean;
   questions?: string[];
+  targetSchools?: Array<{ _id: string; schoolName?: string; fullName?: string; email?: string }>;
+  isSchoolSpecific?: boolean;
   createdAt: string;
 }
 
@@ -56,11 +58,17 @@ const EXAM_TYPES = [
   { value: 'practice', label: 'Practice' }
 ];
 
+type FilterType = 'all-boards' | 'specific-boards' | 'specific-schools';
+
 export default function ExamManagement() {
   const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterType, setFilterType] = useState<FilterType>('all-boards');
   const [selectedBoard, setSelectedBoard] = useState<string>('all');
+  const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
@@ -86,6 +94,8 @@ export default function ExamManagement() {
     description: '',
     examType: 'mains' as 'mains' | 'advanced' | 'weekend' | 'practice',
     board: 'CBSE_AP',
+    filterType: 'all-boards' as FilterType,
+    selectedSchools: [] as string[],
     duration: '',
     totalQuestions: '',
     totalMarks: '',
@@ -96,7 +106,13 @@ export default function ExamManagement() {
 
   useEffect(() => {
     fetchExams();
-  }, [selectedBoard]);
+  }, [selectedBoard, filterType, selectedSchools]);
+
+  useEffect(() => {
+    if (filterType === 'specific-schools') {
+      fetchSchools();
+    }
+  }, [filterType]);
 
   const fetchQuestions = async (examId: string) => {
     setIsLoadingQuestions(true);
@@ -267,13 +283,51 @@ export default function ExamManagement() {
     }
   };
 
+  const fetchSchools = async () => {
+    setIsLoadingSchools(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/super-admin/admins`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const adminsList = Array.isArray(data) ? data : (data.data || []);
+        setSchools(adminsList.map((admin: any) => ({
+          id: admin.id || admin._id,
+          name: admin.schoolName || admin.name,
+          email: admin.email,
+          board: admin.board
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch schools:', error);
+    } finally {
+      setIsLoadingSchools(false);
+    }
+  };
+
   const fetchExams = async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const url = selectedBoard === 'all'
-        ? `${API_BASE_URL}/api/super-admin/exams`
-        : `${API_BASE_URL}/api/super-admin/boards/${selectedBoard}/exams`;
+      let url = `${API_BASE_URL}/api/super-admin/exams`;
+      
+      // Add query parameters based on filter type
+      const params = new URLSearchParams();
+      if (filterType === 'specific-boards' && selectedBoard !== 'all') {
+        params.append('board', selectedBoard);
+      } else if (filterType === 'specific-schools' && selectedSchools.length > 0) {
+        params.append('schoolIds', selectedSchools.join(','));
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
       
       console.log('🌐 Fetching exams from:', url);
       
@@ -287,7 +341,16 @@ export default function ExamManagement() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setExams(data.data || []);
+          let fetchedExams = data.data || [];
+          
+          // Filter by schools on frontend if needed
+          if (filterType === 'specific-schools' && selectedSchools.length > 0) {
+            fetchedExams = fetchedExams.filter((exam: any) => 
+              exam.targetSchools && exam.targetSchools.some((schoolId: string) => selectedSchools.includes(schoolId))
+            );
+          }
+          
+          setExams(fetchedExams);
         }
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -333,16 +396,48 @@ export default function ExamManagement() {
       return;
     }
 
+    if (formData.filterType === 'specific-schools' && formData.selectedSchools.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select at least one school',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsCreating(true);
     try {
       const token = localStorage.getItem('authToken');
+      
+      // Prepare payload based on filter type
+      const payload: any = {
+        title: formData.title,
+        description: formData.description,
+        examType: formData.examType,
+        board: formData.board,
+        duration: parseInt(formData.duration),
+        totalQuestions: parseInt(formData.totalQuestions),
+        totalMarks: parseInt(formData.totalMarks),
+        instructions: formData.instructions,
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      };
+
+      // Add school-specific targeting if selected
+      if (formData.filterType === 'specific-schools' && formData.selectedSchools.length > 0) {
+        payload.targetSchools = formData.selectedSchools;
+        payload.isSchoolSpecific = true;
+      } else if (formData.filterType === 'specific-boards') {
+        payload.isBoardSpecific = true;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/super-admin/exams`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -358,6 +453,8 @@ export default function ExamManagement() {
           description: '',
           examType: 'mains',
           board: 'CBSE_AP',
+          filterType: 'all-boards',
+          selectedSchools: [],
           duration: '',
           totalQuestions: '',
           totalMarks: '',
@@ -445,9 +542,18 @@ export default function ExamManagement() {
     }
   };
 
-  const filteredExams = selectedBoard === 'all'
-    ? exams
-    : exams.filter(exam => exam.board === selectedBoard);
+  const filteredExams = (() => {
+    if (filterType === 'all-boards') {
+      return exams;
+    } else if (filterType === 'specific-boards' && selectedBoard !== 'all') {
+      return exams.filter(exam => exam.board === selectedBoard);
+    } else if (filterType === 'specific-schools' && selectedSchools.length > 0) {
+      return exams.filter(exam => 
+        exam.targetSchools && exam.targetSchools.some((schoolId: string) => selectedSchools.includes(schoolId))
+      );
+    }
+    return exams;
+  })();
 
   return (
     <div className="p-6 space-y-6">
@@ -490,25 +596,33 @@ export default function ExamManagement() {
                   rows={3}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="examType">Exam Type *</Label>
-                  <Select
-                    value={formData.examType}
-                    onValueChange={(value: any) => setFormData({ ...formData, examType: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXAM_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="filterType">Exam Visibility *</Label>
+                <Select
+                  value={formData.filterType}
+                  onValueChange={(value: FilterType) => {
+                    setFormData({ 
+                      ...formData, 
+                      filterType: value,
+                      selectedSchools: value !== 'specific-schools' ? [] : formData.selectedSchools
+                    });
+                    if (value === 'specific-schools' && schools.length === 0) {
+                      fetchSchools();
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-boards">All Boards (All schools can see)</SelectItem>
+                    <SelectItem value="specific-boards">Specific Board (All schools in that board)</SelectItem>
+                    <SelectItem value="specific-schools">Specific Schools (Only selected schools)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.filterType === 'specific-boards' && (
                 <div>
                   <Label htmlFor="board">Board *</Label>
                   <Select
@@ -527,6 +641,92 @@ export default function ExamManagement() {
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              {formData.filterType === 'specific-schools' && (
+                <div>
+                  <Label htmlFor="schools">Select Schools *</Label>
+                  {isLoadingSchools ? (
+                    <p className="text-sm text-gray-500">Loading schools...</p>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
+                      {schools.length === 0 ? (
+                        <p className="text-sm text-gray-500">No schools available</p>
+                      ) : (
+                        schools.map((school) => (
+                          <div key={school.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`school-${school.id}`}
+                              checked={formData.selectedSchools.includes(school.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({
+                                    ...formData,
+                                    selectedSchools: [...formData.selectedSchools, school.id]
+                                  });
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    selectedSchools: formData.selectedSchools.filter(id => id !== school.id)
+                                  });
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <Label htmlFor={`school-${school.id}`} className="text-sm cursor-pointer">
+                              {school.name} ({BOARDS.find(b => b.value === school.board)?.label || school.board})
+                            </Label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {formData.filterType === 'specific-schools' && formData.selectedSchools.length === 0 && (
+                    <p className="text-xs text-yellow-600 mt-1">⚠️ Please select at least one school</p>
+                  )}
+                </div>
+              )}
+
+              {formData.filterType === 'all-boards' && (
+                <div>
+                  <Label htmlFor="board">Board (for categorization) *</Label>
+                  <Select
+                    value={formData.board}
+                    onValueChange={(value) => setFormData({ ...formData, board: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BOARDS.map((board) => (
+                        <SelectItem key={board.value} value={board.value}>
+                          {board.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">This is for categorization. All schools will see this exam.</p>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="examType">Exam Type *</Label>
+                <Select
+                  value={formData.examType}
+                  onValueChange={(value: any) => setFormData({ ...formData, examType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXAM_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -603,20 +803,85 @@ export default function ExamManagement() {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Select value={selectedBoard} onValueChange={setSelectedBoard}>
+      <div className="flex items-center gap-4 flex-wrap">
+        <Select value={filterType} onValueChange={(value: FilterType) => {
+          setFilterType(value);
+          if (value === 'all-boards') {
+            setSelectedBoard('all');
+            setSelectedSchools([]);
+          } else if (value === 'specific-boards') {
+            setSelectedBoard('CBSE_AP');
+            setSelectedSchools([]);
+          } else if (value === 'specific-schools') {
+            setSelectedBoard('all');
+            setSelectedSchools([]);
+          }
+        }}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Board" />
+            <SelectValue placeholder="Filter Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Boards</SelectItem>
-            {BOARDS.map((board) => (
-              <SelectItem key={board.value} value={board.value}>
-                {board.label}
-              </SelectItem>
-            ))}
+            <SelectItem value="all-boards">All Boards</SelectItem>
+            <SelectItem value="specific-boards">Specific Boards</SelectItem>
+            <SelectItem value="specific-schools">Specific Schools</SelectItem>
           </SelectContent>
         </Select>
+
+        {filterType === 'specific-boards' && (
+          <Select value={selectedBoard} onValueChange={setSelectedBoard}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select Board" />
+            </SelectTrigger>
+            <SelectContent>
+              {BOARDS.map((board) => (
+                <SelectItem key={board.value} value={board.value}>
+                  {board.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {filterType === 'specific-schools' && (
+          <div className="flex items-center gap-2">
+            <Select 
+              value="" 
+              onValueChange={(value) => {
+                if (value && !selectedSchools.includes(value)) {
+                  setSelectedSchools([...selectedSchools, value]);
+                }
+              }}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder={isLoadingSchools ? "Loading schools..." : "Add School"} />
+              </SelectTrigger>
+              <SelectContent>
+                {schools.filter(school => !selectedSchools.includes(school.id)).map((school) => (
+                  <SelectItem key={school.id} value={school.id}>
+                    {school.name} ({BOARDS.find(b => b.value === school.board)?.label || school.board})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedSchools.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedSchools.map((schoolId) => {
+                  const school = schools.find(s => s.id === schoolId);
+                  return school ? (
+                    <Badge key={schoolId} variant="secondary" className="flex items-center gap-1">
+                      {school.name}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => setSelectedSchools(selectedSchools.filter(id => id !== schoolId))}
+                      />
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <Badge variant="outline" className="ml-2">
           {filteredExams.length} {filteredExams.length === 1 ? 'Exam' : 'Exams'}
         </Badge>
@@ -659,10 +924,22 @@ export default function ExamManagement() {
                 </div>
               </CardHeader>
               <CardContent>
-                {exam.description && (
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{exam.description}</p>
-                )}
-                <div className="space-y-2 text-sm">
+                      {exam.description && (
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{exam.description}</p>
+                      )}
+                      {exam.targetSchools && exam.targetSchools.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-500 mb-1">Visible to:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {exam.targetSchools.map((school: any, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {school.schoolName || school.fullName || 'School'}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-600">
                     <Clock className="h-4 w-4 mr-2" />
                     <span>{exam.duration} minutes</span>

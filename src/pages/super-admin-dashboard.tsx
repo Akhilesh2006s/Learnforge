@@ -21,7 +21,11 @@ import { InteractiveBackground, FloatingParticles } from "@/components/backgroun
 export default function SuperAdminDashboard() {
   const { toast } = useToast();
   const [currentView, setCurrentView] = useState<SuperAdminView>('dashboard');
-  const [user] = useState({ fullName: 'Super Admin', role: 'super-admin' });
+  const [user] = useState({ 
+    fullName: 'Super Admin', 
+    role: 'super-admin',
+    email: 'super.admin@aslilearn.com'
+  });
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalStudents: 0,
@@ -1166,19 +1170,29 @@ export default function SuperAdminDashboard() {
         />
         
         <div className="flex-1 relative z-10">
-          <div className="bg-white/60 backdrop-blur-xl shadow-xl border-b border-purple-200/30">
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl">
+            <div className="px-6 py-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Super Admin Dashboard</h1>
-                  <p className="text-sm text-gray-600">Welcome back, {user?.fullName || 'Super Admin'}!</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/80 mb-2">Control Center</p>
+                  <h1 className="text-3xl font-bold">Aslilearn Exclusive Dashboard</h1>
+                  <p className="text-sm text-white/90">Welcome back, {user?.email || user?.fullName || 'super.admin@aslilearn.com'}!</p>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <Button variant="ghost" size="sm" className="text-purple-700 hover:bg-purple-100/50 rounded-full">
+                <div className="flex items-center space-x-3">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30"
+                  >
                     <BellIcon className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:bg-red-100/50 rounded-full">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleLogout} 
+                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30"
+                  >
                     <LogOutIcon className="h-4 w-4" />
                   </Button>
                 </div>

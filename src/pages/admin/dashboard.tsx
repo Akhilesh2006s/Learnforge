@@ -420,11 +420,11 @@ const AdminDashboard = () => {
         {/* Logo Section */}
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-sky-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl">
+            <div className="w-12 h-12 bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] rounded-2xl flex items-center justify-center shadow-xl">
               <span className="text-white font-bold text-xl">AS</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">ASLILEARN AI</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-700 to-cyan-300 bg-clip-text text-transparent">ASLILEARN AI</h1>
               <p className="text-xs text-gray-600 font-medium">Admin Panel</p>
             </div>
           </div>
@@ -534,12 +534,13 @@ const AdminDashboard = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col relative z-10">
-          {/* Top Header */}
-          <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 px-responsive py-responsive relative z-10">
+          {/* Top Header - Student Dashboard Theme */}
+          <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl px-responsive py-6 relative z-10">
             <div className="flex-responsive-col items-center sm:items-start justify-between space-y-responsive sm:space-y-0">
               <div className="text-center sm:text-left">
-                <h2 className="text-responsive-xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent capitalize">{activeTab}</h2>
-                <p className="text-gray-600 text-responsive-sm font-medium">Manage your learning platform with style</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/80 mb-2">Admin Control Center</p>
+                <h2 className="text-responsive-xl font-bold capitalize">{activeTab}</h2>
+                <p className="text-white/90 text-responsive-sm font-medium">Manage your learning platform with style</p>
               </div>
               {!isMobile && (
                 <div className="flex items-center space-x-responsive">
@@ -579,7 +580,7 @@ const AdminDashboard = () => {
                         window.location.href = '/signin';
                       }
                     }}
-                    className="border-sky-200 text-sky-800 hover:bg-sky-50 backdrop-blur-sm rounded-responsive"
+                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30 backdrop-blur-sm"
                   >
                     <LogOut className="w-4 h-4 mr-responsive" />
                     Logout

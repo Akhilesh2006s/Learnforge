@@ -28,6 +28,7 @@ interface Content {
   thumbnailUrl?: string;
   duration?: number;
   createdAt: string;
+  isExclusive?: boolean;
 }
 
 const BOARDS = [
@@ -35,6 +36,13 @@ const BOARDS = [
   { value: 'CBSE_TS', label: 'CBSE TS' },
   { value: 'STATE_AP', label: 'State AP' },
   { value: 'STATE_TS', label: 'State TS' }
+];
+
+const ALL_BOARDS_VALUE = 'ALL_BOARDS';
+
+const BOARD_SELECT_OPTIONS = [
+  ...BOARDS,
+  { value: ALL_BOARDS_VALUE, label: 'Aslilearn Exclusive (All Boards)' }
 ];
 
 export default function ContentManagement() {
@@ -62,16 +70,20 @@ export default function ContentManagement() {
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [allBoardSubjectOptions, setAllBoardSubjectOptions] = useState<{ value: string; label: string; boards: Record<string, string>; }[]>([]);
+  const [isLoadingAllBoardSubjects, setIsLoadingAllBoardSubjects] = useState(false);
+  const [multiBoardSubjectMap, setMultiBoardSubjectMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchSubjects();
     fetchContents();
   }, [selectedBoard]);
 
-  const fetchSubjects = async () => {
+  const getSubjectsForBoard = async (boardCode: string, options: { silent?: boolean } = {}) => {
+    const { silent = false } = options;
     try {
       const token = localStorage.getItem('authToken');
-      const url = `${API_BASE_URL}/api/super-admin/boards/${selectedBoard}/subjects`;
+      const url = `${API_BASE_URL}/api/super-admin/boards/${boardCode}/subjects`;
       console.log('🌐 Fetching subjects from:', url);
       
       const response = await fetch(url, {
@@ -84,15 +96,17 @@ export default function ContentManagement() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setSubjects(data.data || []);
+          return data.data || [];
         }
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        toast({
-          title: 'Error',
-          description: errorData.message || `Failed to fetch subjects (${response.status})`,
-          variant: 'destructive'
-        });
+        if (!silent) {
+          toast({
+            title: 'Error',
+            description: errorData.message || `Failed to fetch subjects (${response.status})`,
+            variant: 'destructive'
+          });
+        }
       }
     } catch (error: any) {
       console.error('Failed to fetch subjects:', error);
@@ -110,11 +124,71 @@ export default function ContentManagement() {
         errorMessage = error.message || 'Failed to fetch subjects';
       }
       
+      if (!silent) {
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
+    }
+    return [];
+  };
+
+  const fetchSubjects = async (boardCode = selectedBoard) => {
+    const data = await getSubjectsForBoard(boardCode);
+    setSubjects(data);
+  };
+
+  const loadAllBoardSubjects = async () => {
+    setIsLoadingAllBoardSubjects(true);
+    try {
+      const subjectResults = await Promise.all(
+        BOARDS.map(async (board) => {
+          const data = await getSubjectsForBoard(board.value, { silent: true });
+          return { board: board.value, subjects: data };
+        })
+      );
+
+      const subjectMap = new Map<string, { label: string; boards: Record<string, string> }>();
+
+      subjectResults.forEach(({ board, subjects }) => {
+        subjects.forEach((subject: any) => {
+          const key = subject.name?.trim().toLowerCase();
+          if (!key) return;
+          if (!subjectMap.has(key)) {
+            subjectMap.set(key, { label: subject.name.trim(), boards: {} });
+          }
+          subjectMap.get(key)!.boards[board] = subject._id;
+        });
+      });
+
+      const commonSubjects = Array.from(subjectMap.values()).filter(subject =>
+        BOARDS.every(board => subject.boards[board.value])
+      );
+
+      setAllBoardSubjectOptions(commonSubjects.map(subject => ({
+        value: subject.label,
+        label: subject.label,
+        boards: subject.boards
+      })));
+
+      if (commonSubjects.length === 0) {
+        toast({
+          title: 'No Common Subjects',
+          description: 'No subject exists across every board yet. Please create matching subjects for each board to use the Aslilearn Exclusive option.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load all-board subjects:', error);
       toast({
         title: 'Error',
-        description: errorMessage,
+        description: 'Failed to load subjects for all boards. Please try again.',
         variant: 'destructive'
       });
+    } finally {
+      setIsLoadingAllBoardSubjects(false);
     }
   };
 
@@ -260,14 +334,37 @@ export default function ContentManagement() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate all required fields
-    if (!formData.title || !formData.subject || !formData.date || !formData.type || !selectedBoard) {
+    const isAllBoardsSelection = formData.board === ALL_BOARDS_VALUE;
+    const requiredFieldsMissing = !formData.title || !formData.date || !formData.type || !formData.board;
+
+    if (requiredFieldsMissing || (!formData.subject && !isAllBoardsSelection)) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields: title, subject, date, type, and board',
         variant: 'destructive'
       });
       return;
+    }
+
+    if (isAllBoardsSelection) {
+      if (!formData.subject) {
+        toast({
+          title: 'Validation Error',
+          description: 'Select a subject that exists across every board for Aslilearn Exclusive content.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const missingBoards = BOARDS.filter(board => !multiBoardSubjectMap[board.value]);
+      if (missingBoards.length > 0) {
+        toast({
+          title: 'Missing Subjects',
+          description: `No matching subject found for: ${missingBoards.map(b => b.label).join(', ')}. Please ensure the subject exists in every board.`,
+          variant: 'destructive'
+        });
+        return;
+      }
     }
 
 
@@ -305,12 +402,10 @@ export default function ContentManagement() {
       const token = localStorage.getItem('authToken');
       
       // Prepare the request body with all required data
-      const requestBody = {
+      const baseRequestBody = {
         title: formData.title.trim(),
         description: formData.description?.trim() || undefined,
         type: formData.type,
-        board: selectedBoard,
-        subject: formData.subject, // This should be the subject ID
         topic: formData.topic?.trim() || undefined,
         date: formData.date, // Date in YYYY-MM-DD format
         fileUrl: fileUrl,
@@ -319,54 +414,120 @@ export default function ContentManagement() {
         size: fileSize,
       };
 
-      console.log('📤 Uploading content with data:', {
-        title: requestBody.title,
-        type: requestBody.type,
-        board: requestBody.board,
-        subject: requestBody.subject,
-        date: requestBody.date,
-        hasFileUrl: !!requestBody.fileUrl
-      });
+      if (isAllBoardsSelection) {
+        const uploadResults = [];
+        for (const board of BOARDS) {
+          const payload = {
+            ...baseRequestBody,
+            board: board.value,
+            subject: multiBoardSubjectMap[board.value]
+          };
 
-      const response = await fetch(`${API_BASE_URL}/api/super-admin/content`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
+          console.log('📤 Uploading content for board:', board.value, 'with subject:', payload.subject);
 
-      const data = await response.json();
+          const response = await fetch(`${API_BASE_URL}/api/super-admin/content`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
 
-      if (response.ok && data.success) {
-        toast({
-          title: 'Success',
-          description: 'Content uploaded successfully',
-        });
-        setIsUploadModalOpen(false);
-        setFormData({
-          title: '',
-          description: '',
-          type: 'Video',
-          board: selectedBoard,
-          subject: '',
-          topic: '',
-          date: '',
-          fileUrl: '',
-          thumbnailUrl: '',
-          duration: '',
-        });
-        setSelectedFile(null);
-        setSelectedThumbnail(null);
-        fetchContents();
+          const data = await response.json();
+          uploadResults.push({
+            board: board.label,
+            success: response.ok && data.success,
+            message: data.message
+          });
+
+          if (!response.ok || !data.success) {
+            console.error(`Failed to upload for ${board.label}:`, data.message);
+          }
+        }
+
+        const failedBoards = uploadResults.filter(result => !result.success);
+
+        if (failedBoards.length === 0) {
+          toast({
+            title: 'Success',
+            description: 'Content shared with every board successfully.'
+          });
+          setIsUploadModalOpen(false);
+        } else if (failedBoards.length === uploadResults.length) {
+          toast({
+            title: 'Error',
+            description: 'Content upload failed for all boards. Please try again.',
+            variant: 'destructive'
+          });
+          return;
+        } else {
+          toast({
+            title: 'Partial Success',
+            description: `Some boards failed: ${failedBoards.map(board => board.board).join(', ')}`,
+            variant: 'destructive'
+          });
+        }
       } else {
-        toast({
-          title: 'Error',
-          description: data.message || 'Failed to upload content',
-          variant: 'destructive'
+        const requestBody = {
+          ...baseRequestBody,
+          board: formData.board,
+          subject: formData.subject
+        };
+
+        console.log('📤 Uploading content with data:', {
+          title: requestBody.title,
+          type: requestBody.type,
+          board: requestBody.board,
+          subject: requestBody.subject,
+          date: requestBody.date,
+          hasFileUrl: !!requestBody.fileUrl
         });
+
+        const response = await fetch(`${API_BASE_URL}/api/super-admin/content`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          toast({
+            title: 'Success',
+            description: 'Content uploaded successfully',
+          });
+          setIsUploadModalOpen(false);
+        } else {
+          toast({
+            title: 'Error',
+            description: data.message || 'Failed to upload content',
+            variant: 'destructive'
+          });
+          return;
+        }
       }
+
+      // Reset form after successful (or partially successful) upload
+      setFormData({
+        title: '',
+        description: '',
+        type: 'Video',
+        board: selectedBoard,
+        subject: '',
+        topic: '',
+        date: '',
+        fileUrl: '',
+        thumbnailUrl: '',
+        duration: '',
+      });
+      setSelectedFile(null);
+      setSelectedThumbnail(null);
+      setMultiBoardSubjectMap({});
+      fetchContents();
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -448,6 +609,10 @@ export default function ContentManagement() {
       default:
         return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const getBoardLabel = (boardCode: string) => {
+    return BOARDS.find(board => board.value === boardCode)?.label || boardCode;
   };
 
   return (
@@ -545,6 +710,10 @@ export default function ContentManagement() {
                     <span className="font-medium mr-2">Subject:</span>
                     <span>{content.subject?.name || 'N/A'}</span>
                   </div>
+                  <div className="flex items-center text-white">
+                    <span className="font-medium mr-2">Board:</span>
+                    <span>{getBoardLabel(content.board)}</span>
+                  </div>
                   {content.topic && (
                     <div className="flex items-center text-white">
                       <span className="font-medium mr-2">Topic:</span>
@@ -628,24 +797,16 @@ export default function ContentManagement() {
                   value={formData.board}
                   onValueChange={async (value) => {
                     setFormData({ ...formData, board: value, subject: '' }); // Reset subject when board changes
-                    setSelectedBoard(value);
-                    // Fetch subjects for the new board
-                    try {
-                      const token = localStorage.getItem('authToken');
-                      const response = await fetch(`${API_BASE_URL}/api/super-admin/boards/${value}/subjects`, {
-                        headers: {
-                          'Authorization': `Bearer ${token}`,
-                          'Content-Type': 'application/json'
-                        }
-                      });
-                      if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                          setSubjects(data.data || []);
-                        }
+                    setMultiBoardSubjectMap({});
+                    if (value === ALL_BOARDS_VALUE) {
+                      setSubjects([]);
+                      if (allBoardSubjectOptions.length === 0) {
+                        await loadAllBoardSubjects();
                       }
-                    } catch (error) {
-                      console.error('Failed to fetch subjects:', error);
+                    } else {
+                      setSelectedBoard(value);
+                      const boardSubjects = await getSubjectsForBoard(value);
+                      setSubjects(boardSubjects);
                     }
                   }}
                 >
@@ -653,13 +814,18 @@ export default function ContentManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {BOARDS.map(board => (
+                    {BOARD_SELECT_OPTIONS.map(board => (
                       <SelectItem key={board.value} value={board.value}>
                         {board.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {formData.board === ALL_BOARDS_VALUE && (
+                  <p className="text-xs text-blue-700 mt-2">
+                    Selecting Aslilearn Exclusive will duplicate this content across every board that has the chosen subject.
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="type">Content Type *</Label>
@@ -686,7 +852,35 @@ export default function ContentManagement() {
 
             <div>
               <Label htmlFor="subject">Subject *</Label>
-              {subjects.length === 0 ? (
+              {formData.board === ALL_BOARDS_VALUE ? (
+                isLoadingAllBoardSubjects ? (
+                  <div className="text-sm text-gray-600">Loading subjects across boards...</div>
+                ) : allBoardSubjectOptions.length === 0 ? (
+                  <p className="text-xs text-yellow-600">
+                    ⚠️ No common subjects exist across every board. Please create matching subjects for each board to use this option.
+                  </p>
+                ) : (
+                  <Select
+                    value={formData.subject}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, subject: value });
+                      const mapping = allBoardSubjectOptions.find(option => option.value === value);
+                      setMultiBoardSubjectMap(mapping?.boards || {});
+                    }}
+                  >
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select a subject available in every board" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allBoardSubjectOptions.map(subject => (
+                        <SelectItem key={subject.value} value={subject.value}>
+                          {subject.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )
+              ) : subjects.length === 0 ? (
                 <div className="space-y-2">
                   <Select disabled>
                     <SelectTrigger id="subject">

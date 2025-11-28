@@ -1401,7 +1401,7 @@ const TeacherDashboard = () => {
     return (
       <div className="min-h-screen bg-sky-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <div className="w-16 h-16 bg-gradient-to-r from-pink-600 to-pink-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
             <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
           </div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent mb-2">Loading...</h2>
@@ -1419,29 +1419,29 @@ const TeacherDashboard = () => {
         <FloatingParticles />
       </div>
       
-      {/* Header */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 relative">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Header - Student Dashboard Theme */}
+      <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl sticky top-0 z-50 relative">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-xl">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">ASLILEARN AI</h1>
-                <p className="text-xs text-gray-600 font-medium">Teacher Portal</p>
+                <h1 className="text-xl font-bold">ASLILEARN AI</h1>
+                <p className="text-xs text-white/80 font-medium">Teacher Portal</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{teacherEmail || localStorage.getItem('userEmail') || 'Teacher'}</p>
-                <p className="text-xs text-gray-600">Welcome back!</p>
+                <p className="text-sm font-medium text-white">{teacherEmail || localStorage.getItem('userEmail') || 'Teacher'}</p>
+                <p className="text-xs text-white/80">Welcome back!</p>
               </div>
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm"
                 onClick={handleLogout}
-                className="border-purple-200 text-purple-800 hover:bg-purple-50 backdrop-blur-sm"
+                className="text-white/90 hover:bg-white/10 rounded-full border border-white/30 backdrop-blur-sm"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -1455,7 +1455,7 @@ const TeacherDashboard = () => {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Welcome Message */}
         <div className="mb-8">
-          <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent capitalize">
+          <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-blue-700 to-cyan-300 bg-clip-text text-transparent capitalize">
             Overview
           </h1>
           <p className="text-gray-600 text-responsive-sm font-medium mt-2">Manage your classes and track student progress with style</p>
@@ -1468,7 +1468,7 @@ const TeacherDashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Button
                     variant={dashboardSubTab === 'ai-classes' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'ai-classes' ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg' : 'border-pink-200 text-pink-800 hover:bg-pink-50'}
+                    className={dashboardSubTab === 'ai-classes' ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg' : 'border-pink-200 text-pink-800 hover:bg-pink-50'}
                     onClick={() => setDashboardSubTab('ai-classes')}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -1476,7 +1476,7 @@ const TeacherDashboard = () => {
                   </Button>
                   <Button
                     variant={dashboardSubTab === 'students' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'students' ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
+                    className={dashboardSubTab === 'students' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
                     onClick={() => setDashboardSubTab('students')}
                   >
                     <Users className="w-4 h-4 mr-2" />
@@ -1484,7 +1484,7 @@ const TeacherDashboard = () => {
                   </Button>
                   <Button
                     variant={dashboardSubTab === 'eduott' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'eduott' ? 'bg-gradient-to-r from-orange-400 to-pink-400 text-white shadow-lg' : 'border-orange-200 text-orange-800 hover:bg-orange-50'}
+                    className={dashboardSubTab === 'eduott' ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg' : 'border-orange-200 text-orange-800 hover:bg-orange-50'}
                     onClick={() => setDashboardSubTab('eduott')}
                   >
                     <VideoIcon className="w-4 h-4 mr-2" />
@@ -1499,7 +1499,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-pink-500 to-pink-600 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-pink-600 to-pink-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1521,7 +1521,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-emerald-400 to-teal-400 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1543,7 +1543,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-orange-400 to-pink-400 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-orange-600 to-orange-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1596,7 +1596,7 @@ const TeacherDashboard = () => {
                 className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20"
               >
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 bg-gradient-to-r from-pink-600 to-pink-700 rounded-xl flex items-center justify-center shadow-lg">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">Vidya AI</h3>
@@ -1672,7 +1672,7 @@ const TeacherDashboard = () => {
                 {vidyaAiTab === 'assistant' && (
                   <div className="bg-white rounded-2xl p-6 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
                         <GraduationCap className="w-5 h-5 text-white" />
                       </div>
                       <h4 className="text-xl font-bold text-gray-900">Teaching Assistant</h4>
@@ -1772,7 +1772,7 @@ const TeacherDashboard = () => {
                   <Button 
                     onClick={handleGenerateLessonPlan}
                     disabled={isGeneratingLessonPlan || !lessonPlanForm.subject || !lessonPlanForm.topic || !lessonPlanForm.gradeLevel}
-                    className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-6 py-2 rounded-xl disabled:opacity-50"
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-xl disabled:opacity-50"
                   >
                     {isGeneratingLessonPlan ? (
                       <>
@@ -1832,7 +1832,7 @@ const TeacherDashboard = () => {
                 {vidyaAiTab === 'grading' && (
                   <div className="bg-white rounded-2xl p-6 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-400 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
                         <FileTextIcon className="w-5 h-5 text-white" />
                       </div>
                       <h4 className="text-xl font-bold text-gray-900">Automated Grading Assistant</h4>
@@ -1974,7 +1974,7 @@ const TeacherDashboard = () => {
                 {vidyaAiTab === 'parent-comm' && (
                   <div className="bg-white rounded-2xl p-6 border border-gray-200">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-400 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
                         <MessageCircle className="w-5 h-5 text-white" />
                       </div>
                       <h4 className="text-xl font-bold text-gray-900">Parent Communication</h4>
@@ -1991,7 +1991,7 @@ const TeacherDashboard = () => {
                 {vidyaAiTab === 'quiz-generator' && (
                   <div className="bg-gradient-to-r from-pink-50 to-pink-100 rounded-2xl p-6">
                     <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
                         <FileText className="w-5 h-5 text-white" />
                       </div>
                       <h4 className="text-xl font-bold text-gray-900">AI Quiz Generator</h4>
@@ -2262,7 +2262,7 @@ const TeacherDashboard = () => {
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg">
                       <Users className="w-5 h-5 text-white" />
                     </div>
                     <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">My Classes</h3>
@@ -2479,7 +2479,7 @@ const TeacherDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <Button
                         variant={studentsSubTab === 'list' ? 'default' : 'outline'}
-                        className={studentsSubTab === 'list' ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
+                        className={studentsSubTab === 'list' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
                         onClick={() => setStudentsSubTab('list')}
                       >
                         <Users className="w-4 h-4 mr-2" />
@@ -2487,7 +2487,7 @@ const TeacherDashboard = () => {
                       </Button>
                       <Button
                         variant={studentsSubTab === 'track-progress' ? 'default' : 'outline'}
-                        className={studentsSubTab === 'track-progress' ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
+                        className={studentsSubTab === 'track-progress' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
                         onClick={() => setStudentsSubTab('track-progress')}
                       >
                         <BarChart3 className="w-4 h-4 mr-2" />
@@ -2495,7 +2495,7 @@ const TeacherDashboard = () => {
                       </Button>
                       <Button
                         variant={studentsSubTab === 'submissions' ? 'default' : 'outline'}
-                        className={studentsSubTab === 'submissions' ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
+                        className={studentsSubTab === 'submissions' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
                         onClick={() => setStudentsSubTab('submissions')}
                       >
                         <FileText className="w-4 h-4 mr-2" />
@@ -3033,7 +3033,7 @@ const TeacherDashboard = () => {
                                 className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20"
                               >
                                 <div className="flex items-center justify-between mb-4">
-                                  <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl">
+                                  <div className="p-3 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl">
                                     <TrendingUp className="w-6 h-6 text-white" />
                                   </div>
                                   <div className="text-right">
@@ -3236,7 +3236,7 @@ const TeacherDashboard = () => {
                           className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20"
                         >
                           <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl">
+                            <div className="p-3 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl">
                               <TrendingUp className="w-6 h-6 text-white" />
                             </div>
                             <div className="text-right">

@@ -46,7 +46,7 @@ export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdmi
         <div className="flex items-center space-x-3 mb-8">
           <GraduationCapIcon className="h-8 w-8 text-blue-600" />
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Asli Prep</h2>
+            <h2 className="text-lg font-bold text-gray-900">Aslilearn AI</h2>
             <p className="text-xs text-gray-500">Super Admin</p>
           </div>
         </div>

@@ -1744,24 +1744,77 @@ const TeacherDashboard = () => {
                         {lessonPlanForm.subject === 'Physics' && (
                           <>
                             <option value="Mechanics">Mechanics</option>
+                            <option value="Kinematics">Kinematics</option>
+                            <option value="Dynamics">Dynamics</option>
+                            <option value="Work, Energy and Power">Work, Energy and Power</option>
+                            <option value="Rotational Motion">Rotational Motion</option>
+                            <option value="Gravitation">Gravitation</option>
+                            <option value="Properties of Solids and Liquids">Properties of Solids and Liquids</option>
                             <option value="Thermodynamics">Thermodynamics</option>
-                            <option value="Electromagnetism">Electromagnetism</option>
+                            <option value="Kinetic Theory of Gases">Kinetic Theory of Gases</option>
+                            <option value="Oscillations and Waves">Oscillations and Waves</option>
+                            <option value="Electrostatics">Electrostatics</option>
+                            <option value="Current Electricity">Current Electricity</option>
+                            <option value="Magnetic Effects of Current">Magnetic Effects of Current</option>
+                            <option value="Electromagnetic Induction">Electromagnetic Induction</option>
+                            <option value="Alternating Current">Alternating Current</option>
+                            <option value="Electromagnetic Waves">Electromagnetic Waves</option>
                             <option value="Optics">Optics</option>
-                            <option value="Modern Physics">Modern Physics</option>
+                            <option value="Dual Nature of Matter and Radiation">Dual Nature of Matter and Radiation</option>
+                            <option value="Atoms and Nuclei">Atoms and Nuclei</option>
+                            <option value="Electronic Devices">Electronic Devices</option>
+                            <option value="Communication Systems">Communication Systems</option>
                           </>
                         )}
                         {lessonPlanForm.subject === 'Chemistry' && (
                           <>
-                            <option value="Physical Chemistry">Physical Chemistry</option>
-                            <option value="Inorganic Chemistry">Inorganic Chemistry</option>
-                            <option value="Organic Chemistry">Organic Chemistry</option>
+                            <option value="Some Basic Concepts of Chemistry">Some Basic Concepts of Chemistry</option>
+                            <option value="States of Matter">States of Matter</option>
+                            <option value="Atomic Structure">Atomic Structure</option>
+                            <option value="Chemical Bonding and Molecular Structure">Chemical Bonding and Molecular Structure</option>
+                            <option value="Thermodynamics">Thermodynamics</option>
+                            <option value="Chemical Equilibrium">Chemical Equilibrium</option>
+                            <option value="Ionic Equilibrium">Ionic Equilibrium</option>
+                            <option value="Redox Reactions">Redox Reactions</option>
+                            <option value="Electrochemistry">Electrochemistry</option>
+                            <option value="Chemical Kinetics">Chemical Kinetics</option>
+                            <option value="Surface Chemistry">Surface Chemistry</option>
+                            <option value="Classification of Elements and Periodicity">Classification of Elements and Periodicity</option>
+                            <option value="Hydrogen">Hydrogen</option>
+                            <option value="s-Block Elements">s-Block Elements</option>
+                            <option value="p-Block Elements">p-Block Elements</option>
+                            <option value="d and f Block Elements">d and f Block Elements</option>
+                            <option value="Coordination Compounds">Coordination Compounds</option>
+                            <option value="Environmental Chemistry">Environmental Chemistry</option>
+                            <option value="Purification and Characterisation of Organic Compounds">Purification and Characterisation of Organic Compounds</option>
+                            <option value="Some Basic Principles of Organic Chemistry">Some Basic Principles of Organic Chemistry</option>
+                            <option value="Hydrocarbons">Hydrocarbons</option>
+                            <option value="Organic Compounds Containing Halogens">Organic Compounds Containing Halogens</option>
+                            <option value="Organic Compounds Containing Oxygen">Organic Compounds Containing Oxygen</option>
+                            <option value="Organic Compounds Containing Nitrogen">Organic Compounds Containing Nitrogen</option>
+                            <option value="Biomolecules">Biomolecules</option>
+                            <option value="Polymers">Polymers</option>
+                            <option value="Chemistry in Everyday Life">Chemistry in Everyday Life</option>
                           </>
                         )}
                         {lessonPlanForm.subject === 'Mathematics' && (
                           <>
-                            <option value="Calculus">Calculus</option>
-                            <option value="Algebra">Algebra</option>
-                            <option value="Geometry">Geometry</option>
+                            <option value="Sets, Relations and Functions">Sets, Relations and Functions</option>
+                            <option value="Complex Numbers and Quadratic Equations">Complex Numbers and Quadratic Equations</option>
+                            <option value="Matrices and Determinants">Matrices and Determinants</option>
+                            <option value="Permutations and Combinations">Permutations and Combinations</option>
+                            <option value="Mathematical Induction">Mathematical Induction</option>
+                            <option value="Binomial Theorem">Binomial Theorem</option>
+                            <option value="Sequences and Series">Sequences and Series</option>
+                            <option value="Limit, Continuity and Differentiability">Limit, Continuity and Differentiability</option>
+                            <option value="Integral Calculus">Integral Calculus</option>
+                            <option value="Differential Equations">Differential Equations</option>
+                            <option value="Coordinate Geometry">Coordinate Geometry</option>
+                            <option value="Three Dimensional Geometry">Three Dimensional Geometry</option>
+                            <option value="Vector Algebra">Vector Algebra</option>
+                            <option value="Statistics and Probability">Statistics and Probability</option>
+                            <option value="Trigonometry">Trigonometry</option>
+                            <option value="Mathematical Reasoning">Mathematical Reasoning</option>
                           </>
                         )}
                       </select>

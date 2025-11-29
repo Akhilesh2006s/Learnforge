@@ -580,7 +580,7 @@ const AdminDashboard = () => {
                         window.location.href = '/signin';
                       }
                     }}
-                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30 backdrop-blur-sm"
+                    className="bg-white/20 text-white hover:bg-white/30 rounded-full border-2 border-white/50 backdrop-blur-sm font-semibold shadow-lg"
                   >
                     <LogOut className="w-4 h-4 mr-responsive" />
                     Logout

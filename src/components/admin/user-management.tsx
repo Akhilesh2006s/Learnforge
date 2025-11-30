@@ -26,7 +26,8 @@ import {
   Calendar,
   GraduationCap,
   BookOpen,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 interface Student {
   id: string;
@@ -50,6 +51,7 @@ const UserManagement = () => {
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
   const [deleteAllConfirmStep, setDeleteAllConfirmStep] = useState(1);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -208,22 +210,51 @@ const UserManagement = () => {
   };
 
   const handleCSVUpload = async (file: File) => {
+    if (isUploading) return; // Prevent multiple uploads
+    
+    setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     
     console.log('Uploading file:', file.name, file.size, 'bytes');
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Upload endpoint:', `${API_BASE_URL}/api/admin/users/upload`);
     
     try {
       const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('You are not authenticated. Please log in again.');
+        setIsUploading(false);
+        return;
+      }
+
+      // Test connection first
+      try {
+        const healthCheck = await fetch(`${API_BASE_URL}/api/health`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+        console.log('Health check response:', healthCheck.status);
+      } catch (healthError) {
+        console.warn('Health check failed, but continuing with upload:', healthError);
+      }
+
+      // Check if API_BASE_URL is accessible
+      console.log('Making request to:', `${API_BASE_URL}/api/admin/users/upload`);
+      
       const response = await fetch(`${API_BASE_URL}/api/admin/users/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser will set it with boundary
         },
         body: formData
       });
       
       console.log('Upload response status:', response.status);
+      console.log('Upload response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const result = await response.json();
@@ -247,7 +278,18 @@ const UserManagement = () => {
         
         alert(message);
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        let errorData;
+        try {
+          const text = await response.text();
+          console.log('Error response text:', text);
+          errorData = JSON.parse(text);
+        } catch (e) {
+          errorData = { 
+            message: `Server error (${response.status}): ${response.statusText}`,
+            hint: 'The server returned an error. Please check the console for details.'
+          };
+        }
+        
         const errorMessage = errorData.message || 'Unknown error';
         const errorHint = errorData.hint ? `\n\nHint: ${errorData.hint}` : '';
         const fullError = errorData.error ? `${errorMessage}\n\nError details: ${errorData.error}${errorHint}` : `${errorMessage}${errorHint}`;
@@ -255,8 +297,22 @@ const UserManagement = () => {
       }
     } catch (error) {
       console.error('Failed to upload CSV:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Network error';
-      alert(`Failed to upload CSV: ${errorMessage}\n\nPlease check:\n1. Your admin account has a board assigned\n2. The CSV file format is correct\n3. Your internet connection is stable`);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      let errorMessage = 'Network error';
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = `Cannot connect to server at ${API_BASE_URL}\n\nPlease check:\n1. The backend server is running\n2. The API_BASE_URL is correct\n3. CORS is properly configured`;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to upload CSV: ${errorMessage}\n\nPlease check:\n1. Your admin account has a board assigned\n2. The CSV file format is correct\n3. Your internet connection is stable\n4. The backend server is running at ${API_BASE_URL}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -632,15 +688,24 @@ const UserManagement = () => {
                     <Button 
                       type="button"
                       onClick={() => {
-                        if (selectedFile) {
+                        if (selectedFile && !isUploading) {
                           handleCSVUpload(selectedFile);
                         }
                       }}
-                      disabled={!selectedFile}
-                      className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
+                      disabled={!selectedFile || isUploading}
+                      className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white disabled:opacity-50"
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Students
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Students
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

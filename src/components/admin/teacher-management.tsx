@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,11 @@ import {
   GraduationCap,
   CheckCircle,
   XCircle,
-  Filter
+  Filter,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  Loader2
 } from 'lucide-react';
 
 interface Teacher {
@@ -68,6 +72,10 @@ const TeacherManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isAssignClassDialogOpen, setIsAssignClassDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [assigningTeacher, setAssigningTeacher] = useState<Teacher | null>(null);
   const [assigningClassTeacher, setAssigningClassTeacher] = useState<Teacher | null>(null);
@@ -390,6 +398,109 @@ const TeacherManagement = () => {
         alert('Failed to delete teacher. Please try again.');
       }
     }
+  };
+
+  const handleCSVUpload = async (file: File) => {
+    if (isUploading) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    console.log('Uploading teacher CSV file:', file.name, file.size, 'bytes');
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Upload endpoint:', `${API_BASE_URL}/api/admin/teachers/upload`);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('You are not authenticated. Please log in again.');
+        setIsUploading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/teachers/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      });
+      
+      console.log('Upload response status:', response.status);
+
+      if (response.ok) {
+        const result = await response.json();
+        setIsUploadDialogOpen(false);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        fetchTeachers();
+        
+        let message = `CSV uploaded successfully!\nCreated ${result.createdTeachers?.length || 0} teachers.\nDefault password: Password123`;
+        
+        if (result.errors && result.errors.length > 0) {
+          message += `\n\nErrors:\n${result.errors.slice(0, 10).join('\n')}`;
+          if (result.errors.length > 10) {
+            message += `\n... and ${result.errors.length - 10} more errors`;
+          }
+        }
+        
+        alert(message);
+      } else {
+        let errorData;
+        try {
+          const text = await response.text();
+          console.log('Error response text:', text);
+          errorData = JSON.parse(text);
+        } catch (e) {
+          errorData = { 
+            message: `Server error (${response.status}): ${response.statusText}`,
+            hint: 'The server returned an error. Please check the console for details.'
+          };
+        }
+        
+        const errorMessage = errorData.message || 'Unknown error';
+        const errorHint = errorData.hint ? `\n\nHint: ${errorData.hint}` : '';
+        const fullError = errorData.error ? `${errorMessage}\n\nError details: ${errorData.error}${errorHint}` : `${errorMessage}${errorHint}`;
+        alert(`Failed to upload CSV: ${fullError}`);
+      }
+    } catch (error) {
+      console.error('Failed to upload CSV:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      let errorMessage = 'Network error';
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = `Cannot connect to server at ${API_BASE_URL}\n\nPlease check:\n1. The backend server is running\n2. The API_BASE_URL is correct\n3. CORS is properly configured`;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to upload CSV: ${errorMessage}\n\nPlease check:\n1. Your admin account has a board assigned\n2. The CSV file format is correct\n3. Your internet connection is stable\n4. The backend server is running at ${API_BASE_URL}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csvContent = `name,email,phone,department,qualifications,subjects
+John Doe,john.doe@school.edu,+1234567890,Mathematics,PhD in Mathematics,Mathematics,Physics
+Jane Smith,jane.smith@school.edu,+1234567891,Science,MSc in Chemistry,Chemistry,Biology`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'teacher_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleAssignClasses = async (teacherId: string, classIds: string[]) => {
@@ -774,13 +885,123 @@ const TeacherManagement = () => {
             </Button>
           </div>
           
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl px-8 py-3 shadow-xl hover:shadow-2xl transition-all duration-300">
-                <Plus className="w-5 h-5 mr-2" />
-                Add Teacher
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-3">
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50 rounded-xl">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload CSV
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md bg-white/95 border-purple-200 backdrop-blur-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Upload Teachers CSV
+                  </DialogTitle>
+                  <DialogDescription className="text-gray-600 text-sm">
+                    Upload a CSV file to bulk import teachers. Download the template for the correct format.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <FileSpreadsheet className="w-8 h-8 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">CSV Template</p>
+                        <p className="text-sm text-gray-600">Download the template file</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={downloadTemplate}
+                      className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                  <div>
+                    <Label htmlFor="csv-file" className="text-gray-700 font-medium mb-2 block">
+                      Select CSV File
+                    </Label>
+                    <Input
+                      id="csv-file"
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedFile(file);
+                        }
+                      }}
+                      className="border-purple-200 focus:border-purple-400 rounded-xl"
+                    />
+                    {selectedFile && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          <FileSpreadsheet className="w-4 h-4 inline mr-2" />
+                          {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-xs text-blue-800">
+                      <strong>Required columns:</strong> name, email<br />
+                      <strong>Optional columns:</strong> phone, department, qualifications, subjects (comma-separated)<br />
+                      <strong>Note:</strong> Subjects must exist in the system before uploading. Default password: Password123
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsUploadDialogOpen(false);
+                      setSelectedFile(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    className="rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (selectedFile && !isUploading) {
+                        handleCSVUpload(selectedFile);
+                      }
+                    }}
+                    disabled={!selectedFile || isUploading}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white disabled:opacity-50 rounded-xl"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Teachers
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl px-8 py-3 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Teacher
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] bg-white/95 border-purple-200 backdrop-blur-xl flex flex-col">
               <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Add New Teacher</DialogTitle>
@@ -947,6 +1168,7 @@ const TeacherManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Teachers Grid */}

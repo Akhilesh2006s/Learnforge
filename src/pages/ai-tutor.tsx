@@ -27,6 +27,8 @@ const MOCK_USER_ID = "user-1";
 export default function AITutor() {
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [subjectProgress, setSubjectProgress] = useState<any[]>([]);
   const isMobile = useIsMobile();
 
   // Fetch user data
@@ -38,8 +40,7 @@ export default function AITutor() {
           console.log('No auth token found, using mock data');
           setUser({ 
             fullName: "Student", 
-            email: "student@example.com", 
-            educationStream: "JEE" 
+            email: "student@example.com"
           });
           setIsLoadingUser(false);
           return;
@@ -54,21 +55,20 @@ export default function AITutor() {
         
         if (response.ok) {
           const userData = await response.json();
+          console.log('User data fetched:', userData.user);
           setUser(userData.user);
         } else {
           console.log('Auth check failed, using mock data');
           setUser({ 
             fullName: "Student", 
-            email: "student@example.com", 
-            educationStream: "JEE" 
+            email: "student@example.com"
           });
         }
       } catch (error) {
         console.error('Failed to fetch user:', error);
         setUser({ 
           fullName: "Student", 
-          email: "student@example.com", 
-          educationStream: "JEE" 
+          email: "student@example.com"
         });
       } finally {
         setIsLoadingUser(false);
@@ -78,9 +78,105 @@ export default function AITutor() {
     fetchUser();
   }, []);
 
+  // Fetch subjects
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/api/student/subjects`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const subjectsData = data.data || data || [];
+          setSubjects(subjectsData);
+          console.log('Subjects fetched:', subjectsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subjects:', error);
+      }
+    };
+
+    if (user) {
+      fetchSubjects();
+    }
+  }, [user]);
+
+  // Fetch subject progress (from exam results)
+  useEffect(() => {
+    const fetchSubjectProgress = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const [resultsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/student/exam-results`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        ]);
+
+        if (resultsRes.ok) {
+          const resultsData = await resultsRes.json();
+          const results = resultsData.data || resultsData || [];
+          
+          // Extract unique subjects from exam results
+          const subjectMap = new Map();
+          results.forEach((result: any) => {
+            if (result.subjectWiseScore && typeof result.subjectWiseScore === 'object') {
+              Object.keys(result.subjectWiseScore).forEach((subject) => {
+                if (!subjectMap.has(subject)) {
+                  subjectMap.set(subject, { name: subject, id: subject });
+                }
+              });
+            }
+          });
+          
+          const progressArray = Array.from(subjectMap.values());
+          setSubjectProgress(progressArray);
+          console.log('Subject progress fetched:', progressArray);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subject progress:', error);
+      }
+    };
+
+    if (user) {
+      fetchSubjectProgress();
+    }
+  }, [user]);
+
+  const userId = user?._id || user?.id || MOCK_USER_ID;
+
   // Fetch user's chat sessions
   const { data: chatSessions = [], isLoading: sessionsLoading } = useQuery<any[]>({
-    queryKey: ["/api/users", MOCK_USER_ID, "chat-sessions"],
+    queryKey: ["/api/users", userId, "chat-sessions"],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return [];
+      
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/chat-sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || data || [];
+      }
+      return [];
+    },
+    enabled: !!userId && !!user, // Only fetch when user is loaded
   });
 
   // Removed problematic dashboard query that was causing 404 errors
@@ -194,8 +290,8 @@ export default function AITutor() {
                 Welcome, {user.fullName?.split(' ')[0] || 'Student'}!
               </h2>
               <p className="text-gray-700 text-responsive-sm">
-                I'm here to help you with your {user.educationStream} preparation. 
-                Ask me anything about your studies!
+                I'm here to help you with your studies. 
+                Ask me anything about your subjects!
               </p>
             </div>
           )}
@@ -205,14 +301,57 @@ export default function AITutor() {
           
           {/* Main Chat Interface */}
           <div className="lg:col-span-2">
-            <AIChat 
-              userId={MOCK_USER_ID}
-              className="h-[600px]"
-              context={{
-                studentName: user?.fullName || "Student",
-                currentSubject: user?.educationStream || "General Preparation"
-              }}
-            />
+            {(() => {
+              // Determine the current subject from available data
+              const getCurrentSubject = () => {
+                // Try subjectProgress first (most accurate - from exam results)
+                if (subjectProgress && subjectProgress.length > 0) {
+                  console.log('Using subject from subjectProgress:', subjectProgress[0].name);
+                  return subjectProgress[0].name;
+                }
+                
+                // Try subjects array (from API)
+                if (subjects && subjects.length > 0) {
+                  const firstSubject = subjects[0];
+                  const subjectName = typeof firstSubject === 'object' ? firstSubject.name : firstSubject;
+                  console.log('Using subject from subjects array:', subjectName);
+                  return subjectName;
+                }
+                
+                // Try user's assignedSubjects
+                if (user?.assignedSubjects && user.assignedSubjects.length > 0) {
+                  const firstSubject = user.assignedSubjects[0];
+                  const subjectName = typeof firstSubject === 'object' ? firstSubject.name : firstSubject;
+                  console.log('Using subject from assignedSubjects:', subjectName);
+                  return subjectName;
+                }
+                
+                // Try assignedClass subjects
+                if (user?.assignedClass?.assignedSubjects && user.assignedClass.assignedSubjects.length > 0) {
+                  const firstSubject = user.assignedClass.assignedSubjects[0];
+                  const subjectName = typeof firstSubject === 'object' ? firstSubject.name : firstSubject;
+                  console.log('Using subject from assignedClass:', subjectName);
+                  return subjectName;
+                }
+                
+                console.log('No subject found, using default: General Preparation');
+                return 'General Preparation';
+              };
+              
+              const currentSubject = getCurrentSubject();
+              
+              return (
+                <AIChat 
+                  userId={userId}
+                  className="h-[600px]"
+                  context={{
+                    studentName: user?.fullName || user?.email?.split('@')[0] || "Student",
+                    currentSubject: currentSubject,
+                    currentTopic: undefined
+                  }}
+                />
+              );
+            })()}
           </div>
 
           {/* Sidebar */}

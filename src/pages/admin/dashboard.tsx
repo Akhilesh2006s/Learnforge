@@ -535,7 +535,7 @@ const AdminDashboard = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col relative z-10">
           {/* Top Header - Student Dashboard Theme */}
-          <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl px-responsive py-6 relative z-10">
+          <div className="bg-gradient-to-r from-blue-900 to-blue-950 text-white shadow-xl border-b-0 rounded-b-3xl px-responsive py-6 relative z-10">
             <div className="flex-responsive-col items-center sm:items-start justify-between space-y-responsive sm:space-y-0">
               <div className="text-center sm:text-left">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/80 mb-2">Admin Control Center</p>

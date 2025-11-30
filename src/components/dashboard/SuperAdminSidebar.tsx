@@ -12,11 +12,14 @@ import {
   UploadIcon,
   FileTextIcon,
   TrophyIcon,
-  Sparkles
+  Sparkles,
+  CircleDot,
+  Shield,
+  Users2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'vidya-ai';
+export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'vidya-ai' | 'courses' | 'add-admin';
 
 interface SuperAdminSidebarProps {
   currentView: SuperAdminView;
@@ -27,14 +30,15 @@ interface SuperAdminSidebarProps {
 export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdminSidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3Icon },
-    { id: 'admins', label: 'School Management', icon: CrownIcon },
-    { id: 'subjects', label: 'Subject Management', icon: BookIcon },
+    { id: 'board', label: 'Board Management', icon: Users2 },
+    { id: 'admins', label: 'School Management', icon: Shield },
+    { id: 'subjects', label: 'Subject Management', icon: FileTextIcon },
     { id: 'content', label: 'Content Management', icon: UploadIcon },
     { id: 'exams', label: 'Exam Management', icon: FileTextIcon },
     { id: 'iq-rank-boost', label: 'IQ/Rank Boost Activities', icon: TrophyIcon },
     { id: 'vidya-ai', label: 'Vidya AI', icon: Sparkles },
     { id: 'analytics', label: 'Analytics', icon: BarChartIcon },
-    { id: 'board-comparison', label: 'Board Comparison', icon: BarChartIcon },
+    { id: 'board-comparison', label: 'Board Comparison', icon: BarChart3Icon },
     { id: 'ai-analytics', label: 'AI Analytics', icon: BrainCircuitIcon },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
@@ -51,25 +55,24 @@ export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdmi
           </div>
         </div>
         
-        <nav className="space-y-2">
+        <nav className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
             
             return (
-              <Button
+              <button
                 key={item.id}
-                variant={isActive ? "default" : "ghost"}
-                className={`w-full justify-start ${
+                onClick={() => onViewChange(item.id as SuperAdminView)}
+                className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   isActive 
-                    ? "bg-blue-100 text-blue-900 border-blue-200" 
+                    ? "bg-blue-600 text-white" 
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
-                onClick={() => onViewChange(item.id as SuperAdminView)}
               >
-                <Icon className="mr-3 h-4 w-4" />
-                {item.label}
-              </Button>
+                <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </button>
             );
           })}
         </nav>

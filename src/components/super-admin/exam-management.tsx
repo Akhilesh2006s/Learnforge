@@ -45,10 +45,7 @@ interface Exam {
 }
 
 const BOARDS = [
-  { value: 'CBSE_AP', label: 'CBSE AP' },
-  { value: 'CBSE_TS', label: 'CBSE TS' },
-  { value: 'STATE_AP', label: 'State AP' },
-  { value: 'STATE_TS', label: 'State TS' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'ASLI EXCLUSIVE SCHOOLS' }
 ];
 
 const EXAM_TYPES = [
@@ -58,14 +55,13 @@ const EXAM_TYPES = [
   { value: 'practice', label: 'Practice' }
 ];
 
-type FilterType = 'all-boards' | 'specific-boards' | 'specific-schools';
+type FilterType = 'all-schools' | 'specific-schools';
 
 export default function ExamManagement() {
   const { toast } = useToast();
   const [exams, setExams] = useState<Exam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterType, setFilterType] = useState<FilterType>('all-boards');
-  const [selectedBoard, setSelectedBoard] = useState<string>('all');
+  const [filterType, setFilterType] = useState<FilterType>('all-schools');
   const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
   const [isLoadingSchools, setIsLoadingSchools] = useState(false);
@@ -93,8 +89,8 @@ export default function ExamManagement() {
     title: '',
     description: '',
     examType: 'mains' as 'mains' | 'advanced' | 'weekend' | 'practice',
-    board: 'CBSE_AP',
-    filterType: 'all-boards' as FilterType,
+    board: 'ASLI_EXCLUSIVE_SCHOOLS',
+    filterType: 'all-schools' as FilterType,
     selectedSchools: [] as string[],
     duration: '',
     totalQuestions: '',
@@ -106,7 +102,7 @@ export default function ExamManagement() {
 
   useEffect(() => {
     fetchExams();
-  }, [selectedBoard, filterType, selectedSchools]);
+  }, [filterType, selectedSchools]);
 
   useEffect(() => {
     if (filterType === 'specific-schools') {
@@ -319,9 +315,7 @@ export default function ExamManagement() {
       
       // Add query parameters based on filter type
       const params = new URLSearchParams();
-      if (filterType === 'specific-boards' && selectedBoard !== 'all') {
-        params.append('board', selectedBoard);
-      } else if (filterType === 'specific-schools' && selectedSchools.length > 0) {
+      if (filterType === 'specific-schools' && selectedSchools.length > 0) {
         params.append('schoolIds', selectedSchools.join(','));
       }
       
@@ -426,12 +420,11 @@ export default function ExamManagement() {
         payload.targetSchools = formData.selectedSchools;
         payload.isSchoolSpecific = true;
         payload.isAllBoards = false;
-      } else if (formData.filterType === 'specific-boards') {
-        payload.isBoardSpecific = true;
-        payload.isAllBoards = false;
-      } else if (formData.filterType === 'all-boards') {
+      } else if (formData.filterType === 'all-schools') {
+        // All schools can see this exam
+        payload.isSchoolSpecific = false;
         payload.isAllBoards = true;
-        payload.isBoardSpecific = false;
+        payload.targetSchools = [];
       }
 
       const response = await fetch(`${API_BASE_URL}/api/super-admin/exams`, {
@@ -455,8 +448,8 @@ export default function ExamManagement() {
           title: '',
           description: '',
           examType: 'mains',
-          board: 'CBSE_AP',
-          filterType: 'all-boards',
+          board: 'ASLI_EXCLUSIVE_SCHOOLS',
+          filterType: 'all-schools',
           selectedSchools: [],
           duration: '',
           totalQuestions: '',
@@ -537,22 +530,20 @@ export default function ExamManagement() {
 
   const getBoardBadgeColor = (board: string) => {
     switch (board) {
-      case 'CBSE_AP': return 'bg-red-100 text-red-800';
-      case 'CBSE_TS': return 'bg-blue-100 text-blue-800';
-      case 'STATE_AP': return 'bg-yellow-100 text-yellow-800';
-      case 'STATE_TS': return 'bg-green-100 text-green-800';
+      case 'ASLI_EXCLUSIVE_SCHOOLS': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const filteredExams = (() => {
-    if (filterType === 'all-boards') {
+    if (filterType === 'all-schools') {
       return exams;
-    } else if (filterType === 'specific-boards' && selectedBoard !== 'all') {
-      return exams.filter(exam => exam.board === selectedBoard);
     } else if (filterType === 'specific-schools' && selectedSchools.length > 0) {
       return exams.filter(exam => 
-        exam.targetSchools && exam.targetSchools.some((schoolId: string) => selectedSchools.includes(schoolId))
+        exam.targetSchools && exam.targetSchools.some((school: any) => {
+          const schoolId = typeof school === 'string' ? school : school._id;
+          return selectedSchools.includes(schoolId);
+        })
       );
     }
     return exams;
@@ -563,7 +554,7 @@ export default function ExamManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Exam Management</h2>
-          <p className="text-gray-600 mt-1">Create and manage exams for all boards</p>
+          <p className="text-gray-600 mt-1">Create and manage exams</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -576,7 +567,7 @@ export default function ExamManagement() {
             <DialogHeader>
               <DialogTitle>Create New Exam</DialogTitle>
               <DialogDescription>
-                Create a new exam for students. Exams can be Mains, Advanced, Weekend, or Practice type.
+                Create a new exam for students. You can make it available to all schools or specific schools only. Exams can be Mains, Advanced, Weekend, or Practice type.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -618,33 +609,11 @@ export default function ExamManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all-boards">All Boards (All schools can see)</SelectItem>
-                    <SelectItem value="specific-boards">Specific Board (All schools in that board)</SelectItem>
+                    <SelectItem value="all-schools">All Schools (All schools can see)</SelectItem>
                     <SelectItem value="specific-schools">Specific Schools (Only selected schools)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              {formData.filterType === 'specific-boards' && (
-                <div>
-                  <Label htmlFor="board">Board *</Label>
-                  <Select
-                    value={formData.board}
-                    onValueChange={(value) => setFormData({ ...formData, board: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BOARDS.map((board) => (
-                        <SelectItem key={board.value} value={board.value}>
-                          {board.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
               {formData.filterType === 'specific-schools' && (
                 <div>
@@ -678,7 +647,7 @@ export default function ExamManagement() {
                               className="rounded"
                             />
                             <Label htmlFor={`school-${school.id}`} className="text-sm cursor-pointer">
-                              {school.name} ({BOARDS.find(b => b.value === school.board)?.label || school.board})
+                              {school.name} (ASLI EXCLUSIVE SCHOOLS)
                             </Label>
                           </div>
                         ))
@@ -691,27 +660,6 @@ export default function ExamManagement() {
                 </div>
               )}
 
-              {formData.filterType === 'all-boards' && (
-                <div>
-                  <Label htmlFor="board">Board (for categorization) *</Label>
-                  <Select
-                    value={formData.board}
-                    onValueChange={(value) => setFormData({ ...formData, board: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BOARDS.map((board) => (
-                        <SelectItem key={board.value} value={board.value}>
-                          {board.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">This is for categorization. All schools will see this exam.</p>
-                </div>
-              )}
 
               <div>
                 <Label htmlFor="examType">Exam Type *</Label>
@@ -809,14 +757,9 @@ export default function ExamManagement() {
       <div className="flex items-center gap-4 flex-wrap">
         <Select value={filterType} onValueChange={(value: FilterType) => {
           setFilterType(value);
-          if (value === 'all-boards') {
-            setSelectedBoard('all');
-            setSelectedSchools([]);
-          } else if (value === 'specific-boards') {
-            setSelectedBoard('CBSE_AP');
+          if (value === 'all-schools') {
             setSelectedSchools([]);
           } else if (value === 'specific-schools') {
-            setSelectedBoard('all');
             setSelectedSchools([]);
           }
         }}>
@@ -824,26 +767,10 @@ export default function ExamManagement() {
             <SelectValue placeholder="Filter Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all-boards">All Boards</SelectItem>
-            <SelectItem value="specific-boards">Specific Boards</SelectItem>
+            <SelectItem value="all-schools">All Schools</SelectItem>
             <SelectItem value="specific-schools">Specific Schools</SelectItem>
           </SelectContent>
         </Select>
-
-        {filterType === 'specific-boards' && (
-        <Select value={selectedBoard} onValueChange={setSelectedBoard}>
-          <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select Board" />
-          </SelectTrigger>
-          <SelectContent>
-            {BOARDS.map((board) => (
-              <SelectItem key={board.value} value={board.value}>
-                {board.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        )}
 
         {filterType === 'specific-schools' && (
           <div className="flex items-center gap-2">
@@ -900,7 +827,7 @@ export default function ExamManagement() {
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">No exams found</p>
             <p className="text-sm text-gray-400 mt-2">
-              {selectedBoard === 'all' ? 'Create your first exam to get started' : `No exams found for ${BOARDS.find(b => b.value === selectedBoard)?.label}`}
+              Create your first exam to get started
             </p>
           </CardContent>
         </Card>
@@ -917,7 +844,7 @@ export default function ExamManagement() {
                         {EXAM_TYPES.find(t => t.value === exam.examType)?.label}
                       </Badge>
                       <Badge className={getBoardBadgeColor(exam.board)}>
-                        {BOARDS.find(b => b.value === exam.board)?.label}
+                        ASLI EXCLUSIVE SCHOOLS
                       </Badge>
                       {!exam.isActive && (
                         <Badge variant="outline">Inactive</Badge>

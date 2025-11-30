@@ -23,15 +23,12 @@ interface Subject {
 }
 
 const BOARDS = [
-  { value: 'CBSE_AP', label: 'CBSE AP' },
-  { value: 'CBSE_TS', label: 'CBSE TS' },
-  { value: 'STATE_AP', label: 'State AP' },
-  { value: 'STATE_TS', label: 'State TS' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'ASLI EXCLUSIVE SCHOOLS' }
 ];
 
 export default function SubjectManagement() {
   const { toast } = useToast();
-  const [selectedBoard, setSelectedBoard] = useState<string>('CBSE_AP');
+  const [selectedBoard, setSelectedBoard] = useState<string>('ASLI_EXCLUSIVE_SCHOOLS');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -41,7 +38,7 @@ export default function SubjectManagement() {
     name: '',
     code: '',
     description: '',
-    board: 'CBSE_AP'
+    board: 'ASLI_EXCLUSIVE_SCHOOLS'
   });
 
   useEffect(() => {
@@ -181,6 +178,7 @@ export default function SubjectManagement() {
     }
   };
 
+
   const handleDelete = async (subjectId: string) => {
     if (!confirm('Are you sure you want to delete this subject? This will also delete all associated content.')) return;
 
@@ -228,13 +226,15 @@ export default function SubjectManagement() {
           <h2 className="text-3xl font-bold text-gray-900">Subject Management</h2>
           <p className="text-gray-600 mt-1">Create and manage subjects for each board</p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Subject
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Subject
+          </Button>
+        </div>
       </div>
 
       {/* Board Selector */}
@@ -319,7 +319,7 @@ export default function SubjectManagement() {
                 <div className={`flex items-center justify-between text-sm ${subject.classNumber ? 'mt-2' : ''}`}>
                   <span className="text-gray-600">Board:</span>
                   <Badge className="bg-purple-100 text-purple-700">
-                    {BOARDS.find(b => b.value === subject.board)?.label || subject.board}
+                    ASLI EXCLUSIVE SCHOOLS
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-2">

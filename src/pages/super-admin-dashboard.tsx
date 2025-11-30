@@ -13,7 +13,8 @@ import AIChat from "@/components/ai-chat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BellIcon, LogOutIcon, UsersIcon, TrendingUpIcon, BookIcon, Presentation, UserPlusIcon, BookPlusIcon, SettingsIcon, DownloadIcon, HomeIcon, CrownIcon, BarChart3Icon, CreditCardIcon, ArrowUpRightIcon, ArrowDownRightIcon, StarIcon, TargetIcon, BrainIcon, ZapIcon, AlertTriangleIcon, TrendingDownIcon, RefreshCw, Sparkles, MessageSquare, Clock } from "lucide-react";
+import { BellIcon, LogOutIcon, UsersIcon, TrendingUpIcon, BookIcon, Presentation, UserPlusIcon, BookPlusIcon, SettingsIcon, DownloadIcon, HomeIcon, CrownIcon, BarChart3Icon, CreditCardIcon, ArrowUpRightIcon, ArrowDownRightIcon, StarIcon, TargetIcon, BrainIcon, ZapIcon, AlertTriangleIcon, TrendingDownIcon, RefreshCw, Sparkles, MessageSquare, Clock, Plus, Monitor, Grid3x3, FileText, FileTextIcon, Shield, Search, Camera, PieChart, User, Download, Circle, Square, Bot, Users2, UploadIcon, TrophyIcon, BarChartIcon, BrainCircuitIcon } from "lucide-react";
+import { LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api-config";
 import { InteractiveBackground, FloatingParticles } from "@/components/background/InteractiveBackground";
@@ -147,13 +148,6 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    // Clear localStorage for Super Admin logout
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    window.location.href = "/";
-  };
-
   const fetchBoardDashboard = async (boardCode: string, showToast = true) => {
     setIsLoadingBoard(true);
     try {
@@ -212,286 +206,238 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  // Sample data for charts
+  const totalStudentsData = [
+    { name: 'Jan', value: 4200 },
+    { name: 'Feb', value: 4500 },
+    { name: 'Mar', value: 4800 },
+    { name: 'Apr', value: 5000 },
+    { name: 'May', value: 5230 },
+  ];
+
+  const passRateData = [
+    { name: 'Jan', value: 75 },
+    { name: 'Feb', value: 78 },
+    { name: 'Mar', value: 80 },
+    { name: 'Apr', value: 82 },
+    { name: 'May', value: 80 },
+  ];
+
+  const coursesPerBoardData = [
+    { name: 'ASLI EXCLUSIVE SCHOOLS', value: 100, color: '#8B5CF6' },
+  ];
+
+  const studentsPerAdminData = [
+    { name: 'Week 1', admin1: 200, admin2: 150 },
+    { name: 'Week 2', admin1: 250, admin2: 180 },
+    { name: 'Week 3', admin1: 300, admin2: 200 },
+    { name: 'Week 4', admin1: 350, admin2: 220 },
+  ];
+
+  // Icon grid using EXACT same icons as sidebar in same order
+  const iconGridIcons = [
+    { Icon: BarChart3Icon, view: 'dashboard', label: 'Dashboard' },
+    { Icon: Users2, view: 'board', label: 'Board Management' },
+    { Icon: Shield, view: 'admins', label: 'School Management' },
+    { Icon: FileTextIcon, view: 'subjects', label: 'Subject Management' },
+    { Icon: UploadIcon, view: 'content', label: 'Content Management' },
+    { Icon: FileTextIcon, view: 'exams', label: 'Exam Management' },
+    { Icon: TrophyIcon, view: 'iq-rank-boost', label: 'IQ/Rank Boost Activities' },
+    { Icon: Sparkles, view: 'vidya-ai', label: 'Vidya AI' },
+    { Icon: BarChartIcon, view: 'analytics', label: 'Analytics' },
+    { Icon: BarChart3Icon, view: 'board-comparison', label: 'Board Comparison' },
+    { Icon: BrainCircuitIcon, view: 'ai-analytics', label: 'AI Analytics' },
+    { Icon: CreditCardIcon, view: 'subscriptions', label: 'Subscriptions' },
+    { Icon: SettingsIcon, view: 'settings', label: 'Settings' },
+    { Icon: Shield, view: 'admins', label: 'School Management' },
+    { Icon: Sparkles, view: 'vidya-ai', label: 'Vidya AI' }
+  ];
+
   const renderDashboardContent = () => {
     if (selectedBoard && currentView === 'board') {
       return renderBoardDashboard();
     }
 
     return (
-    <div className="space-y-8 min-h-screen relative z-10">
-      {/* Board Selection - 4 Boxes */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Board Management</h2>
-          <p className="text-gray-600">Select a board to manage content, exams, and analytics</p>
+    <div className="flex gap-6 min-h-screen relative z-10">
+      {/* Main Content Area */}
+      <div className="flex-1 space-y-6">
+        {/* Welcome Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, Super Admin</h1>
+            <p className="text-gray-600">Manage boards, schools, exams and AI analytic tau at one place.</p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <LogOutIcon className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* CBSE AP Box */}
-          <Card 
-            className="bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 cursor-pointer transition-all duration-300 shadow-xl border-0"
-            onClick={() => fetchBoardDashboard('CBSE_AP')}
-          >
-            <CardContent className="p-8">
+        {/* Board Management Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">Board Management</h2>
+          <div className="grid grid-cols-1 gap-4">
+            {/* ASLI EXCLUSIVE SCHOOLS */}
+            <Card className="bg-gradient-to-r from-blue-800 to-blue-900 text-white border-0 cursor-pointer hover:from-blue-900 hover:to-blue-950 transition-colors shadow-lg" onClick={() => fetchBoardDashboard('ASLI_EXCLUSIVE_SCHOOLS')}>
+              <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">CBSE AP</h3>
-                  <p className="text-pink-100">CBSE Board - Andhra Pradesh</p>
-                  <p className="text-white/80 text-sm mt-4">Click to manage content, exams, and view analytics</p>
+                    <h3 className="text-2xl font-bold mb-1">ASLI EXCLUSIVE SCHOOLS</h3>
+                    <p className="text-blue-100 text-sm">All Boards Content - Unified Platform</p>
                 </div>
-                <BookIcon className="h-16 w-16 text-white/80" />
+                  <Users2 className="h-16 w-16 text-white/80" />
               </div>
-              {isLoadingBoard && selectedBoard === 'CBSE_AP' && (
-                <div className="mt-4 text-white">Loading...</div>
-              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Content Management & AI Analytics Boxes */}
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          {/* Content Management - Pink */}
+          <Card 
+            className="bg-gradient-to-br from-pink-600 to-pink-700 text-white border-0 cursor-pointer hover:from-pink-700 hover:to-pink-800 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentView('content')}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">Content Management</h3>
+                  <p className="text-pink-100 text-sm">Manage videos, notes & materials</p>
+                </div>
+                <UploadIcon className="h-12 w-12 text-white/80" />
+              </div>
             </CardContent>
           </Card>
 
-          {/* CBSE TS Box */}
+          {/* AI Analytics - Dark Green */}
           <Card 
-            className="bg-gradient-to-br from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 cursor-pointer transition-all duration-300 shadow-xl border-0"
-            onClick={() => fetchBoardDashboard('CBSE_TS')}
+            className="bg-gradient-to-br from-green-700 to-green-800 text-white border-0 cursor-pointer hover:from-green-800 hover:to-green-900 transition-all duration-300 shadow-lg"
+            onClick={() => setCurrentView('ai-analytics')}
           >
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">CBSE TS</h3>
-                  <p className="text-emerald-50">CBSE Board - Telangana State</p>
-                  <p className="text-white/80 text-sm mt-4">Click to manage content, exams, and view analytics</p>
+                  <h3 className="text-xl font-bold mb-1">AI Analytics</h3>
+                  <p className="text-green-100 text-sm">Advanced ML insights</p>
                 </div>
-                <BookIcon className="h-16 w-16 text-white/80" />
+                <BrainCircuitIcon className="h-12 w-12 text-white/80" />
               </div>
-              {isLoadingBoard && selectedBoard === 'CBSE_TS' && (
-                <div className="mt-4 text-white">Loading...</div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* State AP Box */}
-          <Card 
-            className="bg-gradient-to-br from-orange-400 to-pink-400 hover:from-orange-500 hover:to-pink-500 cursor-pointer transition-all duration-300 shadow-xl border-0"
-            onClick={() => fetchBoardDashboard('STATE_AP')}
-          >
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">State AP</h3>
-                  <p className="text-orange-50">State Board - Andhra Pradesh</p>
-                  <p className="text-white/80 text-sm mt-4">Click to manage content, exams, and view analytics</p>
-                </div>
-                <BookIcon className="h-16 w-16 text-white/80" />
-              </div>
-              {isLoadingBoard && selectedBoard === 'STATE_AP' && (
-                <div className="mt-4 text-white">Loading...</div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* State TS Box */}
-          <Card 
-            className="bg-gradient-to-br from-sky-400 to-blue-400 hover:from-sky-500 hover:to-blue-500 cursor-pointer transition-all duration-300 shadow-xl border-0"
-            onClick={() => fetchBoardDashboard('STATE_TS')}
-          >
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">State TS</h3>
-                  <p className="text-sky-50">State Board - Telangana State</p>
-                  <p className="text-white/80 text-sm mt-4">Click to manage content, exams, and view analytics</p>
-                </div>
-                <BookIcon className="h-16 w-16 text-white/80" />
-              </div>
-              {isLoadingBoard && selectedBoard === 'STATE_TS' && (
-                <div className="mt-4 text-white">Loading...</div>
-              )}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Beautiful Super Admin Dashboard - Enhanced Version */}
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400 shadow-xl">
+        {/* Widgets Row */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Total Students Widget */}
+          <Card className="bg-white">
+          <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+              <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Students</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {isLoadingStats ? '...' : (stats.totalStudents || 5230).toLocaleString().replace(/\s/g, ' ')}
+                  </p>
+              </div>
+                <div className="w-16 h-12">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={totalStudentsData}>
+                      <Area type="monotone" dataKey="value" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+            </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 80% Pass rate Widget */}
+          <Card className="bg-white">
+          <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+              <div>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">80%</p>
+                  <p className="text-sm text-gray-600">Pass rate data</p>
+              </div>
+                <div className="w-16 h-12">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={passRateData}>
+                      <Area type="monotone" dataKey="value" stroke="#10B981" fill="#10B981" fillOpacity={0.2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+            </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Vidya AI Card - Clickable */}
+        <Card 
+          className="bg-white cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-purple-200 hover:border-purple-400"
+          onClick={() => setCurrentView('vidya-ai')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-pink-100">Total Students</p>
-                <p className="text-3xl font-bold text-white">
-                  {isLoadingStats ? '...' : stats.totalStudents.toLocaleString()}
-                </p>
-                <p className="text-sm text-pink-100">All students across all admins</p>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Vidya AI</h3>
+                <p className="text-sm text-gray-600">24/7 AI Tutor Support</p>
+                <p className="text-xs text-purple-600 mt-2 font-medium">Click to access Vidya AI →</p>
               </div>
-              <UsersIcon className="h-12 w-12 text-white" />
-            </div>
-            <div className="mt-4">
-              <button 
-                onClick={() => setCurrentView('admins')} 
-                className="text-sm text-white hover:text-pink-100 flex items-center transition-colors"
-              >
-                View students by school <ArrowUpRightIcon className="ml-1 h-4 w-4" />
-              </button>
+              <div className="ml-4">
+                <img 
+                  src="/ROBOT.gif" 
+                  alt="Vidya AI Robot" 
+                  className="h-24 w-24 object-contain"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-400 to-teal-400 border-emerald-300 shadow-xl">
-          <CardContent className="p-6">
+        {/* Courses per Board Widget */}
+        <Card className="bg-white">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Courses per Board</CardTitle>
+            <span className="text-sm text-gray-500">Skima &gt;</span>
+          </CardHeader>
+          <CardContent>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-emerald-50">Exam Results</p>
-                <p className="text-3xl font-bold text-white">{isLoadingStats ? '...' : stats.examResults}</p>
-                <p className="text-sm text-emerald-50">Total completed</p>
+              <div className="space-y-2 flex-1">
+                {coursesPerBoardData.map((board) => (
+                  <div key={board.name} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{board.name}</span>
+                    <span className="text-sm font-semibold text-gray-900">{board.value}%</span>
               </div>
-              <TrendingUpIcon className="h-12 w-12 text-white" />
+                ))}
             </div>
-            <div className="mt-4">
-              <button 
-                onClick={() => setCurrentView('analytics')} 
-                className="text-sm text-white hover:text-emerald-50 flex items-center transition-colors"
-              >
-                Click for analytics <ArrowUpRightIcon className="ml-1 h-4 w-4" />
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-400 to-pink-400 border-orange-300 shadow-xl">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-50">Courses</p>
-                <p className="text-3xl font-bold text-white">{isLoadingStats ? '...' : stats.courses}</p>
-                <p className="text-sm text-orange-50">Real-time data</p>
-              </div>
-              <BookIcon className="h-12 w-12 text-white" />
-            </div>
-            <div className="mt-4">
-              <button 
-                onClick={() => setCurrentView('admins')} 
-                className="text-sm text-white hover:text-orange-50 flex items-center transition-colors"
-              >
-                Click to manage courses <ArrowUpRightIcon className="ml-1 h-4 w-4" />
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-sky-400 to-blue-400 border-sky-300 shadow-xl">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-sky-50">Admins</p>
-                <p className="text-3xl font-bold text-white">{isLoadingStats ? '...' : stats.totalAdmins}</p>
-                <p className="text-sm text-sky-50">Real-time data</p>
-              </div>
-              <CrownIcon className="h-12 w-12 text-white" />
-            </div>
-            <div className="mt-4">
-              <button 
-                onClick={() => setCurrentView('admins')} 
-                className="text-sm text-white hover:text-sky-50 flex items-center transition-colors"
-              >
-                Click for school details <ArrowUpRightIcon className="ml-1 h-4 w-4" />
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400 shadow-xl">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-pink-100">Vidya AI</p>
-                <p className="text-3xl font-bold text-white">24/7</p>
-                <p className="text-sm text-pink-100">AI Tutor Support</p>
-              </div>
-              <Sparkles className="h-12 w-12 text-white" />
-            </div>
-            <div className="mt-4">
-              <button 
-                onClick={() => setCurrentView('vidya-ai')} 
-                className="text-sm text-white hover:text-pink-100 flex items-center transition-colors"
-              >
-                Manage Vidya AI <ArrowUpRightIcon className="ml-1 h-4 w-4" />
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400 shadow-xl hover:from-pink-600 hover:to-pink-700 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('admins')}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <UserPlusIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white">Add New Admin</h3>
-                <p className="text-sm text-pink-100">Create new admin accounts</p>
+              <div className="w-32 h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={coursesPerBoardData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      dataKey="value"
+                    >
+                      {coursesPerBoardData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+                <div className="text-center -mt-20">
+                  <span className="text-2xl font-bold text-gray-900">40%</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-emerald-400 to-teal-400 border-emerald-300 shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('admins')}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <BookPlusIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white">Create Course</h3>
-                <p className="text-sm text-emerald-50">Add new educational content</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-400 to-pink-400 border-orange-300 shadow-xl hover:from-orange-500 hover:to-pink-500 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('ai-analytics')}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <BrainIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white">AI Analytics</h3>
-                <p className="text-sm text-orange-50">Advanced ML insights</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-sky-400 to-blue-400 border-sky-300 shadow-xl hover:from-sky-500 hover:to-blue-500 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('analytics')}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <DownloadIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white">Export Data</h3>
-                <p className="text-sm text-sky-50">Download platform analytics</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400 shadow-xl hover:from-pink-600 hover:to-pink-700 transition-all duration-300 cursor-pointer" onClick={() => setCurrentView('vidya-ai')}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 rounded-lg">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white">Vidya AI</h3>
-                <p className="text-sm text-pink-100">Manage AI tutor</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Students per Admin Summary */}
       {adminSummary.length > 0 && (
@@ -508,7 +454,6 @@ export default function SuperAdminDashboard() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {adminSummary.map((admin) => {
-              // Handle different API response structures
               const studentCount = admin.totalStudents || admin.stats?.students || admin.students || 0;
               return (
                 <Card key={admin.id || admin._id} className="border-l-4 border-l-blue-500">
@@ -731,6 +676,67 @@ export default function SuperAdminDashboard() {
             </CardContent>
           </Card>
         </div>
+        </div>
+      </div>
+
+      {/* Right Sidebar */}
+      <div className="w-80 space-y-6">
+        {/* Icon Grid */}
+        <Card className="bg-white">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-3 gap-3">
+              {iconGridIcons.map((item, index) => {
+                const Icon = item.Icon;
+                const isActive = currentView === item.view;
+                return (
+                  <div
+                    key={index}
+                    onClick={() => setCurrentView(item.view as SuperAdminView)}
+                    className={`w-12 h-12 flex items-center justify-center border rounded transition-all cursor-pointer ${
+                      isActive
+                        ? "border-blue-600 bg-blue-50"
+                        : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                    }`}
+                    title={item.label}
+                  >
+                    <Icon className={`h-6 w-6 ${isActive ? "text-blue-600" : "text-gray-700"}`} />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Students per Admin Widget */}
+        <Card className="bg-white">
+          <CardHeader>
+            <CardTitle>Students per Admin</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-2">6ost Un</p>
+                <div className="h-16">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={studentsPerAdminData}>
+                      <Line type="monotone" dataKey="admin1" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Admin Two</p>
+                <div className="h-16">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={studentsPerAdminData}>
+                      <Line type="monotone" dataKey="admin2" stroke="#10B981" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
     );
@@ -761,7 +767,7 @@ export default function SuperAdminDashboard() {
       return (
         <div className="text-center py-12">
           <p className="text-gray-600">No board data available. Please try again.</p>
-          <Button onClick={() => fetchBoardDashboard(selectedBoard || 'CBSE_AP')} className="mt-4">
+          <Button onClick={() => fetchBoardDashboard(selectedBoard || 'ASLI_EXCLUSIVE_SCHOOLS')} className="mt-4">
             Refresh
           </Button>
         </div>
@@ -822,165 +828,11 @@ export default function SuperAdminDashboard() {
           </Card>
         </div>
 
-        {/* Top Performers */}
-        {boardData.topPerformers && boardData.topPerformers.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 10 Performers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {boardData.topPerformers.map((performer: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                        idx === 0 ? 'bg-yellow-500 text-white' :
-                        idx === 1 ? 'bg-gray-400 text-white' :
-                        idx === 2 ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' :
-                        'bg-gray-200 text-gray-700'
-                      }`}>
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{performer.studentName}</p>
-                        <p className="text-sm text-gray-600">{performer.studentEmail}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{performer.percentage}%</p>
-                      <p className="text-sm text-gray-600">{performer.marks}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Schools Assigned to Board */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Schools Assigned to {boardName}</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              View all schools, their admins, students, and performance metrics
-            </p>
-          </CardHeader>
-          <CardContent>
-            {boardData.schoolParticipation && boardData.schoolParticipation.length > 0 ? (
-              <div className="space-y-6">
-                {boardData.schoolParticipation.map((school: any, idx: number) => (
-                  <Card key={school.adminId || idx} className="border-2 hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-xl mb-2">{school.schoolName}</CardTitle>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <div>
-                              <span className="font-medium">Admin:</span> {school.adminName}
-                            </div>
-                            <div>
-                              <span className="font-medium">Email:</span> {school.adminEmail}
-                            </div>
-                          </div>
-                        </div>
-                        <Badge className="bg-purple-100 text-purple-700 text-lg px-4 py-1">
-                          School #{idx + 1}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {/* School Stats */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white/60 backdrop-blur-xl border border-purple-200/30 p-4 rounded-lg text-center shadow-md">
-                          <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{school.students || 0}</p>
-                          <p className="text-sm text-purple-700 font-medium">Students</p>
-                        </div>
-                        <div className="bg-white/60 backdrop-blur-xl border border-indigo-200/30 p-4 rounded-lg text-center shadow-md">
-                          <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{school.teachers || 0}</p>
-                          <p className="text-sm text-indigo-700 font-medium">Teachers</p>
-                        </div>
-                        <div className="bg-white/60 backdrop-blur-xl border border-pink-200/30 p-4 rounded-lg text-center shadow-md">
-                          <p className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">{school.examAttempts || 0}</p>
-                          <p className="text-sm text-pink-700 font-medium">Exam Attempts</p>
-                        </div>
-                        <div className="bg-white/60 backdrop-blur-xl border border-violet-200/30 p-4 rounded-lg text-center shadow-md">
-                          <p className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">{school.averageScore || '0.00'}%</p>
-                          <p className="text-sm text-violet-700 font-medium">Avg Score</p>
-                        </div>
-                      </div>
-
-                      {/* Participation Rate */}
-                      <div className="mb-6">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-700">Participation Rate</span>
-                          <span className="text-lg font-bold text-gray-900">{school.participationRate}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all"
-                            style={{ width: `${Math.min(parseFloat(school.participationRate || '0'), 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      {/* Students List */}
-                      {school.studentList && school.studentList.length > 0 && (
-                        <div className="border-t pt-4">
-                          <h4 className="font-semibold text-gray-900 mb-3">
-                            Students ({school.studentList.length}{school.students > school.studentList.length ? ` of ${school.students}` : ''})
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-                            {school.studentList.map((student: any, studentIdx: number) => (
-                              <div key={studentIdx} className="bg-gray-50 p-3 rounded-lg">
-                                <p className="font-medium text-gray-900 text-sm">{student.name}</p>
-                                <p className="text-xs text-gray-600">{student.email}</p>
-                                {student.classNumber && (
-                                  <Badge variant="outline" className="mt-1 text-xs">
-                                    Class: {student.classNumber}
-                                  </Badge>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          {school.students > school.studentList.length && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Showing first 50 students. Total: {school.students}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {(!school.studentList || school.studentList.length === 0) && school.students === 0 && (
-                        <div className="border-t pt-4 text-center text-gray-500 text-sm">
-                          No students assigned to this school yet.
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <UsersIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Schools Assigned</h3>
-                <p className="text-gray-600 mb-4">
-                  No schools have been assigned to {boardName} board yet.
-                  <br />
-                  Make sure admins have the correct board selected when creating or editing them.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <Button onClick={() => setCurrentView('admins')}>
-                    Go to School Management
-                  </Button>
-                  <Button variant="outline" onClick={() => fetchBoardDashboard(selectedBoard || boardName)}>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Board Comparison Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Board Performance Comparison</h2>
+          <BoardComparisonCharts />
+        </div>
       </div>
     );
   };
@@ -1154,53 +1006,24 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('superAdminUser');
+    localStorage.removeItem('superAdminToken');
+    localStorage.removeItem('authToken');
+    window.location.href = '/auth/login';
+  };
+
   return (
-    <div className="min-h-screen bg-sky-50 relative overflow-hidden">
-      {/* Interactive Background */}
-      <div className="fixed inset-0 z-0">
-        <InteractiveBackground />
-        <FloatingParticles />
-      </div>
-      
-      <div className="flex relative z-10">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
         <SuperAdminSidebar 
           currentView={currentView} 
           onViewChange={setCurrentView} 
           user={user} 
         />
         
-        <div className="flex-1 relative z-10">
-          <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl">
-            <div className="px-6 py-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/80 mb-2">Control Center</p>
-                  <h1 className="text-3xl font-bold">Aslilearn Exclusive Dashboard</h1>
-                  <p className="text-sm text-white/90">Welcome back, {user?.email || user?.fullName || 'super.admin@aslilearn.com'}!</p>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30"
-                  >
-                    <BellIcon className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleLogout} 
-                    className="text-white/90 hover:bg-white/10 rounded-full border border-white/30"
-                  >
-                    <LogOutIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 relative z-10">
+        <div className="flex-1">
+          <div className="p-6">
             {renderContent()}
           </div>
         </div>

@@ -72,7 +72,7 @@ export default function LiveSessions() {
     description: '',
     scheduledTime: '',
     subject: '',
-    board: 'CBSE_AP',
+    board: 'ASLI_EXCLUSIVE_SCHOOLS',
     classNumber: '',
     isRecorded: false,
     chatEnabled: true
@@ -601,10 +601,7 @@ export default function LiveSessions() {
                     <SelectValue placeholder="Select board" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CBSE_AP">CBSE AP</SelectItem>
-                    <SelectItem value="CBSE_TS">CBSE TS</SelectItem>
-                    <SelectItem value="STATE_AP">STATE AP</SelectItem>
-                    <SelectItem value="STATE_TS">STATE TS</SelectItem>
+                    <SelectItem value="ASLI_EXCLUSIVE_SCHOOLS">ASLI EXCLUSIVE SCHOOLS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -715,10 +712,7 @@ export default function LiveSessions() {
                     <SelectValue placeholder="Select board" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CBSE_AP">CBSE AP</SelectItem>
-                    <SelectItem value="CBSE_TS">CBSE TS</SelectItem>
-                    <SelectItem value="STATE_AP">STATE AP</SelectItem>
-                    <SelectItem value="STATE_TS">STATE TS</SelectItem>
+                    <SelectItem value="ASLI_EXCLUSIVE_SCHOOLS">ASLI EXCLUSIVE SCHOOLS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1239,10 +1239,7 @@ export default function SuperAdminDashboard() {
                         <SelectValue placeholder="Select board" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CBSE_AP">CBSE Andhra Pradesh</SelectItem>
-                        <SelectItem value="CBSE_TS">CBSE Telangana</SelectItem>
-                        <SelectItem value="STATE_AP">State Board Andhra Pradesh</SelectItem>
-                        <SelectItem value="STATE_TS">State Board Telangana</SelectItem>
+                        <SelectItem value="ASLI_EXCLUSIVE_SCHOOLS">ASLI EXCLUSIVE SCHOOLS</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

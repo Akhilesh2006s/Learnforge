@@ -1891,126 +1891,17 @@ const TeacherDashboard = () => {
                 )}
 
                 {vidyaAiTab === 'grading' && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
-                        <FileTextIcon className="w-5 h-5 text-white" />
+                  <div className="bg-white rounded-2xl p-12 border border-gray-200">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center mb-6">
+                        <FileTextIcon className="w-10 h-10 text-white" />
                       </div>
-                      <h4 className="text-xl font-bold text-gray-900">Automated Grading Assistant</h4>
-                    </div>
-                    <p className="text-gray-600 mb-6">AI-powered grading with detailed feedback and improvement suggestions</p>
-                    
-                    <div className="space-y-6">
-                      {/* Grading Rubric */}
-                      <div>
-                        <Label htmlFor="rubric" className="text-sm font-medium text-gray-700 mb-2 block">
-                          Grading Rubric (Optional)
-                        </Label>
-                        <Textarea
-                          id="rubric"
-                          value={gradingForm.rubric}
-                          onChange={(e) => setGradingForm({ ...gradingForm, rubric: e.target.value })}
-                          placeholder="Enter your grading criteria or rubric..."
-                          rows={4}
-                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      {/* Student Work */}
-                      <div>
-                        <Label htmlFor="studentWork" className="text-sm font-medium text-gray-700 mb-2 block">
-                          Student Work
-                        </Label>
-                        <div className="space-y-2">
-                          <Textarea
-                            id="studentWork"
-                            value={gradingForm.studentWork}
-                            onChange={(e) => setGradingForm({ ...gradingForm, studentWork: e.target.value })}
-                            placeholder="Paste the student's assignment, essay, or answer here..."
-                            rows={6}
-                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="file"
-                              id="fileUpload"
-                              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  setGradingForm({ ...gradingForm, uploadedFile: file });
-                                  // Read file content if it's a text file
-                                  if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                      setGradingForm(prev => ({ ...prev, studentWork: event.target?.result as string }));
-                                    };
-                                    reader.readAsText(file);
-                                  }
-                                }
-                              }}
-                              className="hidden"
-                            />
-                            <Label htmlFor="fileUpload" className="cursor-pointer">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center space-x-2"
-                              >
-                                <Upload className="w-4 h-4" />
-                                <span>Upload File</span>
-                              </Button>
-                            </Label>
-                            {gradingForm.uploadedFile && (
-                              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                <FileTextIcon className="w-4 h-4" />
-                                <span>{gradingForm.uploadedFile.name}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setGradingForm({ ...gradingForm, uploadedFile: null })}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Analyze & Grade Button */}
-                      <Button
-                        onClick={handleGradeWork}
-                        disabled={isGrading || (!gradingForm.studentWork && !gradingForm.uploadedFile)}
-                        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-3 rounded-lg disabled:opacity-50"
-                      >
-                        {isGrading ? (
-                          <>
-                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                            Analyzing & Grading...
-                          </>
-                        ) : (
-                          <>
-                            <ClipboardCheck className="w-4 h-4 mr-2" />
-                            Analyze & Grade
-                          </>
-                        )}
-                      </Button>
-
-                      {/* Grading Result */}
-                      {gradingResult && (
-                        <div className="mt-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                          <h5 className="text-lg font-semibold text-gray-900 mb-3">Grading Result:</h5>
-                          <div className="prose prose-sm max-w-none">
-                            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                              {gradingResult}
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      <h4 className="text-2xl font-bold text-gray-900 mb-3">Automated Grading Assistant</h4>
+                      <p className="text-lg text-gray-600 mb-2">Coming Soon</p>
+                      <p className="text-sm text-gray-500 max-w-md">
+                        We're working on an AI-powered grading system with detailed feedback and improvement suggestions. 
+                        This feature will be available soon!
+                      </p>
                     </div>
                   </div>
                 )}

@@ -33,10 +33,7 @@ interface Content {
 }
 
 const BOARDS = [
-  { value: 'CBSE_AP', label: 'CBSE AP' },
-  { value: 'CBSE_TS', label: 'CBSE TS' },
-  { value: 'STATE_AP', label: 'State AP' },
-  { value: 'STATE_TS', label: 'State TS' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'ASLI EXCLUSIVE SCHOOLS' }
 ];
 
 const ALL_BOARDS_VALUE = 'ALL_BOARDS';
@@ -48,30 +45,26 @@ const BOARD_SELECT_OPTIONS = [
 
 export default function ContentManagement() {
   const { toast } = useToast();
-  const [selectedBoard, setSelectedBoard] = useState<string>('CBSE_AP');
+  const [selectedBoard, setSelectedBoard] = useState<string>('ASLI_EXCLUSIVE_SCHOOLS');
   const [subjects, setSubjects] = useState<any[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     type: 'Video' as 'TextBook' | 'Workbook' | 'Material' | 'Video' | 'Audio',
-    board: 'CBSE_AP',
+    board: 'ASLI_EXCLUSIVE_SCHOOLS',
     subject: '',
     topic: '',
     date: '',
     fileUrl: '',
     fileUrls: [] as string[],
-    thumbnailUrl: '',
     duration: ''
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
-  const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [allBoardSubjectOptions, setAllBoardSubjectOptions] = useState<{ value: string; label: string; boards: Record<string, string>; }[]>([]);
   const [isLoadingAllBoardSubjects, setIsLoadingAllBoardSubjects] = useState(false);
   const [multiBoardSubjectMap, setMultiBoardSubjectMap] = useState<Record<string, string>>({});
@@ -247,91 +240,6 @@ export default function ContentManagement() {
     }
   };
 
-  const handleFileUpload = async (file: File): Promise<string | null> => {
-    setIsUploadingFile(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-
-      const response = await fetch(`${API_BASE_URL}/api/super-admin/content/upload-file?contentType=${formData.type}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: uploadFormData
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          return data.fileUrl;
-        }
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Upload Error',
-          description: error.message || 'Failed to upload file',
-          variant: 'destructive'
-        });
-        return null;
-      }
-    } catch (error) {
-      console.error('File upload error:', error);
-      toast({
-        title: 'Upload Error',
-        description: 'Failed to upload file',
-        variant: 'destructive'
-      });
-      return null;
-    } finally {
-      setIsUploadingFile(false);
-    }
-    return null;
-  };
-
-  const handleThumbnailUpload = async (file: File): Promise<string | null> => {
-    setIsUploadingThumbnail(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const uploadFormData = new FormData();
-      uploadFormData.append('thumbnail', file);
-
-      const response = await fetch(`${API_BASE_URL}/api/super-admin/content/upload-thumbnail`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: uploadFormData
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          return data.thumbnailUrl;
-        }
-      } else {
-        const error = await response.json();
-        toast({
-          title: 'Upload Error',
-          description: error.message || 'Failed to upload thumbnail',
-          variant: 'destructive'
-        });
-        return null;
-      }
-    } catch (error) {
-      console.error('Thumbnail upload error:', error);
-      toast({
-        title: 'Upload Error',
-        description: 'Failed to upload thumbnail',
-        variant: 'destructive'
-      });
-      return null;
-    } finally {
-      setIsUploadingThumbnail(false);
-    }
-    return null;
-  };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -372,42 +280,23 @@ export default function ContentManagement() {
 
     let fileUrl = formData.fileUrl;
     let fileUrls = formData.fileUrls;
-    let thumbnailUrl = formData.thumbnailUrl;
-    let fileSize = 0;
 
-    // If a file is selected, upload it first
-    if (selectedFile) {
-      const uploadedUrl = await handleFileUpload(selectedFile);
-      if (!uploadedUrl) {
-        return; // Error already shown in handleFileUpload
-      }
-      fileUrl = uploadedUrl;
-      fileUrls = [uploadedUrl]; // Store as array for consistency
-      fileSize = selectedFile.size;
-    } else if (formData.fileUrls.length > 0) {
+    // Validate that at least one URL is provided
+    if (formData.fileUrls.length > 0) {
       // Use multiple URLs if provided
       fileUrls = formData.fileUrls;
       fileUrl = formData.fileUrls[0]; // Keep first URL for backward compatibility
-    } else if (!formData.fileUrl && formData.fileUrls.length === 0) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please either upload a file or provide at least one file URL',
-        variant: 'destructive'
-      });
-      return;
     } else if (formData.fileUrl) {
       // Single URL provided
       fileUrl = formData.fileUrl;
       fileUrls = [formData.fileUrl];
-    }
-
-    // If a thumbnail file is selected, upload it
-    if (selectedThumbnail) {
-      const uploadedThumbnailUrl = await handleThumbnailUpload(selectedThumbnail);
-      if (uploadedThumbnailUrl) {
-        thumbnailUrl = uploadedThumbnailUrl;
-      }
-      // Continue even if thumbnail upload fails (it's optional)
+    } else {
+      toast({
+        title: 'Validation Error',
+        description: 'Please provide at least one file URL',
+        variant: 'destructive'
+      });
+      return;
     }
 
     try {
@@ -421,9 +310,7 @@ export default function ContentManagement() {
         topic: formData.topic?.trim() || undefined,
         date: formData.date, // Date in YYYY-MM-DD format
         fileUrl: fileUrl, // Keep for backward compatibility
-        thumbnailUrl: thumbnailUrl || undefined,
         duration: formData.duration ? Number(formData.duration) : 0,
-        size: fileSize,
       };
 
       // Add multiple file URLs if available
@@ -539,11 +426,8 @@ export default function ContentManagement() {
           date: '',
           fileUrl: '',
         fileUrls: [],
-          thumbnailUrl: '',
           duration: '',
         });
-        setSelectedFile(null);
-        setSelectedThumbnail(null);
       setMultiBoardSubjectMap({});
         fetchContents();
     } catch (error) {
@@ -630,7 +514,61 @@ export default function ContentManagement() {
   };
 
   const getBoardLabel = (boardCode: string) => {
-    return BOARDS.find(board => board.value === boardCode)?.label || boardCode;
+    return 'ASLI EXCLUSIVE SCHOOLS';
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL content? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeletingAll(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Use bulk delete endpoint for better performance
+      const boardParam = selectedBoard === 'ALL_BOARDS' ? '' : `?board=${selectedBoard}`;
+      const response = await fetch(`${API_BASE_URL}/api/super-admin/content${boardParam}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          toast({
+            title: 'Success',
+            description: data.message || `Deleted ${data.deletedCount || contents.length} content item${(data.deletedCount || contents.length) !== 1 ? 's' : ''} successfully`,
+          });
+          fetchContents();
+        } else {
+          toast({
+            title: 'Error',
+            description: data.message || 'Failed to delete all content',
+            variant: 'destructive'
+          });
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+        toast({
+          title: 'Error',
+          description: errorData.message || `Failed to delete all content (${response.status})`,
+          variant: 'destructive'
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to delete all content:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete all content: ${error.message || 'Unknown error'}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   return (
@@ -641,13 +579,24 @@ export default function ContentManagement() {
           <h2 className="text-3xl font-bold text-gray-900">Content Management</h2>
           <p className="text-gray-600 mt-1">Upload videos and notes for AsliLearn Exclusive</p>
         </div>
-        <Button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="bg-gradient-to-r from-blue-700 to-cyan-300 hover:from-blue-800 hover:to-cyan-400 text-white"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Content
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleDeleteAll}
+            disabled={isDeletingAll || contents.length === 0}
+            variant="outline"
+            className="border-red-500 text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className={`w-4 h-4 mr-2 ${isDeletingAll ? 'animate-spin' : ''}`} />
+            {isDeletingAll ? 'Deleting All...' : 'Delete All'}
+          </Button>
+          <Button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="bg-gradient-to-r from-blue-700 to-cyan-300 hover:from-blue-800 hover:to-cyan-400 text-white"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Content
+          </Button>
+        </div>
       </div>
 
       {/* Board Selector */}
@@ -818,10 +767,6 @@ export default function ContentManagement() {
         if (open) {
           // Sync form board with selected board when modal opens
           setFormData(prev => ({ ...prev, board: selectedBoard, subject: '' }));
-        } else {
-          // Reset file selection when modal closes
-          setSelectedFile(null);
-          setSelectedThumbnail(null);
         }
       }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -875,7 +820,6 @@ export default function ContentManagement() {
                   value={formData.type}
                   onValueChange={(value: any) => {
                     setFormData({ ...formData, type: value });
-                    setSelectedFile(null); // Clear file when content type changes
                   }}
                 >
                   <SelectTrigger id="type">
@@ -1015,19 +959,17 @@ export default function ContentManagement() {
             <div>
               <Label htmlFor="file">File Links *</Label>
               <div className="space-y-3">
-                {selectedFile && (
+                {false && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-xs text-green-600 mb-2">
-                      Selected File: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      Selected File: (removed)
                     </p>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setSelectedFile(null);
-                        const fileInput = document.getElementById('file') as HTMLInputElement;
-                        if (fileInput) fileInput.value = '';
+                        // File upload removed
                       }}
                       className="text-xs"
                     >
@@ -1043,7 +985,6 @@ export default function ContentManagement() {
                       value={formData.fileUrl}
                       onChange={(e) => {
                         setFormData({ ...formData, fileUrl: e.target.value });
-                        if (e.target.value) setSelectedFile(null); // Clear file if URL is entered
                       }}
                       placeholder="https://example.com/video.mp4 or Google Drive link"
                       className="flex-1"
@@ -1059,7 +1000,6 @@ export default function ContentManagement() {
                             fileUrls: [...formData.fileUrls, formData.fileUrl.trim()],
                             fileUrl: ''
                           });
-                          setSelectedFile(null);
                         }
                       }}
                       disabled={!formData.fileUrl.trim()}
@@ -1093,90 +1033,12 @@ export default function ContentManagement() {
                   )}
                 </div>
 
-                <div className="text-xs text-gray-500">
-                  <p className="font-semibold mb-1">Or upload a file:</p>
-                <Input
-                  id="file"
-                  type="file"
-                  accept={formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
-                    ? '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.ods,.odp'
-                    : formData.type === 'Video'
-                    ? '.mp4,.mpeg,.mov,.avi,.webm,.mkv'
-                    : '.mp3,.wav,.ogg,.aac,.m4a,.webm'
-                  }
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedFile(file);
-                        setFormData({ ...formData, fileUrl: '', fileUrls: [] }); // Clear URLs if file is selected
-                    }
-                  }}
-                  className="cursor-pointer"
-                  />
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.type === 'TextBook' || formData.type === 'Workbook' || formData.type === 'Material'
-                    ? 'Accepted formats: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX'
-                    : formData.type === 'Video'
-                    ? 'Accepted formats: MP4, MPEG, MOV, AVI, WEBM, MKV'
-                    : 'Accepted formats: MP3, WAV, OGG, AAC, M4A'}
-                </p>
                 <p className="text-xs text-blue-600 mt-1">
                   💡 Tip: You can add multiple links for different parts of the chapter. Click the + button after entering each URL.
                 </p>
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
-              <div className="space-y-2">
-                <Input
-                  id="thumbnail"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedThumbnail(file);
-                      setFormData({ ...formData, thumbnailUrl: '' }); // Clear URL if file is selected
-                    } else {
-                      setSelectedThumbnail(null);
-                    }
-                  }}
-                  className="cursor-pointer"
-                />
-                {selectedThumbnail && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-green-600">
-                      Selected: {selectedThumbnail.name} ({(selectedThumbnail.size / 1024 / 1024).toFixed(2)} MB)
-                    </p>
-                    {selectedThumbnail.type.startsWith('image/') && (
-                      <img
-                        src={URL.createObjectURL(selectedThumbnail)}
-                        alt="Thumbnail preview"
-                        className="w-32 h-32 object-cover rounded border border-gray-300"
-                      />
-                    )}
-                  </div>
-                )}
-                <div className="text-xs text-gray-500">
-                  <p className="font-semibold mb-1">Or enter a URL:</p>
-                  <Input
-                    id="thumbnailUrl"
-                    value={formData.thumbnailUrl}
-                    onChange={(e) => {
-                      setFormData({ ...formData, thumbnailUrl: e.target.value });
-                      if (e.target.value) setSelectedThumbnail(null); // Clear file if URL is entered
-                    }}
-                    placeholder="https://example.com/thumbnail.jpg"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Accepted formats: JPG, PNG, GIF, WEBP (Max 5MB)
-                </p>
-              </div>
-            </div>
 
             <div className="flex justify-end space-x-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsUploadModalOpen(false)}>
@@ -1185,10 +1047,9 @@ export default function ContentManagement() {
               <Button 
                 type="submit" 
                 className="bg-gradient-to-r from-blue-700 to-cyan-300 hover:from-blue-800 hover:to-cyan-400 text-white"
-                disabled={isUploadingFile || isUploadingThumbnail}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {isUploadingFile || isUploadingThumbnail ? 'Uploading...' : 'Upload Content'}
+                Upload Content
               </Button>
             </div>
           </form>

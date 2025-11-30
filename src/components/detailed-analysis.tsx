@@ -29,8 +29,6 @@ import {
   Crown,
   Sparkles,
   Eye,
-  Download,
-  Share2,
   RefreshCw
 } from 'lucide-react';
 
@@ -1102,19 +1100,6 @@ export default function DetailedAnalysis({ result, examTitle, onBack }: Detailed
           >
             <ArrowUp className="w-4 h-4 mr-2" />
             Back to Results
-          </Button>
-          <Button 
-            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Report
-          </Button>
-          <Button 
-            variant="outline"
-            className="px-8 py-3 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 shadow-lg"
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share Results
           </Button>
         </div>
       </div>

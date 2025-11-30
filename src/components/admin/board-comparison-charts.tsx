@@ -52,7 +52,7 @@ export default function BoardComparisonCharts() {
       }
 
       // Fallback: Fetch all boards analytics using dashboard endpoint
-      const boards = ['CBSE_AP', 'CBSE_TS', 'STATE_AP', 'STATE_TS'];
+      const boards = ['ASLI_EXCLUSIVE_SCHOOLS'];
       const analyticsPromises = boards.map(async (board) => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/super-admin/boards/${board}/dashboard`, {
@@ -76,10 +76,7 @@ export default function BoardComparisonCharts() {
       
       // Format data for comparison
       const formattedAnalytics = results.map((result) => {
-        const boardName = result.board === 'CBSE_AP' ? 'CBSE AP' :
-                         result.board === 'CBSE_TS' ? 'CBSE TS' :
-                         result.board === 'STATE_AP' ? 'State AP' :
-                         'State TS';
+        const boardName = 'ASLI EXCLUSIVE SCHOOLS';
         
         if (result.data && result.data.stats) {
           const stats = result.data.stats;
@@ -178,27 +175,108 @@ export default function BoardComparisonCharts() {
     );
   };
 
-  const exportChartData = (title: string, dataKey: keyof BoardAnalytics) => {
-    const headers = ['Board', title];
-    const rows = analytics.map(item => [
-      item.board,
-      item[dataKey]
-    ]);
+  const exportChartData = async (title: string, dataKey: keyof BoardAnalytics) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Map dataKey to export data type
+      let dataType = 'attempts'; // default
+      if (dataKey === 'students') {
+        dataType = 'students';
+      } else if (dataKey === 'totalAttempts') {
+        dataType = 'attempts';
+      } else if (dataKey === 'averageScore') {
+        dataType = 'scores';
+      } else if (dataKey === 'participationRate') {
+        dataType = 'participation';
+      }
 
-    const csvContent = [
-      headers.map(h => `"${h}"`).join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+      // Fetch detailed export data from backend
+      const response = await fetch(`${API_BASE_URL}/api/super-admin/boards/export?dataType=${dataType}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${title}_comparison_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data && result.data.length > 0) {
+          // Convert array of objects to CSV
+          const headers = Object.keys(result.data[0]);
+          const rows = result.data.map((row: any) => 
+            headers.map(header => {
+              const value = row[header];
+              // Handle values that might contain commas or quotes
+              if (value === null || value === undefined) return '""';
+              return `"${String(value).replace(/"/g, '""')}"`;
+            })
+          );
+
+          const csvContent = [
+            headers.map(h => `"${h}"`).join(','),
+            ...rows.map(row => row.join(','))
+          ].join('\n');
+
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
+        }
+      }
+
+      // Fallback to simple export if backend fails
+      console.warn('Failed to fetch detailed export data, using simple export');
+      const headers = ['Board', title];
+      const rows = analytics.map(item => [
+        item.board,
+        item[dataKey]
+      ]);
+
+      const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Export error:', error);
+      // Fallback to simple export
+      const headers = ['Board', title];
+      const rows = analytics.map(item => [
+        item.board,
+        item[dataKey]
+      ]);
+
+      const csvContent = [
+        headers.map(h => `"${h}"`).join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (isLoading) {
@@ -226,34 +304,50 @@ export default function BoardComparisonCharts() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {analytics.map((item, idx) => {
-          const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500'];
-          const color = colors[idx] || 'bg-gray-500';
-          
-          return (
-            <Card key={idx} className={`border-l-4 ${color.replace('bg-', 'border-')}`}>
-              <CardContent className="p-4">
-                <p className="text-sm font-medium text-gray-600 mb-1">{item.board}</p>
-                <p className="text-2xl font-bold text-gray-900">{item.students}</p>
-                <p className="text-xs text-gray-500">Students</p>
-                <div className="mt-2 pt-2 border-t">
-                  <p className="text-xs text-gray-600">Avg Score: <span className="font-semibold">{item.averageScore}%</span></p>
-                  <p className="text-xs text-gray-600">Participation: <span className="font-semibold">{item.participationRate}%</span></p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {analytics.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Board Data Available</h3>
+            <p className="text-gray-600 mb-4">There is no data to display for board comparison.</p>
+            <Button onClick={fetchBoardAnalytics} variant="outline">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {analytics.map((item, idx) => {
+              const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500'];
+              const color = colors[idx] || 'bg-gray-500';
+              
+              return (
+                <Card key={idx} className={`border-l-4 ${color.replace('bg-', 'border-')}`}>
+                  <CardContent className="p-4">
+                    <p className="text-sm font-medium text-gray-600 mb-1">{item.board}</p>
+                    <p className="text-2xl font-bold text-gray-900">{item.students}</p>
+                    <p className="text-xs text-gray-500">Students</p>
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-xs text-gray-600">Avg Score: <span className="font-semibold">{item.averageScore}%</span></p>
+                      <p className="text-xs text-gray-600">Participation: <span className="font-semibold">{item.participationRate}%</span></p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {renderBarChart('Number of Students', 'students', 'bg-gradient-to-r from-blue-500 to-blue-600')}
-        {renderBarChart('Average Score (%)', 'averageScore', 'bg-gradient-to-r from-green-500 to-green-600', 100)}
-        {renderBarChart('Total Exam Attempts', 'totalAttempts', 'bg-gradient-to-r from-purple-500 to-purple-600')}
-        {renderBarChart('Participation Rate (%)', 'participationRate', 'bg-gradient-to-r from-orange-500 to-orange-600', 100)}
-      </div>
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {renderBarChart('Number of Students', 'students', 'bg-gradient-to-r from-blue-500 to-blue-600')}
+            {renderBarChart('Average Score (%)', 'averageScore', 'bg-gradient-to-r from-green-500 to-green-600', 100)}
+            {renderBarChart('Total Exam Attempts', 'totalAttempts', 'bg-gradient-to-r from-purple-500 to-purple-600')}
+            {renderBarChart('Participation Rate (%)', 'participationRate', 'bg-gradient-to-r from-orange-500 to-orange-600', 100)}
+          </div>
+        </>
+      )}
     </div>
   );
 }

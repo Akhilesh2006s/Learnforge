@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Zap, Loader2, MessageCircle } from "lucide-react";
+import { Send, Loader2, Mic, Image as ImageIcon, Sparkles } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -31,56 +31,130 @@ interface AIChatProps {
 export default function AIChat({ userId, context, className }: AIChatProps) {
   const [message, setMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get chat sessions
-  const { data: sessions, isLoading } = useQuery({
+  // Get chat sessions with auto-refresh
+  const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ["/api/users", userId, "chat-sessions"],
     queryFn: async () => {
-      const response = await apiRequest("GET", `${API_BASE_URL}/api/users/${userId}/chat-sessions`);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/chat-sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat sessions');
+      }
       return response.json();
     },
+    refetchInterval: 2000, // Refresh every 2 seconds to get new messages
   });
 
   const currentSession = sessions?.[0];
-  const messages: Message[] = (currentSession?.messages as Message[]) || [];
+  const sessionMessages: Message[] = (currentSession?.messages as Message[]) || [];
+
+  // Merge local and session messages
+  useEffect(() => {
+    if (sessionMessages.length > 0) {
+      setLocalMessages(sessionMessages);
+    }
+  }, [sessionMessages]);
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { message: string; context?: any }) => {
-      const response = await apiRequest("POST", `${API_BASE_URL}/api/ai-chat`, {
-        userId,
-        message: data.message,
-        context: data.context || context,
+      const token = localStorage.getItem('authToken');
+      
+      // Add user message immediately to local state
+      const userMessage: Message = {
+        role: 'user',
+        content: data.message,
+        timestamp: new Date(),
+      };
+      setLocalMessages(prev => [...prev, userMessage]);
+
+      const response = await fetch(`${API_BASE_URL}/api/ai-chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          message: data.message,
+          context: {
+            ...data.context,
+            studentName: context?.studentName || 'Student',
+            currentSubject: context?.currentSubject || data.context?.currentSubject,
+            currentTopic: context?.currentTopic || data.context?.currentTopic,
+          },
+        }),
       });
-      return response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const result = await response.json();
+      
+      // Add AI response to local state immediately
+      if (result.session?.messages) {
+        setLocalMessages(result.session.messages);
+      } else if (result.message) {
+        const aiMessage: Message = {
+          role: 'assistant',
+          content: result.message,
+          timestamp: new Date(),
+        };
+        setLocalMessages(prev => [...prev, aiMessage]);
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", userId, "chat-sessions"] });
       setMessage("");
+      // Refetch to get latest session
+      setTimeout(() => refetch(), 500);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
+      // Remove the user message if sending failed
+      setLocalMessages(prev => prev.slice(0, -1));
     },
   });
 
   // Image analysis mutation
   const analyzeImageMutation = useMutation({
     mutationFn: async (data: { image: string; context?: string }) => {
-      const response = await apiRequest("POST", `${API_BASE_URL}/api/ai-chat/analyze-image`, data);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/api/ai-chat/analyze-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to analyze image');
+      }
       return response.json();
     },
     onSuccess: (data) => {
-      // Send the analysis as a message
       sendMessageMutation.mutate({
-        message: `Image Analysis: ${data.analysis}`,
+        message: `Please analyze this image: ${data.analysis}`,
         context,
       });
     },
@@ -95,14 +169,22 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [localMessages]);
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
-    sendMessageMutation.mutate({ message });
+    if (!message.trim() || sendMessageMutation.isPending) return;
+    
+    const subjectContext = context?.currentSubject || 'General Preparation';
+    sendMessageMutation.mutate({ 
+      message: message.trim(),
+      context: {
+        ...context,
+        currentSubject: subjectContext,
+      }
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -119,10 +201,10 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
-      const base64Data = base64.split(",")[1]; // Remove data:image/jpeg;base64, prefix
+      const base64Data = base64.split(",")[1];
       analyzeImageMutation.mutate({
         image: base64Data,
-        context: "Please analyze this educational image and help me understand the concepts.",
+        context: `Subject: ${context?.currentSubject || 'General Preparation'}. Please analyze this educational image and help me understand the concepts.`,
       });
     };
     reader.readAsDataURL(file);
@@ -152,7 +234,10 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       if (transcript.trim()) {
-        sendMessageMutation.mutate({ message: transcript });
+        setMessage(transcript);
+        setTimeout(() => {
+          handleSendMessage();
+        }, 100);
       }
     };
 
@@ -171,134 +256,185 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
     recognition.start();
   };
 
-  if (isLoading) {
+  if (isLoading && localMessages.length === 0) {
     return (
-      <Card className={className}>
-        <CardContent className="flex items-center justify-center h-64">
-          <Loader2 className="w-6 h-6 animate-spin" />
+      <Card className={`${className} border-0 shadow-xl`}>
+        <CardContent className="flex items-center justify-center h-96">
+          <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
         </CardContent>
       </Card>
     );
   }
 
+  const displayMessages = localMessages.length > 0 ? localMessages : sessionMessages;
+  const currentSubject = context?.currentSubject || 'General Preparation';
+
   return (
-    <Card className={className}>
-      <CardHeader>
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
-            <img 
-              src="/ROBOT.gif" 
-              alt="Vidya AI" 
-              className="w-full h-full object-cover rounded-full"
-            />
+    <Card className={`${className} border-0 shadow-xl flex flex-col h-[600px]`}>
+      {/* Header */}
+      <CardHeader className="border-b bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-white/30">
+              <img 
+                src="/ROBOT.gif" 
+                alt="Vidya AI" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                Vidya AI
+                <Sparkles className="w-4 h-4 text-yellow-300" />
+              </CardTitle>
+              <p className="text-xs text-white/90">Online • {currentSubject}</p>
+            </div>
           </div>
-          <CardTitle className="text-lg">Vidya AI</CardTitle>
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
-            Online
-          </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="space-responsive">
-        {/* Chat Messages */}
-        <ScrollArea className="h-64 sm:h-80 lg:h-96 w-full pr-responsive" ref={scrollAreaRef}>
+      {/* Chat Messages */}
+      <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
+        <ScrollArea className="flex-1 px-4 py-4">
           <div className="space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-responsive">
-                <MessageCircle className="w-12 h-12 mx-auto mb-responsive text-gray-300" />
-                <p className="text-responsive-sm">Start a conversation with your Vidya AI!</p>
-                <p className="text-responsive-xs mt-responsive">Ask any questions about your studies.</p>
+            {displayMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+                <div className="w-16 h-16 rounded-xl overflow-hidden mb-4 border-2 border-purple-200">
+                  <img 
+                    src="/ROBOT.gif" 
+                    alt="Vidya AI" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-gray-700 font-medium mb-1">Ask me anything about {currentSubject}!</p>
+                <p className="text-gray-500 text-sm">I'm here to help with your studies</p>
               </div>
             ) : (
-              messages.map((msg, index) => (
+              displayMessages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex items-start space-x-responsive ${
-                    msg.role === "user" ? "justify-end" : ""
-                  }`}
+                  className={`flex items-start gap-3 ${
+                    msg.role === "user" ? "flex-row-reverse" : ""
+                  } animate-in fade-in slide-in-from-bottom-2 duration-200`}
                 >
-                  {msg.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {/* Avatar */}
+                  {msg.role === "assistant" ? (
+                    <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                       <img 
                         src="/ROBOT.gif" 
                         alt="Vidya AI" 
-                        className="w-full h-full object-cover rounded-full"
+                        className="w-full h-full object-cover"
                       />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 text-white text-xs font-semibold">
+                      {context?.studentName?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
                   
-                  <div
-                    className={`max-w-xs sm:max-w-sm lg:max-w-md ${
-                      msg.role === "user" ? "chat-message-user" : "chat-message-ai"
-                    }`}
-                  >
-                    <p className="text-responsive-xs whitespace-pre-wrap">{msg.content}</p>
-                    <span
-                      className={`text-responsive-xs mt-responsive block ${
-                        msg.role === "user" ? "text-primary-200" : "text-gray-500"
+                  {/* Message */}
+                  <div className={`flex-1 max-w-[80%] ${msg.role === "user" ? "text-right" : ""}`}>
+                    <div
+                      className={`inline-block rounded-2xl px-4 py-2.5 shadow-sm ${
+                        msg.role === "user"
+                          ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-tr-sm"
+                          : "bg-gray-100 text-gray-800 rounded-tl-sm"
                       }`}
                     >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </p>
+                    </div>
+                    <span className="text-xs text-gray-400 mt-1 block">
                       {new Date(msg.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
-
-                  {msg.role === "user" && (
-                    <div className="w-8 h-8 gradient-accent rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-responsive-xs font-medium text-white">AK</span>
-                    </div>
-                  )}
                 </div>
               ))
             )}
             
-            {(sendMessageMutation.isPending || analyzeImageMutation.isPending) && (
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {/* Loading Indicator */}
+            {sendMessageMutation.isPending && (
+              <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
                   <img 
                     src="/ROBOT.gif" 
                     alt="Vidya AI" 
-                    className="w-full h-full object-cover rounded-full"
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="chat-message-ai">
-                  <p className="text-sm">Thinking...</p>
+                <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span className="text-xs text-gray-500">Vidya AI is thinking...</span>
+                  </div>
                 </div>
               </div>
             )}
+            
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
-        {/* Context Display */}
-        {context && (context.currentSubject || context.currentTopic) && (
-          <div className="flex flex-wrap gap-responsive">
-            {context.currentSubject && (
-              <Badge variant="outline" className="text-responsive-xs">Subject: {context.currentSubject}</Badge>
-            )}
-            {context.currentTopic && (
-              <Badge variant="outline" className="text-responsive-xs">Topic: {context.currentTopic}</Badge>
-            )}
+        {/* Subject Badge */}
+        {currentSubject && (
+          <div className="px-4 pb-2 border-t border-gray-100 pt-2">
+            <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+              📚 {currentSubject}
+            </Badge>
           </div>
         )}
 
         {/* Input Area */}
-        <div className="space-responsive">
-          <div className="flex-responsive-row gap-responsive">
+        <div className="border-t p-4 bg-gray-50">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-lg hover:bg-gray-200"
+              onClick={handleVoiceInput}
+              disabled={isListening || sendMessageMutation.isPending}
+              title="Voice input"
+            >
+              <Mic className={`w-4 h-4 ${isListening ? 'text-red-500 animate-pulse' : ''}`} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-lg hover:bg-gray-200"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sendMessageMutation.isPending}
+              title="Upload image"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask anything about your studies..."
-              className="flex-1 text-responsive-sm"
+              placeholder={`Ask about ${currentSubject}...`}
+              className="flex-1 h-10 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
               disabled={sendMessageMutation.isPending}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
+              className="h-10 w-10 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md hover:shadow-lg transition-all"
               size="icon"
-              className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 hover:bg-blue-700 text-white"
             >
               {sendMessageMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

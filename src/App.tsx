@@ -40,7 +40,7 @@ function Router() {
       <Route path="/asli-prep-content" component={AsliPrepContentPage} />
       <Route path="/edu-ott" component={EduOTT} />
       <Route path="/iq-rank-boost-subjects" component={IQRankBoostSubjects} />
-      <Route path="/iq-rank-boost/quiz/:subjectId" component={IQRankBoostQuiz} />
+      <Route path="/iq-rank-boost/quiz/:quizId" component={IQRankBoostQuiz} />
       <Route path="/quiz/:id" component={QuizPage} />
       <Route path="/subject/:id" component={SubjectContent} />
       <Route path="/ai-tutor" component={AITutor} />

@@ -115,7 +115,7 @@ export default function QuestionGenerator({ classNumber, onBack }: QuestionGener
           setIsSuccess(true);
           toast({
             title: 'Success',
-            description: `Successfully generated ${data.data.questions?.length || 0} questions`
+            description: `Successfully generated ${data.data.questions?.length || 0} questions and created a new quiz! Questions are automatically saved and visible to students.`
           });
           
           // Reset form after successful generation
@@ -264,8 +264,11 @@ export default function QuestionGenerator({ classNumber, onBack }: QuestionGener
                   Successfully Generated {generatedQuestions.length} Questions
                 </h3>
                 <p className="text-sm text-green-700">
-                  Questions have been saved to the database for Class {classNumber}
-                  {selectedSubject && ` - ${selectedSubject.name}`}
+                  ✅ Questions have been automatically saved and a new quiz has been created!
+                </p>
+                <p className="text-sm text-green-600 mt-1">
+                  The quiz is now visible to students in Class {classNumber}
+                  {selectedSubject && ` for ${selectedSubject.name}`}. Each time you generate questions, a new quiz is created.
                 </p>
               </div>
             </div>

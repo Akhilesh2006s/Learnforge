@@ -33,7 +33,7 @@ interface Question {
 }
 
 export default function IQRankBoostQuiz() {
-  const [, params] = useRoute('/iq-rank-boost/quiz/:subjectId');
+  const [, params] = useRoute('/iq-rank-boost/quiz/:quizId');
   const { toast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,21 +48,24 @@ export default function IQRankBoostQuiz() {
     score: number;
   } | null>(null);
   const [subjectName, setSubjectName] = useState<string>('');
+  const [quizTitle, setQuizTitle] = useState<string>('');
+  const [quizId, setQuizId] = useState<string>('');
 
   useEffect(() => {
-    if (params?.subjectId) {
+    if (params?.quizId) {
+      setQuizId(params.quizId);
       fetchQuestions();
     }
-  }, [params?.subjectId]);
+  }, [params?.quizId]);
 
   const fetchQuestions = async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('authToken');
 
-      // Fetch questions for this subject - backend automatically filters by student's class
+      // Fetch questions for this quiz - backend automatically filters by student's class
       const questionsResponse = await fetch(
-        `${API_BASE_URL}/api/student/iq-rank-questions?subject=${encodeURIComponent(params!.subjectId)}`,
+        `${API_BASE_URL}/api/student/iq-rank-questions?quizId=${encodeURIComponent(params!.quizId)}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -74,19 +77,26 @@ export default function IQRankBoostQuiz() {
       if (questionsResponse.ok) {
         const questionsData = await questionsResponse.json();
         const fetchedQuestions = questionsData.data || questionsData.questions || [];
+        const quiz = questionsData.quiz;
         
         // Shuffle questions to randomize order
         const shuffled = [...fetchedQuestions].sort(() => Math.random() - 0.5);
         setQuestions(shuffled);
         
-        // Get subject name from first question
-        if (shuffled.length > 0) {
+        // Get subject name and quiz title
+        if (quiz) {
+          setQuizTitle(quiz.title || 'IQ Quiz');
+          if (quiz.subject && typeof quiz.subject === 'object' && quiz.subject.name) {
+            setSubjectName(quiz.subject.name);
+          }
+        } else if (shuffled.length > 0) {
           const firstQuestion = shuffled[0];
           if (typeof firstQuestion.subject === 'object' && firstQuestion.subject?.name) {
             setSubjectName(firstQuestion.subject.name);
           } else {
             setSubjectName('Subject');
           }
+          setQuizTitle('IQ Quiz');
         }
       } else {
         toast({
@@ -159,6 +169,10 @@ export default function IQRankBoostQuiz() {
     // Save result to backend
     try {
       const token = localStorage.getItem('authToken');
+      const subjectId = questions.length > 0 && questions[0].subject 
+        ? (typeof questions[0].subject === 'object' ? questions[0].subject._id : questions[0].subject)
+        : null;
+      
       await fetch(`${API_BASE_URL}/api/student/iq-rank-quiz-result`, {
         method: 'POST',
         headers: {
@@ -166,7 +180,8 @@ export default function IQRankBoostQuiz() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          subjectId: params?.subjectId,
+          quizId: quizId || params?.quizId,
+          subjectId: subjectId,
           totalQuestions: questions.length,
           correctAnswers: correct,
           incorrectAnswers: incorrect,

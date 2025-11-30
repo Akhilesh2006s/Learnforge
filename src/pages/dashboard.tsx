@@ -87,6 +87,8 @@ export default function Dashboard() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [remarks, setRemarks] = useState<any[]>([]);
   const [isLoadingRemarks, setIsLoadingRemarks] = useState(false);
+  const [homeworkSubmissions, setHomeworkSubmissions] = useState<any[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   // Fetch user data
   useEffect(() => {
@@ -809,7 +811,7 @@ export default function Dashboard() {
           return;
         }
         
-        // Fetch all content to count by type
+        // Fetch all content to count by type (including homework)
         const response = await fetch(`${API_BASE_URL}/api/student/asli-prep-content`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -820,7 +822,35 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json();
           const fetchedContent = data.data || data || [];
-          setAllContent(fetchedContent);
+          
+          // Also explicitly fetch homework if not included
+          // This ensures homework is always included even if filtered out
+          const homeworkResponse = await fetch(`${API_BASE_URL}/api/student/asli-prep-content?type=Homework`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          let homeworkContent: any[] = [];
+          if (homeworkResponse.ok) {
+            const homeworkData = await homeworkResponse.json();
+            homeworkContent = homeworkData.data || homeworkData || [];
+          }
+          
+          // Merge content, avoiding duplicates
+          const contentMap = new Map();
+          fetchedContent.forEach((content: any) => {
+            contentMap.set(content._id || content.id, content);
+          });
+          homeworkContent.forEach((content: any) => {
+            if (!contentMap.has(content._id || content.id)) {
+              contentMap.set(content._id || content.id, content);
+            }
+          });
+          
+          const allFetchedContent = Array.from(contentMap.values());
+          setAllContent(allFetchedContent);
           
           // Count by type
           const counts = {
@@ -832,14 +862,42 @@ export default function Dashboard() {
             Homework: 0
           };
           
-          fetchedContent.forEach((content: any) => {
+          allFetchedContent.forEach((content: any) => {
             const contentType = content.type;
-            if (counts.hasOwnProperty(contentType)) {
-              counts[contentType as keyof typeof counts]++;
+            // Normalize content type to match our keys (case-insensitive)
+            const normalizedType = contentType ? 
+              Object.keys(counts).find(key => key.toLowerCase() === contentType.toLowerCase()) : null;
+            
+            if (normalizedType) {
+              counts[normalizedType as keyof typeof counts]++;
+            } else if (contentType) {
+              // Log unexpected content types for debugging
+              console.log('Unexpected content type:', contentType, 'for content:', content.title);
             }
           });
           
+          // Debug logging
+          console.log('📚 Content type counts:', counts);
+          console.log('📚 Total content fetched:', allFetchedContent.length);
+          const homeworkItems = allFetchedContent.filter((c: any) => 
+            c.type && c.type.toLowerCase() === 'homework'
+          );
+          console.log('📚 Homework content found:', homeworkItems.length);
+          if (homeworkItems.length > 0) {
+            console.log('📚 Homework items:', homeworkItems.map((h: any) => ({
+              id: h._id,
+              title: h.title,
+              subject: h.subject?.name || h.subject,
+              isActive: h.isActive,
+              isExclusive: h.isExclusive
+            })));
+          }
+          
           setContentTypeCounts(counts);
+        } else {
+          console.error('Failed to fetch content. Status:', response.status);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Error data:', errorData);
         }
       } catch (error) {
         console.error('Failed to fetch content counts:', error);
@@ -860,8 +918,14 @@ export default function Dashboard() {
 
     setIsLoadingFilteredContent(true);
     
-    // Filter by the selected content type
-    const filtered = allContent.filter((content: any) => content.type === selectedBrowseType);
+    // Filter by the selected content type (case-insensitive)
+    const filtered = allContent.filter((content: any) => 
+      content.type && content.type.toLowerCase() === selectedBrowseType.toLowerCase()
+    );
+    
+    console.log(`Filtered ${filtered.length} items for type: ${selectedBrowseType}`);
+    const uniqueTypes = allContent.map((c: any) => c.type).filter((type: any, index: number, arr: any[]) => arr.indexOf(type) === index);
+    console.log('All content types in allContent:', uniqueTypes);
     
     setFilteredContent(filtered);
     setIsLoadingFilteredContent(false);
@@ -1272,6 +1336,35 @@ export default function Dashboard() {
     };
 
     fetchRemarks();
+
+    // Fetch homework submissions
+    const fetchHomeworkSubmissions = async () => {
+      try {
+        setIsLoadingSubmissions(true);
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/api/student/homework-submissions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setHomeworkSubmissions(data.data || []);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch homework submissions:', error);
+      } finally {
+        setIsLoadingSubmissions(false);
+      }
+    };
+
+    fetchHomeworkSubmissions();
   }, []);
 
   const handleWatchVideo = (video: any) => {
@@ -1728,6 +1821,118 @@ export default function Dashboard() {
             </Card>
           </div>
         )}
+
+        {/* Homework Submissions Section */}
+        <div className="mb-responsive relative z-10">
+          <Card className="bg-white rounded-xl shadow-md">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  My Homework Submissions
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingSubmissions ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                  <p className="text-gray-600 text-sm">Loading submissions...</p>
+                </div>
+              ) : homeworkSubmissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600 font-medium">No homework submissions yet</p>
+                  <p className="text-gray-500 text-sm mt-1">Submit your homework assignments to see them here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {homeworkSubmissions.map((submission: any) => (
+                    <div
+                      key={submission._id}
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-gray-900 mb-1">
+                            {submission.homeworkId?.title || 'Untitled Homework'}
+                          </h5>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                            <span>
+                              Subject: {submission.subjectId?.name || submission.subjectId || 'N/A'}
+                            </span>
+                            {submission.homeworkId?.deadline && (
+                              <span>
+                                Deadline: {new Date(submission.homeworkId.deadline).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          {submission.description && (
+                            <p className="text-sm text-gray-700 mb-2">{submission.description}</p>
+                          )}
+                          <div className="flex items-center gap-4">
+                            {submission.submissionLink && (
+                              <a
+                                href={submission.submissionLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                View Submission
+                              </a>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              Submitted: {new Date(submission.submittedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          {submission.grade !== undefined && submission.grade !== null && (
+                            <div className="mt-2">
+                              <Badge className={`${
+                                submission.grade >= 80 ? 'bg-green-100 text-green-700' :
+                                submission.grade >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                Grade: {submission.grade}%
+                              </Badge>
+                            </div>
+                          )}
+                          {submission.feedback && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-500">
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">Feedback: </span>
+                                {submission.feedback}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="text-center pt-2">
+                    <p className="text-sm text-gray-600">
+                      Total: {homeworkSubmissions.length} {homeworkSubmissions.length === 1 ? 'submission' : 'submissions'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Quick Stats */}
         <div className="grid-responsive-3 gap-responsive mb-responsive relative z-10">
@@ -2392,13 +2597,54 @@ export default function Dashboard() {
           <div className="space-y-6">
             
             {/* AI Chat */}
-            <AIChat 
-              userId={MOCK_USER_ID}
-              context={{
-                currentSubject: "Physics",
-                currentTopic: "Rotational Motion"
-              }}
-            />
+            {(() => {
+              // Determine the current subject from available data
+              const getCurrentSubject = () => {
+                // Try subjectProgress first (most accurate - from exam results)
+                if (subjectProgress && subjectProgress.length > 0) {
+                  console.log('Using subject from subjectProgress:', subjectProgress[0].name);
+                  return subjectProgress[0].name;
+                }
+                
+                // Try subjects array (from API)
+                if (subjects && subjects.length > 0) {
+                  console.log('Using subject from subjects array:', subjects[0].name || subjects[0]);
+                  return subjects[0].name || subjects[0];
+                }
+                
+                // Try user's assignedSubjects
+                if (user?.assignedSubjects && user.assignedSubjects.length > 0) {
+                  const firstSubject = user.assignedSubjects[0];
+                  const subjectName = typeof firstSubject === 'object' ? firstSubject.name : firstSubject;
+                  console.log('Using subject from assignedSubjects:', subjectName);
+                  return subjectName;
+                }
+                
+                // Try assignedClass subjects
+                if (user?.assignedClass?.assignedSubjects && user.assignedClass.assignedSubjects.length > 0) {
+                  const firstSubject = user.assignedClass.assignedSubjects[0];
+                  const subjectName = typeof firstSubject === 'object' ? firstSubject.name : firstSubject;
+                  console.log('Using subject from assignedClass:', subjectName);
+                  return subjectName;
+                }
+                
+                console.log('No subject found, using default: General Preparation');
+                return 'General Preparation';
+              };
+              
+              const currentSubject = getCurrentSubject();
+              
+              return (
+                <AIChat 
+                  userId={user?._id || user?.id || MOCK_USER_ID}
+                  context={{
+                    studentName: user?.fullName || user?.email?.split('@')[0] || 'Student',
+                    currentSubject: currentSubject,
+                    currentTopic: undefined
+                  }}
+                />
+              );
+            })()}
 
             {/* Performance Dashboard */}
             <ProgressChart 

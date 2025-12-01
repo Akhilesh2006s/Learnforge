@@ -33,6 +33,8 @@ export default function SubjectManagement() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [filterBySubject, setFilterBySubject] = useState<string>('all');
+  const [filterByClass, setFilterByClass] = useState<string>('all');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +45,9 @@ export default function SubjectManagement() {
 
   useEffect(() => {
     fetchSubjects();
+    // Reset filters when board changes
+    setFilterBySubject('all');
+    setFilterByClass('all');
   }, [selectedBoard]);
 
   const fetchSubjects = async () => {
@@ -179,6 +184,51 @@ export default function SubjectManagement() {
   };
 
 
+  // Extract class number from subject name (e.g., "Chemistry_1" -> "1", "Chemistry_10" -> "10")
+  const extractClassNumber = (subjectName: string): string | null => {
+    const match = subjectName.match(/_(\d+)$/);
+    return match ? match[1] : null;
+  };
+
+  // Extract subject name without class number (e.g., "Chemistry_1" -> "Chemistry")
+  const extractSubjectName = (subjectName: string): string => {
+    const match = subjectName.match(/^(.+?)_\d+$/);
+    return match ? match[1] : subjectName;
+  };
+
+  // Get unique subject names and class numbers from subjects
+  const getUniqueSubjectNames = (): string[] => {
+    const names = subjects.map(s => extractSubjectName(s.name));
+    return Array.from(new Set(names)).sort();
+  };
+
+  const getUniqueClassNumbers = (): string[] => {
+    const classes = subjects
+      .map(s => extractClassNumber(s.name))
+      .filter((c): c is string => c !== null);
+    return Array.from(new Set(classes)).sort((a, b) => parseInt(a) - parseInt(b));
+  };
+
+  // Filter subjects based on selected filters
+  const filteredSubjects = subjects.filter(subject => {
+    const subjectName = extractSubjectName(subject.name);
+    const classNumber = extractClassNumber(subject.name);
+
+    // Filter by subject name
+    if (filterBySubject !== 'all' && subjectName !== filterBySubject) {
+      return false;
+    }
+
+    // Filter by class number
+    if (filterByClass !== 'all') {
+      if (!classNumber || classNumber !== filterByClass) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
   const handleDelete = async (subjectId: string) => {
     if (!confirm('Are you sure you want to delete this subject? This will also delete all associated content.')) return;
 
@@ -237,10 +287,10 @@ export default function SubjectManagement() {
         </div>
       </div>
 
-      {/* Board Selector */}
+      {/* Board Selector and Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Label className="font-semibold">Select Board:</Label>
             <div className="relative w-48">
               <div className="absolute -inset-[2px] bg-gradient-to-r from-sky-300 to-teal-400 rounded-md"></div>
@@ -257,8 +307,47 @@ export default function SubjectManagement() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Filter by Subject */}
+            <Label className="font-semibold ml-4">Filter by Subject:</Label>
+            <div className="relative w-48">
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-orange-300 to-orange-400 rounded-md"></div>
+              <Select value={filterBySubject} onValueChange={setFilterBySubject}>
+                <SelectTrigger className="w-full relative z-10 border-0 bg-white focus:ring-2 focus:ring-orange-500 focus:ring-offset-0">
+                  <SelectValue placeholder="All Subjects" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {getUniqueSubjectNames().map(name => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filter by Class */}
+            <Label className="font-semibold ml-4">Filter by Class:</Label>
+            <div className="relative w-48">
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-teal-400 to-teal-500 rounded-md"></div>
+              <Select value={filterByClass} onValueChange={setFilterByClass}>
+                <SelectTrigger className="w-full relative z-10 border-0 bg-white focus:ring-2 focus:ring-teal-500 focus:ring-offset-0">
+                  <SelectValue placeholder="All Classes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {getUniqueClassNumbers().map(classNum => (
+                    <SelectItem key={classNum} value={classNum}>
+                      Class {classNum}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <Badge variant="outline" className="ml-auto">
-              {subjects.length} subjects
+              {filteredSubjects.length} of {subjects.length} subjects
             </Badge>
           </div>
         </CardContent>
@@ -282,9 +371,26 @@ export default function SubjectManagement() {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredSubjects.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subjects Match Filters</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your filter criteria</p>
+            <Button 
+              onClick={() => {
+                setFilterBySubject('all');
+                setFilterByClass('all');
+              }} 
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {subjects.map((subject, index) => {
+          {filteredSubjects.map((subject, index) => {
             // Randomly assign one of the three dashboard colors
             const colorSchemes = [
               { bg: 'from-orange-300 to-orange-400', text: 'text-white', badge: 'bg-orange-500/20 text-orange-100' },

@@ -17,6 +17,8 @@ import AdminSubjectContent from "./pages/admin/subject-content";
 import SubjectManagement from "./pages/admin/subject-management";
 import TeacherDashboard from "./pages/teacher/dashboard";
 import TeacherSubjectContent from "./pages/teacher/subject-content";
+import TeacherToolPage from "./pages/teacher/tools/[toolType]";
+import StudentToolPage from "./pages/student/tools/[toolType]";
 import StudentExams from "./pages/student-exams";
 import AsliPrepContentPage from "./pages/asli-prep-content";
 import SubjectContent from "./pages/subject-content";
@@ -53,6 +55,8 @@ function Router() {
       <Route path="/admin/subjects" component={SubjectManagement} />
       <Route path="/teacher/dashboard" component={TeacherDashboard} />
       <Route path="/teacher/subject/:id" component={TeacherSubjectContent} />
+      <Route path="/teacher/tools/:toolType" component={TeacherToolPage} />
+      <Route path="/student/tools/:toolType" component={StudentToolPage} />
       <Route path="/super-admin/login" component={SuperAdminLogin} />
       <Route path="/super-admin/dashboard" component={SuperAdminDashboard} />
       <Route path="/super-admin/test" component={SuperAdminTest} />

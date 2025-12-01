@@ -50,7 +50,17 @@ import {
   ClipboardList,
   Headphones,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  BookMarked,
+  Brain,
+  Calendar as CalendarIcon,
+  HelpCircle,
+  FileText as FileTextIcon2,
+  Key,
+  ClipboardList as ClipboardListIcon,
+  CheckCircle2 as CheckCircle2Icon,
+  Layout,
+  Target as TargetIcon
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -254,6 +264,7 @@ export default function Dashboard() {
     }
   };
   const [learningPathTab, setLearningPathTab] = useState<'subjects' | 'quizzes'>('subjects');
+  const [vidyaAiTab, setVidyaAiTab] = useState<'student-tools' | 'chat'>('student-tools');
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
@@ -2550,32 +2561,244 @@ export default function Dashboard() {
           {/* Right Column: Vidya AI & Performance */}
           <div className="space-y-6">
             
-            {/* Vidya AI Card */}
-            <Card 
-              className="bg-gradient-to-br from-sky-400 to-teal-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-              onClick={() => setLocation('/ai-tutor')}
-            >
-              <CardContent className="p-6 flex flex-col items-center justify-center min-h-[200px]">
-                <div className="w-20 h-20 mb-4 rounded-full overflow-hidden border-2 border-white/30">
-                  <img 
-                    src="/ROBOT.gif" 
-                    alt="Vidya AI Robot" 
-                    className="w-full h-full object-cover"
-                  />
+            {/* Vidya AI Section */}
+            <Card className="bg-white/60 backdrop-blur-xl border-white/20 shadow-xl">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                    <img 
+                      src="/ROBOT.gif" 
+                      alt="Vidya AI Robot" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                <h3 className="text-2xl font-bold mb-2 text-white">Vidya AI</h3>
-                <p className="text-white/90 text-center mb-4">Click to chat with your AI tutor</p>
-                <Button 
-                  className="bg-white text-sky-600 hover:bg-gray-100 font-semibold"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLocation('/ai-tutor');
-                  }}
-                >
-                  Open Vidya AI
-                  </Button>
-                </CardContent>
-              </Card>
+                  <div>
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Vidya AI</CardTitle>
+                    <p className="text-sm text-gray-600">AI-powered study tools</p>
+                  </div>
+                </div>
+                
+                {/* Tabs */}
+                <div className="flex space-x-2 border-b border-gray-200">
+                  <button
+                    onClick={() => setVidyaAiTab('student-tools')}
+                    className={`px-4 py-2 text-sm font-medium rounded-t-md transition-all ${
+                      vidyaAiTab === 'student-tools'
+                        ? 'bg-white text-blue-600 shadow-sm border border-gray-300 border-b-0'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Student Tools
+                  </button>
+                  <button
+                    onClick={() => setVidyaAiTab('chat')}
+                    className={`px-4 py-2 text-sm font-medium rounded-t-md transition-all ${
+                      vidyaAiTab === 'chat'
+                        ? 'bg-white text-blue-600 shadow-sm border border-gray-300 border-b-0'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Chat
+                  </button>
+                </div>
+              </CardHeader>
+              
+              <CardContent>
+                {vidyaAiTab === 'student-tools' && (
+                  <div className="space-y-6">
+                    {/* Stats Overview */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center p-3 bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg text-white">
+                        <p className="text-2xl font-bold">10</p>
+                        <p className="text-xs text-orange-100">Tools</p>
+                      </div>
+                      <div className="text-center p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white">
+                        <p className="text-2xl font-bold">24/7</p>
+                        <p className="text-xs text-blue-100">Available</p>
+                      </div>
+                      <div className="text-center p-3 bg-gradient-to-br from-teal-400 to-teal-500 rounded-lg text-white">
+                        <p className="text-2xl font-bold">AI</p>
+                        <p className="text-xs text-teal-100">Powered</p>
+                      </div>
+                    </div>
+
+                    {/* Tools Grid */}
+                    <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto">
+                      {/* Tool 1: Smart Study Guide Generator */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/smart-study-guide-generator')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <BookMarked className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Smart Study Guide Generator</h4>
+                            <p className="text-xs text-gray-600">Create personalized study guides tailored to your needs.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 2: Concept Breakdown Explainer */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/concept-breakdown-explainer')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Brain className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Concept Breakdown Explainer</h4>
+                            <p className="text-xs text-gray-600">Break down complex concepts into simple explanations.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 3: Personalized Revision Planner */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/personalized-revision-planner')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <CalendarIcon className="w-5 h-5 text-teal-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Personalized Revision Planner</h4>
+                            <p className="text-xs text-gray-600">Get a customized revision schedule based on your goals.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 4: Smart Q&A Practice Generator */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/smart-qa-practice-generator')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <HelpCircle className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Smart Q&A Practice Generator</h4>
+                            <p className="text-xs text-gray-600">Generate practice questions with detailed answers.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 5: Chapter Summary Creator */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/chapter-summary-creator')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileTextIcon2 className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Chapter Summary Creator</h4>
+                            <p className="text-xs text-gray-600">Create concise summaries of chapters and topics.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 6: Key Points & Formula Extractor */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/key-points-formula-extractor')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Key className="w-5 h-5 text-teal-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Key Points & Formula Extractor</h4>
+                            <p className="text-xs text-gray-600">Extract key points and formulas from any topic.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 7: Quick Assignment Builder */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/quick-assignment-builder')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <ClipboardListIcon className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Quick Assignment Builder</h4>
+                            <p className="text-xs text-gray-600">Build structured assignments quickly and efficiently.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 8: Exam Readiness Checker */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/exam-readiness-checker')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2Icon className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Exam Readiness Checker</h4>
+                            <p className="text-xs text-gray-600">Assess your readiness for upcoming exams.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 9: Project Layout Designer */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/project-layout-designer')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Layout className="w-5 h-5 text-teal-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Project Layout Designer</h4>
+                            <p className="text-xs text-gray-600">Design structured layouts for your projects.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tool 10: Goal & Motivation Planner */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                        onClick={() => setLocation('/student/tools/goal-motivation-planner')}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <TargetIcon className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-1 text-sm">Goal & Motivation Planner</h4>
+                            <p className="text-xs text-gray-600">Set goals and create motivation plans for success.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {vidyaAiTab === 'chat' && (
+                  <div className="text-center py-8">
+                    <Button 
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                      onClick={() => setLocation('/ai-tutor')}
+                    >
+                      Open AI Chat
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Performance Dashboard */}
             <ProgressChart 

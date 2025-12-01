@@ -49,7 +49,16 @@ import {
   Filter,
   Radio,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Lightbulb,
+  FileQuestion,
+  CheckSquare,
+  Rocket,
+  Scale,
+  Layers,
+  CreditCard,
+  FileCheck,
+  CheckCircle2
 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
@@ -118,7 +127,7 @@ interface Assessment {
 
 
 const TeacherDashboard = () => {
-  const [dashboardSubTab, setDashboardSubTab] = useState<'ai-classes' | 'students' | 'eduott'>('ai-classes');
+  const [dashboardSubTab, setDashboardSubTab] = useState<'ai-classes' | 'students' | 'eduott' | 'vidya-ai'>('ai-classes');
   const [stats, setStats] = useState<TeacherStats>({
     totalStudents: 0,
     totalClasses: 0,
@@ -194,7 +203,7 @@ const TeacherDashboard = () => {
 
   const [isGeneratingLessonPlan, setIsGeneratingLessonPlan] = useState(false);
   const [generatedLessonPlan, setGeneratedLessonPlan] = useState('');
-  const [vidyaAiTab, setVidyaAiTab] = useState<'assistant' | 'lesson-plans' | 'grading' | 'tutor' | 'parent-comm' | 'quiz-generator'>('assistant');
+  const [vidyaAiTab, setVidyaAiTab] = useState<'teacher-tools'>('teacher-tools');
   const [teacherId, setTeacherId] = useState<string>('');
   
   // Quiz Generator form state
@@ -237,6 +246,14 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     fetchTeacherData();
+    
+    // Check for saved tab preference from tool pages
+    const savedTab = localStorage.getItem('teacherDashboardTab');
+    if (savedTab && ['ai-classes', 'students', 'eduott', 'vidya-ai'].includes(savedTab)) {
+      setDashboardSubTab(savedTab as 'ai-classes' | 'students' | 'eduott' | 'vidya-ai');
+      // Clear it after using so it doesn't persist on refresh
+      localStorage.removeItem('teacherDashboardTab');
+    }
   }, []);
 
   // Fetch student performance data when Track Progress tab is active
@@ -1428,7 +1445,7 @@ const TeacherDashboard = () => {
       </div>
       
       {/* Header - Student Dashboard Theme */}
-      <div className="bg-gradient-to-r from-[#1CD8D2] via-[#1FA2FF] to-[#5B43F1] text-white shadow-xl border-b-0 rounded-b-3xl sticky top-0 z-50 relative">
+      <div className="bg-gradient-to-r from-sky-400 via-sky-500 to-teal-500 text-white shadow-xl border-b-0 rounded-b-3xl sticky top-0 z-50 relative">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -1449,7 +1466,7 @@ const TeacherDashboard = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={handleLogout}
-                className="text-white/90 hover:bg-white/10 rounded-full border border-white/30 backdrop-blur-sm"
+                className="bg-white/90 text-sky-600 hover:bg-white rounded-full border-2 border-teal-400 backdrop-blur-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -1463,7 +1480,7 @@ const TeacherDashboard = () => {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Welcome Message */}
         <div className="mb-8">
-          <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-blue-700 to-cyan-300 bg-clip-text text-transparent capitalize">
+          <h1 className="text-responsive-xl font-bold bg-gradient-to-r from-orange-500 to-teal-500 bg-clip-text text-transparent capitalize">
             Overview
           </h1>
           <p className="text-gray-600 text-responsive-sm font-medium mt-2">Manage your classes and track student progress with style</p>
@@ -1472,11 +1489,11 @@ const TeacherDashboard = () => {
         {/* Dashboard Content */}
         <div className="space-y-8">
           {/* Dashboard Sub-Tabs */}
-              <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-4 shadow-xl border border-white/20">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-3xl p-4 shadow-xl border border-orange-300">
                 <div className="flex items-center space-x-2">
                   <Button
                     variant={dashboardSubTab === 'ai-classes' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'ai-classes' ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg' : 'border-pink-200 text-pink-800 hover:bg-pink-50'}
+                    className={dashboardSubTab === 'ai-classes' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
                     onClick={() => setDashboardSubTab('ai-classes')}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -1484,7 +1501,7 @@ const TeacherDashboard = () => {
                   </Button>
                   <Button
                     variant={dashboardSubTab === 'students' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'students' ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}
+                    className={dashboardSubTab === 'students' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
                     onClick={() => setDashboardSubTab('students')}
                   >
                     <Users className="w-4 h-4 mr-2" />
@@ -1492,11 +1509,22 @@ const TeacherDashboard = () => {
                   </Button>
                   <Button
                     variant={dashboardSubTab === 'eduott' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'eduott' ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg' : 'border-orange-200 text-orange-800 hover:bg-orange-50'}
+                    className={dashboardSubTab === 'eduott' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
                     onClick={() => setDashboardSubTab('eduott')}
                   >
                     <VideoIcon className="w-4 h-4 mr-2" />
                     EduOTT
+                  </Button>
+                  <Button
+                    variant={dashboardSubTab === 'vidya-ai' ? 'default' : 'outline'}
+                    className={dashboardSubTab === 'vidya-ai' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
+                    onClick={() => {
+                      setDashboardSubTab('vidya-ai');
+                      localStorage.removeItem('teacherDashboardTab'); // Clear saved tab when manually selected
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Vidya AI
                   </Button>
                 </div>
               </div>
@@ -1507,7 +1535,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-pink-600 to-pink-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-orange-400 to-orange-500 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1529,7 +1557,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1551,7 +1579,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-orange-600 to-orange-700 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-teal-400 to-teal-500 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1573,7 +1601,7 @@ const TeacherDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="group relative overflow-hidden bg-gradient-to-br from-sky-400 to-blue-400 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
+                  className="group relative overflow-hidden bg-gradient-to-br from-orange-400 to-orange-500 rounded-responsive p-responsive shadow-responsive hover:shadow-xl transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
                   <div className="relative z-10">
@@ -1593,617 +1621,10 @@ const TeacherDashboard = () => {
 
               </div>
 
-              {/* Vidya AI & My Classes Tab */}
+              {/* Dashboard Tab - Stats Cards, My Classes, and Learning Paths */}
               {dashboardSubTab === 'ai-classes' && (
                 <>
-              {/* Vidya AI */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20"
-              >
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-pink-600 to-pink-700 rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">Vidya AI</h3>
-                </div>
-
-                {/* Tabs */}
-                <div className="mb-6 border-b border-gray-200">
-                  <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                    <button
-                      onClick={() => setVidyaAiTab('assistant')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'assistant'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Assistant
-                    </button>
-                    <button
-                      onClick={() => setVidyaAiTab('lesson-plans')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'lesson-plans'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Lesson Plans
-                    </button>
-                    <button
-                      onClick={() => setVidyaAiTab('grading')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'grading'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Grading
-                    </button>
-                    <button
-                      onClick={() => setVidyaAiTab('tutor')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'tutor'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Tutor
-                    </button>
-                    <button
-                      onClick={() => setVidyaAiTab('parent-comm')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'parent-comm'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Parent Comm
-                    </button>
-                    <button
-                      onClick={() => setVidyaAiTab('quiz-generator')}
-                      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'quiz-generator'
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Quiz Generator
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tab Content */}
-                {vidyaAiTab === 'assistant' && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900">Teaching Assistant</h4>
-                    </div>
-                    <p className="text-gray-600 mb-6">Get help with teaching strategies, classroom management, and curriculum planning</p>
-                    {teacherId ? (
-                      <AIChat userId={teacherId} />
-                    ) : (
-                      <div className="text-center py-12">
-                        <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">Loading assistant...</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {vidyaAiTab === 'lesson-plans' && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-4">Lesson Plan Generator</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Class *</label>
-                      <select 
-                        value={lessonPlanForm.gradeLevel}
-                        onChange={(e) => setLessonPlanForm({...lessonPlanForm, gradeLevel: e.target.value, subject: '', topic: ''})}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select class</option>
-                        <option value="Class 11">Class 11</option>
-                        <option value="Class 12">Class 12</option>
-                        <option value="Dropper Batch">Dropper Batch</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                      <select 
-                        value={lessonPlanForm.subject}
-                        onChange={(e) => setLessonPlanForm({...lessonPlanForm, subject: e.target.value, topic: ''})}
-                        disabled={!lessonPlanForm.gradeLevel}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                      >
-                        <option value="">Select subject</option>
-                        {lessonPlanForm.gradeLevel && (
-                          <>
-                            <option value="Physics">Physics</option>
-                            <option value="Chemistry">Chemistry</option>
-                            <option value="Mathematics">Mathematics</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Topic *</label>
-                      <select 
-                        value={lessonPlanForm.topic}
-                        onChange={(e) => setLessonPlanForm({...lessonPlanForm, topic: e.target.value})}
-                        disabled={!lessonPlanForm.subject}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                      >
-                        <option value="">Select topic</option>
-                        {lessonPlanForm.subject === 'Physics' && (
-                          <>
-                            <option value="Mechanics">Mechanics</option>
-                            <option value="Kinematics">Kinematics</option>
-                            <option value="Dynamics">Dynamics</option>
-                            <option value="Work, Energy and Power">Work, Energy and Power</option>
-                            <option value="Rotational Motion">Rotational Motion</option>
-                            <option value="Gravitation">Gravitation</option>
-                            <option value="Properties of Solids and Liquids">Properties of Solids and Liquids</option>
-                            <option value="Thermodynamics">Thermodynamics</option>
-                            <option value="Kinetic Theory of Gases">Kinetic Theory of Gases</option>
-                            <option value="Oscillations and Waves">Oscillations and Waves</option>
-                            <option value="Electrostatics">Electrostatics</option>
-                            <option value="Current Electricity">Current Electricity</option>
-                            <option value="Magnetic Effects of Current">Magnetic Effects of Current</option>
-                            <option value="Electromagnetic Induction">Electromagnetic Induction</option>
-                            <option value="Alternating Current">Alternating Current</option>
-                            <option value="Electromagnetic Waves">Electromagnetic Waves</option>
-                            <option value="Optics">Optics</option>
-                            <option value="Dual Nature of Matter and Radiation">Dual Nature of Matter and Radiation</option>
-                            <option value="Atoms and Nuclei">Atoms and Nuclei</option>
-                            <option value="Electronic Devices">Electronic Devices</option>
-                            <option value="Communication Systems">Communication Systems</option>
-                          </>
-                        )}
-                        {lessonPlanForm.subject === 'Chemistry' && (
-                          <>
-                            <option value="Some Basic Concepts of Chemistry">Some Basic Concepts of Chemistry</option>
-                            <option value="States of Matter">States of Matter</option>
-                            <option value="Atomic Structure">Atomic Structure</option>
-                            <option value="Chemical Bonding and Molecular Structure">Chemical Bonding and Molecular Structure</option>
-                            <option value="Thermodynamics">Thermodynamics</option>
-                            <option value="Chemical Equilibrium">Chemical Equilibrium</option>
-                            <option value="Ionic Equilibrium">Ionic Equilibrium</option>
-                            <option value="Redox Reactions">Redox Reactions</option>
-                            <option value="Electrochemistry">Electrochemistry</option>
-                            <option value="Chemical Kinetics">Chemical Kinetics</option>
-                            <option value="Surface Chemistry">Surface Chemistry</option>
-                            <option value="Classification of Elements and Periodicity">Classification of Elements and Periodicity</option>
-                            <option value="Hydrogen">Hydrogen</option>
-                            <option value="s-Block Elements">s-Block Elements</option>
-                            <option value="p-Block Elements">p-Block Elements</option>
-                            <option value="d and f Block Elements">d and f Block Elements</option>
-                            <option value="Coordination Compounds">Coordination Compounds</option>
-                            <option value="Environmental Chemistry">Environmental Chemistry</option>
-                            <option value="Purification and Characterisation of Organic Compounds">Purification and Characterisation of Organic Compounds</option>
-                            <option value="Some Basic Principles of Organic Chemistry">Some Basic Principles of Organic Chemistry</option>
-                            <option value="Hydrocarbons">Hydrocarbons</option>
-                            <option value="Organic Compounds Containing Halogens">Organic Compounds Containing Halogens</option>
-                            <option value="Organic Compounds Containing Oxygen">Organic Compounds Containing Oxygen</option>
-                            <option value="Organic Compounds Containing Nitrogen">Organic Compounds Containing Nitrogen</option>
-                            <option value="Biomolecules">Biomolecules</option>
-                            <option value="Polymers">Polymers</option>
-                            <option value="Chemistry in Everyday Life">Chemistry in Everyday Life</option>
-                          </>
-                        )}
-                        {lessonPlanForm.subject === 'Mathematics' && (
-                          <>
-                            <option value="Sets, Relations and Functions">Sets, Relations and Functions</option>
-                            <option value="Complex Numbers and Quadratic Equations">Complex Numbers and Quadratic Equations</option>
-                            <option value="Matrices and Determinants">Matrices and Determinants</option>
-                            <option value="Permutations and Combinations">Permutations and Combinations</option>
-                            <option value="Mathematical Induction">Mathematical Induction</option>
-                            <option value="Binomial Theorem">Binomial Theorem</option>
-                            <option value="Sequences and Series">Sequences and Series</option>
-                            <option value="Limit, Continuity and Differentiability">Limit, Continuity and Differentiability</option>
-                            <option value="Integral Calculus">Integral Calculus</option>
-                            <option value="Differential Equations">Differential Equations</option>
-                            <option value="Coordinate Geometry">Coordinate Geometry</option>
-                            <option value="Three Dimensional Geometry">Three Dimensional Geometry</option>
-                            <option value="Vector Algebra">Vector Algebra</option>
-                            <option value="Statistics and Probability">Statistics and Probability</option>
-                            <option value="Trigonometry">Trigonometry</option>
-                            <option value="Mathematical Reasoning">Mathematical Reasoning</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
-                      <input
-                        type="number"
-                        value={lessonPlanForm.duration}
-                        onChange={(e) => setLessonPlanForm({...lessonPlanForm, duration: e.target.value})}
-                        placeholder="90"
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleGenerateLessonPlan}
-                    disabled={isGeneratingLessonPlan || !lessonPlanForm.subject || !lessonPlanForm.topic || !lessonPlanForm.gradeLevel}
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-xl disabled:opacity-50"
-                  >
-                    {isGeneratingLessonPlan ? (
-                      <>
-                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Lesson Plan
-                      </>
-                    )}
-                  </Button>
-                  {generatedLessonPlan && (
-                    <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200 shadow-lg max-h-96 overflow-y-auto">
-                      <h5 className="text-lg font-semibold text-gray-900 mb-3">Generated Lesson Plan:</h5>
-                      <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg p-4 border border-sky-200">
-                        <div className="prose prose-sm max-w-none">
-                          <div className="text-gray-800 leading-relaxed">
-                            {generatedLessonPlan.split('\n').map((line, index) => {
-                              if (line.startsWith('###')) {
-                                return (
-                                  <h3 key={index} className="text-lg font-bold text-blue-900 mt-4 mb-2">
-                                    {line.replace('###', '').trim()}
-                                  </h3>
-                                );
-                              } else if (line.startsWith('**') && line.endsWith('**')) {
-                                return (
-                                  <h4 key={index} className="text-base font-semibold text-blue-800 mt-3 mb-1">
-                                    {line.replace(/\*\*/g, '').trim()}
-                                  </h4>
-                                );
-                              } else if (line.startsWith('-') || line.startsWith('*')) {
-                                return (
-                                  <div key={index} className="ml-4 mb-1 text-gray-700">
-                                    • {line.replace(/^[-*]\s*/, '').trim()}
-                                  </div>
-                                );
-                              } else if (line.trim() === '') {
-                                return <br key={index} />;
-                              } else {
-                                return (
-                                  <p key={index} className="mb-2 text-gray-700">
-                                    {line.trim()}
-                                  </p>
-                                );
-                              }
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  </div>
-                )}
-
-                {vidyaAiTab === 'grading' && (
-                  <div className="bg-white rounded-2xl p-12 border border-gray-200">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-orange-700 rounded-full flex items-center justify-center mb-6">
-                        <FileTextIcon className="w-10 h-10 text-white" />
-                      </div>
-                      <h4 className="text-2xl font-bold text-gray-900 mb-3">Automated Grading Assistant</h4>
-                      <p className="text-lg text-gray-600 mb-2">Coming Soon</p>
-                      <p className="text-sm text-gray-500 max-w-md">
-                        We're working on an AI-powered grading system with detailed feedback and improvement suggestions. 
-                        This feature will be available soon!
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {vidyaAiTab === 'tutor' && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900">Tutor Assistant</h4>
-                    </div>
-                    <p className="text-gray-600 mb-6">Get personalized tutoring support and student guidance</p>
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <UserCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Tutor Features Coming Soon</h3>
-                      <p className="text-gray-500">Tutoring assistance and student support tools will be available here</p>
-                    </div>
-                  </div>
-                )}
-
-                {vidyaAiTab === 'parent-comm' && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center">
-                        <MessageCircle className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900">Parent Communication</h4>
-                    </div>
-                    <p className="text-gray-600 mb-6">AI-assisted parent communication and progress updates</p>
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Parent Communication Coming Soon</h3>
-                      <p className="text-gray-500">Automated parent communication tools will be available here</p>
-                    </div>
-                  </div>
-                )}
-
-                {vidyaAiTab === 'quiz-generator' && (
-                  <div className="bg-gradient-to-r from-pink-50 to-pink-100 rounded-2xl p-6">
-                    <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-8 h-8 bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900">AI Quiz Generator</h4>
-                    </div>
-                    <p className="text-gray-600 mb-6">Generate customized quizzes with AI-powered questions for your students</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Class *</Label>
-                        <select 
-                          value={quizForm.gradeLevel}
-                          onChange={(e) => {
-                            const selectedClassNumber = e.target.value;
-                            console.log('Class selected:', selectedClassNumber);
-                            
-                            // Validate classNumber
-                            if (!selectedClassNumber || selectedClassNumber.trim() === '' || selectedClassNumber === '-9') {
-                              console.error('Invalid classNumber:', selectedClassNumber);
-                              setSelectedClassSubjects([]);
-                              return;
-                            }
-                            
-                            setQuizForm({...quizForm, gradeLevel: selectedClassNumber, subject: '', topic: ''});
-                            
-                            // Use teacher's assigned subjects directly (already fetched from dashboard API)
-                            if (teacherSubjects && teacherSubjects.length > 0) {
-                              console.log('Using teacher subjects:', teacherSubjects);
-                              // Format subjects for dropdown
-                              const formattedSubjects = teacherSubjects.map((subject: any) => ({
-                                _id: subject._id || subject,
-                                name: subject.name || subject
-                              }));
-                              setSelectedClassSubjects(formattedSubjects);
-                            } else {
-                              console.warn('No teacher subjects available');
-                              setSelectedClassSubjects([]);
-                            }
-                          }}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="">Select class</option>
-                          {availableClasses.map((classItem) => (
-                            <option key={classItem.classNumber} value={classItem.classNumber}>
-                              Class {classItem.classNumber}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Subject *</Label>
-                        <select 
-                          value={quizForm.subject}
-                          onChange={(e) => setQuizForm({...quizForm, subject: e.target.value, topic: ''})}
-                          disabled={!quizForm.gradeLevel || isLoadingSubjects || selectedClassSubjects.length === 0}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                        >
-                          <option value="">Select subject</option>
-                          {selectedClassSubjects.map((subject) => (
-                            <option key={subject._id || subject} value={subject.name}>
-                              {subject.name}
-                            </option>
-                          ))}
-                        </select>
-                        {quizForm.gradeLevel && isLoadingSubjects && (
-                          <p className="text-xs text-gray-500 mt-1">Loading subjects...</p>
-                        )}
-                        {quizForm.gradeLevel && !isLoadingSubjects && selectedClassSubjects.length === 0 && (
-                          <p className="text-xs text-gray-500 mt-1">No subjects available for this class</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Topic *</Label>
-                        <input
-                          type="text"
-                          value={quizForm.topic}
-                          onChange={(e) => setQuizForm({...quizForm, topic: e.target.value})}
-                          disabled={!quizForm.subject}
-                          placeholder="e.g., Mechanics, Organic Chemistry, Calculus"
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
-                        />
-                      </div>
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Number of Questions *</Label>
-                        <select
-                          value={quizForm.questionCount}
-                          onChange={(e) => setQuizForm({...quizForm, questionCount: e.target.value})}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="5">5 Questions</option>
-                          <option value="10">10 Questions</option>
-                          <option value="15">15 Questions</option>
-                          <option value="20">20 Questions</option>
-                          <option value="25">25 Questions</option>
-                          <option value="30">30 Questions</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level *</Label>
-                        <select
-                          value={quizForm.difficulty}
-                          onChange={(e) => setQuizForm({...quizForm, difficulty: e.target.value})}
-                          className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        >
-                          <option value="easy">Easy</option>
-                          <option value="medium">Medium</option>
-                          <option value="hard">Hard</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label className="block text-sm font-medium text-gray-700 mb-2">Assign to Classes (Optional)</Label>
-                        <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-xl p-3 bg-white">
-                          {assignedClasses.length === 0 ? (
-                            <p className="text-sm text-gray-500">No classes assigned to you yet.</p>
-                          ) : (
-                            assignedClasses.map((classItem: any) => (
-                              <label key={classItem._id || classItem.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                  type="checkbox"
-                                  checked={quizForm.assignedClasses.includes(classItem._id || classItem.id)}
-                                  onChange={(e) => {
-                                    const classId = classItem._id || classItem.id;
-                                    if (e.target.checked) {
-                                      setQuizForm({
-                                        ...quizForm,
-                                        assignedClasses: [...quizForm.assignedClasses, classId]
-                                      });
-                                    } else {
-                                      setQuizForm({
-                                        ...quizForm,
-                                        assignedClasses: quizForm.assignedClasses.filter(id => id !== classId)
-                                      });
-                                    }
-                                  }}
-                                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                />
-                                <span className="text-sm text-gray-700">
-                                  {classItem.classNumber}{classItem.section ? ` - Section ${classItem.section}` : ''}
-                                </span>
-                              </label>
-                            ))
-                          )}
-                        </div>
-                        {quizForm.assignedClasses.length > 0 && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {quizForm.assignedClasses.length} class(es) selected
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      onClick={handleGenerateQuiz}
-                      disabled={isGeneratingQuiz || !quizForm.subject || !quizForm.topic || !quizForm.gradeLevel}
-                      className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-6 py-2 rounded-xl disabled:opacity-50 mb-4"
-                    >
-                      {isGeneratingQuiz ? (
-                        <>
-                          <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                          Generating Quiz...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Generate Quiz
-                        </>
-                      )}
-                    </Button>
-
-                    {generatedQuiz && (
-                      <div id="generated-quiz-section" className="mt-6 space-y-4">
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-lg max-h-96 overflow-y-auto">
-                          <div className="flex items-center justify-between mb-4">
-                            <h5 className="text-lg font-semibold text-gray-900">Generated Quiz Questions:</h5>
-                            <Button
-                              onClick={handleSaveQuiz}
-                              disabled={isSavingQuiz}
-                              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-                            >
-                              {isSavingQuiz ? (
-                                <>
-                                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                                  Saving...
-                                </>
-                              ) : (
-                                <>
-                                  <ClipboardCheck className="w-4 h-4 mr-2" />
-                                  Save Quiz
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                          
-                          {generatedQuiz.parsedQuestions?.questions ? (
-                            <div className="space-y-6">
-                              {generatedQuiz.parsedQuestions.questions.map((q: any, index: number) => (
-                                <div key={index} className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border border-pink-200">
-                                  <div className="flex items-start space-x-2 mb-3">
-                                    <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold">
-                                      {index + 1}
-                                    </span>
-                                    <p className="text-gray-800 font-medium flex-1">{q.question || q.questionText}</p>
-                                  </div>
-                                  
-                                  {q.options && q.options.length > 0 && (
-                                    <div className="ml-8 space-y-2 mb-3">
-                                      {q.options.map((option: string | { text: string; isCorrect?: boolean }, optIndex: number) => {
-                                        const optText = typeof option === 'string' ? option : option.text;
-                                        const isCorrect = typeof option === 'string' 
-                                          ? optText === q.correctAnswer 
-                                          : option.isCorrect;
-                                        return (
-                                          <div 
-                                            key={optIndex} 
-                                            className={`p-2 rounded-lg border ${
-                                              isCorrect 
-                                                ? 'bg-green-50 border-green-300 text-green-800' 
-                                                : 'bg-white border-gray-200 text-gray-700'
-                                            }`}
-                                          >
-                                            <span className="font-semibold mr-2">{String.fromCharCode(65 + optIndex)}.</span>
-                                            {optText}
-                                            {isCorrect && (
-                                              <span className="ml-2 text-green-600 font-semibold">✓ Correct</span>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                  
-                                  {q.explanation && (
-                                    <div className="ml-8 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                      <p className="text-sm text-blue-800">
-                                        <span className="font-semibold">Explanation: </span>
-                                        {q.explanation}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : generatedQuiz.rawText ? (
-                            <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg p-4 border border-sky-200">
-                              <div className="prose prose-sm max-w-none">
-                                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                  {generatedQuiz.rawText}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 text-gray-500">
-                              No questions generated. Please try again.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
+                {/* Stats Cards are shown above, outside conditional */}
 
               {/* My Classes */}
               <motion.div
@@ -2417,6 +1838,415 @@ const TeacherDashboard = () => {
                         </div>
                       );
                     })}
+                    </div>
+                  )}
+                </motion.div>
+                </>
+              )}
+
+              {/* Vidya AI Tab */}
+              {dashboardSubTab === 'vidya-ai' && (
+                <>
+              {/* Vidya AI */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white/60 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20"
+              >
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                    <img 
+                      src="/ROBOT.gif" 
+                      alt="Vidya AI Robot" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Vidya AI</h3>
+                </div>
+
+                {/* Teacher Tools Content */}
+                {vidyaAiTab === 'teacher-tools' && (
+                  <div className="space-y-8">
+                    {/* Header */}
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Teacher Tools</h2>
+                      <p className="text-gray-600">AI-powered tools to enhance your teaching experience</p>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl p-6 shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                          <p className="text-3xl font-bold text-white">15</p>
+                    </div>
+                        <h3 className="text-white font-semibold mb-1">Total Tools</h3>
+                        <p className="text-white/90 text-sm">AI-powered features</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-gradient-to-br from-sky-400 to-sky-500 rounded-xl p-6 shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <TrendingUp className="w-6 h-6 text-white" />
+                      </div>
+                          <p className="text-3xl font-bold text-white">50%</p>
+                    </div>
+                        <h3 className="text-white font-semibold mb-1">Time Saved</h3>
+                        <p className="text-white/90 text-sm">Average per week</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl p-6 shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-white" />
+                      </div>
+                          <p className="text-3xl font-bold text-white">1000+</p>
+                    </div>
+                        <h3 className="text-white font-semibold mb-1">Resources Created</h3>
+                        <p className="text-white/90 text-sm">This month</p>
+                      </motion.div>
+                    </div>
+
+                    {/* Available Tools Section */}
+                      <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Available Tools</h3>
+                      <p className="text-gray-600 mb-6">Select a tool to get started with AI-assisted teaching resources</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Tool 1: Activity & Project Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/activity-project-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Sparkles className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Activity & Project Generator</h4>
+                              <p className="text-sm text-gray-600">Create engaging activities and projects tailored to your curriculum.</p>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Tool 2: Worksheet Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/worksheet-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Worksheet Generator</h4>
+                              <p className="text-sm text-gray-600">Design custom worksheets with exercises and problems.</p>
+                      </div>
+                      </div>
+                        </motion.div>
+
+                        {/* Tool 3: Concept Mastery Helper */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/concept-mastery-helper');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Lightbulb className="w-6 h-6 text-teal-600" />
+                      </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Concept Mastery Helper</h4>
+                              <p className="text-sm text-gray-600">Break down complex concepts into digestible lessons.</p>
+                        </div>
+                      </div>
+                        </motion.div>
+
+                        {/* Tool 4: Lesson Planner */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/lesson-planner');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Calendar className="w-6 h-6 text-orange-600" />
+                          </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Lesson Planner</h4>
+                              <p className="text-sm text-gray-600">Plan structured lessons with objectives and activities.</p>
+                                  </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Tool 5: Exam Question Paper Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.8 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/exam-question-paper-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileQuestion className="w-6 h-6 text-blue-600" />
+                                          </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Exam Question Paper Generator</h4>
+                              <p className="text-sm text-gray-600">Create comprehensive exam papers with varying difficulty.</p>
+                                    </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Tool 6: Daily Class Plan Maker */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.9 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/daily-class-plan-maker');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <CheckSquare className="w-6 h-6 text-teal-600" />
+                                    </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Daily Class Plan Maker</h4>
+                              <p className="text-sm text-gray-600">Organize your daily teaching schedule efficiently.</p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Tool 7: Homework Creator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.0 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/homework-creator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Rocket className="w-6 h-6 text-orange-600" />
+                                </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Homework Creator</h4>
+                              <p className="text-sm text-gray-600">Generate meaningful homework assignments.</p>
+                              </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Tool 8: Rubrics & Evaluation Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.1 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/rubrics-evaluation-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Scale className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Rubrics & Evaluation Generator</h4>
+                              <p className="text-sm text-gray-600">Create clear assessment criteria and rubrics.</p>
+                        </div>
+                      </div>
+              </motion.div>
+
+                        {/* Tool 9: Learning Outcomes Generator */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.2 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/learning-outcomes-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Target className="w-6 h-6 text-teal-600" />
+                    </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Learning Outcomes Generator</h4>
+                              <p className="text-sm text-gray-600">Define measurable learning outcomes for your courses.</p>
+                  </div>
+                </div>
+                        </motion.div>
+
+                        {/* Tool 10: Story & Passage Creator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.3 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/story-passage-creator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <BookOpen className="w-6 h-6 text-orange-600" />
+                        </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Story & Passage Creator</h4>
+                              <p className="text-sm text-gray-600">Generate engaging stories and reading passages.</p>
+                          </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Tool 11: MCQ Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.4 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/mcq-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                            </div>
+                                  <div>
+                              <h4 className="font-bold text-gray-900 mb-1">MCQ Generator</h4>
+                              <p className="text-sm text-gray-600">Create multiple-choice questions with detailed explanations.</p>
+                                  </div>
+                                </div>
+                        </motion.div>
+
+                        {/* Tool 12: Short Notes & Summaries Maker */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.5 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                            onClick={() => {
+                            setLocation('/teacher/tools/short-notes-summaries-maker');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Layers className="w-6 h-6 text-teal-600" />
+                        </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Short Notes & Summaries Maker</h4>
+                              <p className="text-sm text-gray-600">Condense complex topics into concise notes.</p>
+                      </div>
+                </div>
+              </motion.div>
+
+                        {/* Tool 13: Flashcard Generator */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.6 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/flashcard-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <CreditCard className="w-6 h-6 text-orange-600" />
+                    </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Flashcard Generator</h4>
+                              <p className="text-sm text-gray-600">Build study flashcards for quick revision.</p>
+                  </div>
+                </div>
+                        </motion.div>
+
+                        {/* Tool 14: Report Card Generator */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.7 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/report-card-generator');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileCheck className="w-6 h-6 text-blue-600" />
+                      </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Report Card Generator</h4>
+                              <p className="text-sm text-gray-600">Generate comprehensive student progress reports with feedback.</p>
+                  </div>
+                  </div>
+                        </motion.div>
+
+                        {/* Tool 15: Student Skill Tracker */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1.8 }}
+                          className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200"
+                          onClick={() => {
+                            setLocation('/teacher/tools/student-skill-tracker');
+                          }}
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <TrendingUp className="w-6 h-6 text-teal-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 mb-1">Student Skill Tracker</h4>
+                              <p className="text-sm text-gray-600">Monitor and track student skill development.</p>
+                          </div>
+                            </div>
+                        </motion.div>
+                            </div>
+                            </div>
                   </div>
                 )}
               </motion.div>

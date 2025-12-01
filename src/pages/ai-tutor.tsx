@@ -11,8 +11,18 @@ import {
   Brain,
   Target,
   Clock,
-  Star
+  Star,
+  BookMarked,
+  Calendar,
+  HelpCircle,
+  FileText,
+  Key,
+  ClipboardList,
+  CheckCircle2,
+  Layout,
+  ArrowRight
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { API_BASE_URL } from "@/lib/api-config";
 
@@ -25,6 +35,71 @@ export default function AITutor() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [subjectProgress, setSubjectProgress] = useState<any[]>([]);
   const isMobile = useIsMobile();
+  const [, setLocation] = useLocation();
+
+  // Student AI Tools
+  const studentTools = [
+    {
+      id: 'smart-study-guide-generator',
+      name: 'Smart Study Guide Generator',
+      icon: BookMarked,
+      color: 'from-orange-400 to-orange-500'
+    },
+    {
+      id: 'concept-breakdown-explainer',
+      name: 'Concept Breakdown Explainer',
+      icon: Brain,
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 'personalized-revision-planner',
+      name: 'Personalized Revision Planner',
+      icon: Calendar,
+      color: 'from-teal-400 to-teal-500'
+    },
+    {
+      id: 'smart-qa-practice-generator',
+      name: 'Smart Q&A Practice Generator',
+      icon: HelpCircle,
+      color: 'from-orange-400 to-orange-500'
+    },
+    {
+      id: 'chapter-summary-creator',
+      name: 'Chapter Summary Creator',
+      icon: FileText,
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 'key-points-formula-extractor',
+      name: 'Key Points & Formula Extractor',
+      icon: Key,
+      color: 'from-teal-400 to-teal-500'
+    },
+    {
+      id: 'quick-assignment-builder',
+      name: 'Quick Assignment Builder',
+      icon: ClipboardList,
+      color: 'from-orange-400 to-orange-500'
+    },
+    {
+      id: 'exam-readiness-checker',
+      name: 'Exam Readiness Checker',
+      icon: CheckCircle2,
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 'project-layout-designer',
+      name: 'Project Layout Designer',
+      icon: Layout,
+      color: 'from-teal-400 to-teal-500'
+    },
+    {
+      id: 'goal-motivation-planner',
+      name: 'Goal & Motivation Planner',
+      icon: Target,
+      color: 'from-orange-400 to-orange-500'
+    }
+  ];
 
   // Fetch user data
   useEffect(() => {
@@ -275,47 +350,33 @@ export default function AITutor() {
               </Button>
             </div>
 
-            {/* Chat History */}
+            {/* AI Tools */}
             <div className="flex-1 overflow-y-auto p-2 bg-gradient-to-b from-gray-900 via-black to-black">
               <div className="text-xs font-semibold text-white uppercase tracking-wider px-3 py-3 border-b border-gray-800 mb-2">
-                Recent Chats
+                AI Tools
               </div>
-              {sessionsLoading ? (
-                <div className="space-y-2 px-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-12 bg-gradient-to-r from-gray-200 to-gray-100 rounded-lg animate-pulse" />
-                  ))}
-                </div>
-              ) : chatSessions.length > 0 ? (
-                <div className="space-y-1 px-2">
-                  {(chatSessions as any[]).slice(0, 10).map((session: any, index: number) => (
+              <div className="space-y-1 px-2">
+                {studentTools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
                     <button
-                      key={session.id}
-                      className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-white truncate transition-all duration-200 border border-transparent hover:border-gray-700 hover:shadow-sm group"
-                      onClick={() => {
-                        // Load this session - would need to implement
-                        console.log('Load session:', session.id);
-                      }}
+                      key={tool.id}
+                      className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-white transition-all duration-200 border border-transparent hover:border-gray-700 hover:shadow-sm group"
+                      onClick={() => setLocation(`/student/tools/${tool.id}`)}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <MessageCircle className="w-4 h-4 text-gray-400 group-hover:text-white flex-shrink-0 transition-colors" />
-                        <span className="truncate group-hover:text-white font-medium">
-                          {session.messages?.[0]?.content?.substring(0, 30) || `Chat ${index + 1}`}
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${tool.color} flex items-center justify-center flex-shrink-0 shadow-md`}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="flex-1 truncate group-hover:text-white font-medium text-gray-300">
+                          {tool.name}
                         </span>
+                        <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-white opacity-0 group-hover:opacity-100 transition-all flex-shrink-0" />
                       </div>
                     </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
-                    <MessageCircle className="w-6 h-6 text-gray-500" />
-                  </div>
-                  <p className="font-medium text-gray-300">No chat history</p>
-                  <p className="text-xs text-gray-500 mt-1">Start a conversation to see it here</p>
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </div>
 
             {/* User Info */}

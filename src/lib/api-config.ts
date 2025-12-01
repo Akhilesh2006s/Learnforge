@@ -31,15 +31,24 @@ const isIpAddress = (url?: string) => {
 };
 
 // In production: ignore localhost, optionally convert HTTP to HTTPS, otherwise use envUrl or default
-let finalUrl = envUrl || PRODUCTION_URL;
+// In development: use LOCAL_URL if envUrl is not set
+let finalUrl: string;
 if (isProduction) {
-  if (isLocalhostUrl) {
-    finalUrl = PRODUCTION_URL; // Ignore localhost in production
-  } else if (isHttpUrl && !allowHttpApi && !isIpAddress(envUrl)) {
-    finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS for domains
-  } else if (envUrl) {
-    finalUrl = envUrl; // Respect explicit env URL (e.g., droplet IP over HTTP)
+  // Production mode
+  if (envUrl) {
+    if (isLocalhostUrl) {
+      finalUrl = PRODUCTION_URL; // Ignore localhost in production
+    } else if (isHttpUrl && !allowHttpApi && !isIpAddress(envUrl)) {
+      finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS for domains
+    } else {
+      finalUrl = envUrl; // Respect explicit env URL (e.g., droplet IP over HTTP)
+    }
+  } else {
+    finalUrl = PRODUCTION_URL; // Default to production
   }
+} else {
+  // Development mode
+  finalUrl = envUrl || LOCAL_URL; // Use env URL if set, otherwise use localhost
 }
 
 export const API_BASE_URL = finalUrl;

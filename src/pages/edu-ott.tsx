@@ -323,15 +323,15 @@ export default function EduOTT() {
       <Navigation />
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 bg-sky-50 min-h-screen relative">
           
-        {/* Robot GIF - Fixed at Bottom Left */}
+        {/* Vidya AI - Fixed at Bottom Left */}
         {!isMobile && (
           <div 
             className="fixed bottom-8 left-4 z-30 cursor-pointer"
             onClick={() => window.location.href = '/ai-tutor'}
           >
             <img 
-              src="/ROBOT.gif" 
-              alt="Robot - Click to chat with Vidya AI" 
+              src="/Vidya-ai.jpg" 
+              alt="Vidya AI - Click to chat" 
               className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
             />
           </div>

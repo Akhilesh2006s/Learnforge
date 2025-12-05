@@ -3,7 +3,42 @@
  * Tracks study time using timestamps and ignores time when app is in background
  */
 
-const STORAGE_KEY = 'studyTimeData';
+/**
+ * Get user-specific storage key
+ */
+function getStorageKey(): string {
+  // Try to get user ID from JWT token
+  try {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // Decode JWT to get user ID (simple base64 decode, no verification needed for storage key)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.userId || payload.id || payload._id;
+      if (userId) {
+        return `studyTimeData_${userId}`;
+      }
+    }
+  } catch (error) {
+    console.warn('Could not extract user ID from token:', error);
+  }
+  
+  // Fallback: try to get from user data in localStorage
+  try {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.id || user._id) {
+        return `studyTimeData_${user.id || user._id}`;
+      }
+    }
+  } catch (error) {
+    console.warn('Could not extract user ID from userData:', error);
+  }
+  
+  // Final fallback: use default key (for backward compatibility, but should be avoided)
+  console.warn('⚠️ Using default study time storage key - data may be shared across users');
+  return 'studyTimeData';
+}
 
 interface DailyData {
   totalMinutes: number;
@@ -33,6 +68,7 @@ function getStartOfWeek(date: Date): Date {
  * Get or initialize study time data
  */
 function getStudyTimeData(): StudyTimeData {
+  const STORAGE_KEY = getStorageKey();
   const stored = localStorage.getItem(STORAGE_KEY);
   const TODAY_KEY = new Date().toDateString();
   const WEEK_START = getStartOfWeek(new Date()).toDateString();
@@ -90,6 +126,7 @@ function getStudyTimeData(): StudyTimeData {
  * Save study time data to localStorage
  */
 function saveStudyTimeData(data: StudyTimeData): void {
+  const STORAGE_KEY = getStorageKey();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 

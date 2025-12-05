@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Video, FileText, File, X, Trash2, Edit, Play, Download, Eye, Plus } from 'lucide-react';
+import { Upload, Video, FileText, File, X, Trash2, Edit, Play, Eye, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api-config';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,6 +55,7 @@ export default function ContentManagement() {
   const [filterBySubject, setFilterBySubject] = useState<string>('all');
   const [filterByClass, setFilterByClass] = useState<string>('all');
   const [filterByType, setFilterByType] = useState<string>('all');
+  const [viewingContent, setViewingContent] = useState<Content | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -859,48 +860,25 @@ export default function ContentManagement() {
                           size="sm"
                           className="w-full bg-white/90 text-gray-900 border-white/50 hover:bg-white hover:text-gray-900 text-left justify-start"
                           onClick={() => {
-                            const fileUrl = url.startsWith('http') 
-                              ? url 
-                              : `${API_BASE_URL}${url}`;
-                            window.open(fileUrl, '_blank');
+                            const contentWithUrl = { ...content, fileUrl: url };
+                            setViewingContent(contentWithUrl);
                           }}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           <span className="truncate flex-1">Link {index + 1}</span>
-                          <Download className="w-4 h-4 ml-2" />
                         </Button>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 bg-white/90 text-gray-900 border-white/50 hover:bg-white hover:text-gray-900"
-                    onClick={() => {
-                      const fileUrl = content.fileUrl.startsWith('http') 
-                        ? content.fileUrl 
-                        : `${API_BASE_URL}${content.fileUrl}`;
-                      window.open(fileUrl, '_blank');
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/90 text-gray-900 border-white/50 hover:bg-white hover:text-gray-900"
-                    onClick={() => {
-                      const fileUrl = content.fileUrl.startsWith('http') 
-                        ? content.fileUrl 
-                        : `${API_BASE_URL}${content.fileUrl}`;
-                      window.open(fileUrl, '_blank');
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-white/90 text-gray-900 border-white/50 hover:bg-white hover:text-gray-900"
+                      onClick={() => setViewingContent(content)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
                   )}
                 </div>
               </CardContent>
@@ -1201,6 +1179,139 @@ export default function ContentManagement() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Content Modal */}
+      <Dialog open={!!viewingContent} onOpenChange={(open) => !open && setViewingContent(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{viewingContent?.title}</DialogTitle>
+            <DialogDescription>
+              {viewingContent?.description || 'View content'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {viewingContent && (
+            <div className="space-y-4 mt-4">
+              {/* Content Info */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Subject:</span> {viewingContent.subject?.name || 'N/A'}
+                </div>
+                <div>
+                  <span className="font-medium">Board:</span> {getBoardLabel(viewingContent.board)}
+                </div>
+                {viewingContent.topic && (
+                  <div>
+                    <span className="font-medium">Topic:</span> {viewingContent.topic}
+                  </div>
+                )}
+                {viewingContent.date && (
+                  <div>
+                    <span className="font-medium">Date:</span> {new Date(viewingContent.date).toLocaleDateString()}
+                  </div>
+                )}
+                {viewingContent.duration && (viewingContent.type === 'Video' || viewingContent.type === 'Audio') && (
+                  <div>
+                    <span className="font-medium">Duration:</span> {viewingContent.duration} min
+                  </div>
+                )}
+                <div>
+                  <span className="font-medium">Type:</span> {viewingContent.type}
+                </div>
+              </div>
+
+              {/* Content Display */}
+              <div className="border rounded-lg p-4 bg-gray-50">
+                {(() => {
+                  const fileUrl = viewingContent.fileUrl.startsWith('http') 
+                    ? viewingContent.fileUrl 
+                    : `${API_BASE_URL}${viewingContent.fileUrl}`;
+                  
+                  // Check if it's a YouTube URL
+                  const isYouTube = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
+                  
+                  // Function to extract YouTube video ID
+                  const getYouTubeId = (url: string) => {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                  };
+                  
+                  if (viewingContent.type === 'Video') {
+                    if (isYouTube) {
+                      const videoId = getYouTubeId(fileUrl);
+                      if (videoId) {
+                        return (
+                          <div className="aspect-video">
+                            <iframe
+                              className="w-full h-full rounded-lg"
+                              src={`https://www.youtube.com/embed/${videoId}`}
+                              title={viewingContent.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        );
+                      }
+                    }
+                    // Regular video file
+                    return (
+                      <div className="aspect-video">
+                        <video
+                          controls
+                          className="w-full h-full rounded-lg"
+                          src={fileUrl}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    );
+                  } else if (viewingContent.type === 'Audio') {
+                    return (
+                      <div className="p-4">
+                        <audio
+                          controls
+                          className="w-full"
+                          src={fileUrl}
+                        >
+                          Your browser does not support the audio tag.
+                        </audio>
+                      </div>
+                    );
+                  } else {
+                    // Documents/PDFs - use iframe
+                    return (
+                      <div className="w-full h-[600px]">
+                        <iframe
+                          src={fileUrl}
+                          className="w-full h-full rounded-lg border"
+                          title={viewingContent.title}
+                        />
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
+
+              {/* File URL */}
+              <div className="text-sm">
+                <span className="font-medium">File URL:</span>
+                <a
+                  href={viewingContent.fileUrl.startsWith('http') 
+                    ? viewingContent.fileUrl 
+                    : `${API_BASE_URL}${viewingContent.fileUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline ml-2 break-all"
+                >
+                  {viewingContent.fileUrl}
+                </a>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

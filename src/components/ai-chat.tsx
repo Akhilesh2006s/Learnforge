@@ -313,7 +313,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
               <div className="flex flex-col items-center justify-center min-h-[400px] py-16 text-center">
               <div className="w-16 h-16 rounded-full overflow-hidden mb-6 border-2 border-teal-200">
               <img 
-                src="/ROBOT.gif" 
+                src="/Vidya-ai.jpg" 
                 alt="Vidya AI" 
                 className="w-full h-full object-cover"
               />
@@ -363,7 +363,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                   {msg.role === "assistant" ? (
                     <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-teal-200/50">
                       <img 
-                        src="/ROBOT.gif" 
+                        src="/Vidya-ai.jpg" 
                         alt="Vidya AI" 
                         className="w-full h-full object-cover"
                       />
@@ -396,7 +396,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-teal-200/50">
                   <img 
-                    src="/ROBOT.gif" 
+                    src="/Vidya-ai.jpg" 
                     alt="Vidya AI" 
                     className="w-full h-full object-cover"
                   />

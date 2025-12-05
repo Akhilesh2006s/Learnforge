@@ -391,9 +391,9 @@ export default function SuperAdminDashboard() {
               </div>
               <div className="ml-4">
                 <img 
-                  src="/ROBOT.gif" 
-                  alt="Vidya AI Robot" 
-                  className="h-24 w-24 object-contain"
+                  src="/Vidya-ai.jpg" 
+                  alt="Vidya AI" 
+                  className="h-24 w-24 object-contain rounded-lg"
                 />
               </div>
             </div>

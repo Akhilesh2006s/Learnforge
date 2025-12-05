@@ -660,8 +660,8 @@ export default function LearningPaths() {
           <Link href="/ai-tutor">
             <div className="fixed bottom-8 left-4 z-30 cursor-pointer">
               <img 
-                src="/ROBOT.gif" 
-                alt="Robot - Click to chat with Vidya AI" 
+                src="/Vidya-ai.jpg" 
+                alt="Vidya AI - Click to chat" 
                 className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
               />
             </div>

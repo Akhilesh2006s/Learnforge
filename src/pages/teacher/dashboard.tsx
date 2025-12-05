@@ -1935,8 +1935,8 @@ const TeacherDashboard = () => {
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                     <img 
-                      src="/ROBOT.gif" 
-                      alt="Vidya AI Robot" 
+                      src="/Vidya-ai.jpg" 
+                      alt="Vidya AI" 
                       className="w-full h-full object-cover"
                     />
                   </div>

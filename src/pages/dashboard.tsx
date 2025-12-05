@@ -83,6 +83,55 @@ import { InteractiveBackground, FloatingParticles } from "@/components/backgroun
 // Mock user ID - in a real app, this would come from authentication
 const MOCK_USER_ID = "user-1";
 
+// Vidya AI Corner Button Component with Rotating Messages
+function VidyaAICornerButton() {
+  const [, setLocation] = useLocation();
+  const messages = [
+    "Need some help with your homework?",
+    "Need some help with maths?",
+    "Need some help with physics?",
+    "Need some help with chemistry?"
+  ];
+  const [currentMessage, setCurrentMessage] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessage((prev) => (prev + 1) % messages.length);
+    }, 3000); // Change message every 3 seconds
+    return () => clearInterval(interval);
+  }, [messages.length]);
+  
+  return (
+    <div className="fixed bottom-8 left-4 z-30">
+      {/* Message Popup */}
+      <div className="relative mb-2 animate-fade-in">
+        <div className="bg-white rounded-lg shadow-xl p-3 border-2 border-blue-200 relative">
+          <p className="text-sm font-medium text-gray-800 whitespace-nowrap">
+            {messages[currentMessage]}
+          </p>
+          {/* Speech bubble tail */}
+          <div className="absolute bottom-0 left-8 transform translate-y-full">
+            <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-blue-200"></div>
+            <div className="absolute top-0 left-0 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white" style={{ marginTop: '-1px' }}></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Vidya AI Image */}
+      <div 
+        className="cursor-pointer"
+        onClick={() => setLocation('/ai-tutor')}
+      >
+        <img 
+          src="/Vidya-ai.jpg" 
+          alt="Vidya AI - Click to chat" 
+          className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
@@ -940,6 +989,54 @@ export default function Dashboard() {
 
   // Track study time using timestamp module (ignores background time)
   useEffect(() => {
+    // Fetch session time from backend on mount to get user-specific data
+    const fetchSessionTime = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/api/student/session-time`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+              // Use backend data if available (more accurate and user-specific)
+              setStudyTimeToday(data.data.today || 0);
+              setStudyTimeThisWeek(data.data.thisWeek || 0);
+              
+              // Convert backend weekly data format to our format
+              if (data.data.weeklyData) {
+                const convertedWeeklyData: { [key: string]: number } = {};
+                Object.keys(data.data.weeklyData).forEach(dateKey => {
+                  const date = new Date(dateKey);
+                  convertedWeeklyData[date.toDateString()] = data.data.weeklyData[dateKey];
+                });
+                setWeeklyStudyData(convertedWeeklyData);
+              }
+              
+              console.log('✅ Loaded session time from backend:', data.data);
+              return; // Use backend data, skip localStorage
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch session time from backend, using localStorage:', error);
+      }
+      
+      // Fallback to localStorage if backend fetch fails
+      const initialTimes = updateStudyTime();
+      setStudyTimeToday(initialTimes.today);
+      setStudyTimeThisWeek(initialTimes.thisWeek);
+      const initialWeeklyData = getWeeklyStudyData();
+      setWeeklyStudyData(initialWeeklyData);
+    };
+    
+    fetchSessionTime();
+    
     // Start session when component mounts
     startSession();
     
@@ -1431,19 +1528,8 @@ export default function Dashboard() {
           <FloatingParticles /> */}
         </div>
         
-        {/* Robot GIF - Fixed at Bottom Left */}
-        {!isMobile && (
-          <div 
-            className="fixed bottom-8 left-4 z-30 cursor-pointer"
-            onClick={() => setLocation('/ai-tutor')}
-          >
-            <img 
-              src="/ROBOT.gif" 
-              alt="Robot - Click to chat with Vidya AI" 
-              className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
-            />
-          </div>
-        )}
+        {/* Vidya AI - Fixed at Bottom Left with Message Popup */}
+        {!isMobile && <VidyaAICornerButton />}
         
         {/* Welcome Section */}
         <div className="mt-6 sm:mt-8 mb-6 relative z-10">
@@ -1481,8 +1567,8 @@ export default function Dashboard() {
                 <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 relative">
                   <div className="absolute inset-0 bg-white/20 rounded-xl backdrop-blur-sm p-1.5">
                     <img 
-                      src="/ROBOT.gif" 
-                      alt="Vidya AI Robot" 
+                      src="/Vidya-ai.jpg" 
+                      alt="Vidya AI" 
                       className="w-full h-full object-contain rounded-lg"
                     />
                   </div>
@@ -2580,8 +2666,8 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                   <img 
-                    src="/ROBOT.gif" 
-                    alt="Vidya AI Robot" 
+                    src="/Vidya-ai.jpg" 
+                    alt="Vidya AI" 
                     className="w-full h-full object-cover"
                   />
                   </div>

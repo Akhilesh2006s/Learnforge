@@ -88,6 +88,11 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [exitAttempts, setExitAttempts] = useState(0);
+  const [showExitWarning, setShowExitWarning] = useState(false);
+  const [showReenterPrompt, setShowReenterPrompt] = useState(false);
+  const MAX_EXIT_ATTEMPTS = 5;
 
   // Fetch exam data
   const { data: exam, isLoading } = useQuery({
@@ -143,6 +148,99 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
       setTimeLeft(exam.duration * 60);
     }
   }, [exam]);
+
+  // Function to enter/re-enter fullscreen
+  const enterFullscreen = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+        setShowReenterPrompt(false);
+      } else if ((document.documentElement as any).webkitRequestFullscreen) {
+        await (document.documentElement as any).webkitRequestFullscreen();
+        setIsFullscreen(true);
+        setShowReenterPrompt(false);
+      } else if ((document.documentElement as any).mozRequestFullScreen) {
+        await (document.documentElement as any).mozRequestFullScreen();
+        setIsFullscreen(true);
+        setShowReenterPrompt(false);
+      } else if ((document.documentElement as any).msRequestFullscreen) {
+        await (document.documentElement as any).msRequestFullscreen();
+        setIsFullscreen(true);
+        setShowReenterPrompt(false);
+      }
+    } catch (error) {
+      console.log('Fullscreen not available:', error);
+    }
+  };
+
+  // Enter fullscreen on mount
+  useEffect(() => {
+    enterFullscreen();
+
+    // Listen for fullscreen changes
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // If exited fullscreen and not submitted, show warning and prompt
+      if (!isCurrentlyFullscreen && !isSubmitted) {
+        setExitAttempts(prev => {
+          const newAttempts = prev + 1;
+          if (newAttempts >= MAX_EXIT_ATTEMPTS) {
+            // Auto submit immediately after 5 attempts
+            console.log('⚠️ Maximum exit attempts reached. Auto-submitting exam...');
+            setShowExitWarning(true);
+            // Submit immediately without delay
+            setTimeout(() => {
+              handleSubmit();
+            }, 500);
+            return newAttempts;
+          }
+          setShowExitWarning(true);
+          setShowReenterPrompt(true);
+          return newAttempts;
+        });
+      } else if (isCurrentlyFullscreen) {
+        // If back in fullscreen, hide warnings
+        setShowExitWarning(false);
+        setShowReenterPrompt(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    // Prevent context menu and other shortcuts
+    const preventDefaults = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    document.addEventListener('contextmenu', preventDefaults);
+    document.addEventListener('keydown', (e) => {
+      // Prevent F11, Alt+Tab, etc.
+      if (e.key === 'F11' || (e.altKey && e.key === 'Tab')) {
+        e.preventDefault();
+      }
+    });
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      document.removeEventListener('contextmenu', preventDefaults);
+    };
+  }, [isSubmitted]);
 
   // Timer countdown
   useEffect(() => {
@@ -413,6 +511,94 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Exit Warning Modal */}
+      {showExitWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <Card className="max-w-md w-full mx-4 border-2 border-red-500">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-600">
+                <AlertTriangle className="w-6 h-6" />
+                <span>Warning: Fullscreen Exit Detected</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-lg font-bold text-red-700 text-center mb-2">
+                    Attempt {exitAttempts} of {MAX_EXIT_ATTEMPTS}
+                  </p>
+                  <p className="text-sm text-red-600 text-center">
+                    {exitAttempts >= MAX_EXIT_ATTEMPTS 
+                      ? 'Maximum exit attempts reached. Exam will be auto-submitted.'
+                      : `You have ${MAX_EXIT_ATTEMPTS - exitAttempts} attempt(s) remaining before auto-submission.`
+                    }
+                  </p>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Please stay in fullscreen mode during the exam. Exiting fullscreen multiple times will result in automatic submission.
+                </p>
+                {exitAttempts >= MAX_EXIT_ATTEMPTS ? (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                      <p className="text-sm text-red-800 font-bold">
+                        Maximum Exit Attempts Reached
+                      </p>
+                    </div>
+                    <p className="text-sm text-red-700 font-semibold">
+                      ⚠️ Your exam is being automatically submitted now...
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                      <span className="text-xs text-red-600">Submitting...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      onClick={enterFullscreen}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                    >
+                      Return to Fullscreen Mode
+                    </Button>
+                    <p className="text-xs text-gray-500 text-center">
+                      Click the button above to continue your exam in fullscreen mode
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Re-enter Fullscreen Prompt (Non-blocking) */}
+      {showReenterPrompt && !showExitWarning && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+          <Card className="border-2 border-yellow-400 shadow-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-800">
+                    Exit Attempt: {exitAttempts}/{MAX_EXIT_ATTEMPTS}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Return to fullscreen to continue your exam
+                  </p>
+                </div>
+                <Button
+                  onClick={enterFullscreen}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  size="sm"
+                >
+                  Re-enter Fullscreen
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Mobile-style Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
         <div className="max-w-md mx-auto px-4 py-3">
@@ -458,12 +644,117 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
               <span className="transition-all duration-300">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2 transition-all duration-500" />
+            {exitAttempts > 0 && (
+              <div className="mt-2 text-xs text-center">
+                <span className={`font-semibold ${exitAttempts >= MAX_EXIT_ATTEMPTS ? 'text-red-600' : 'text-yellow-600'}`}>
+                  Exit Attempts: {exitAttempts}/{MAX_EXIT_ATTEMPTS}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
+          {/* Question Navigation Sidebar - Modern Grid Layout */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <Card className="sticky top-24">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-purple-600" />
+                  Questions
+                </CardTitle>
+                <p className="text-xs text-gray-500 mt-1">
+                  {Object.keys(answers).length} of {exam.questions.length} answered
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {/* Question Numbers Grid - 5 columns, 5-6 rows */}
+                <div className="bg-gradient-to-br from-gray-50 to-purple-50/30 rounded-xl p-4 border border-gray-200">
+                  <div className="grid grid-cols-5 gap-2.5">
+                    {exam.questions.map((_, index) => {
+                      const questionId = exam.questions[index]._id;
+                      const isAnswered = answers[questionId] !== undefined;
+                      const isFlagged = flaggedQuestions.has(index);
+                      const isCurrent = index === currentQuestionIndex;
+                      
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => animateToQuestion(index)}
+                          disabled={isAnimating}
+                          className={`
+                            group relative
+                            w-11 h-11 rounded-xl font-bold text-sm
+                            transition-all duration-300 ease-out
+                            flex items-center justify-center
+                            border-2
+                            disabled:cursor-not-allowed disabled:opacity-50
+                            ${
+                              isCurrent
+                                ? 'bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white border-purple-400 shadow-xl shadow-purple-500/50 scale-110 z-10 ring-2 ring-purple-300'
+                                : isFlagged && isAnswered
+                                ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white border-amber-300 shadow-lg shadow-amber-400/30 hover:scale-105'
+                                : isFlagged
+                                ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 text-yellow-900 border-yellow-400 shadow-md hover:scale-105'
+                                : isAnswered
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-400/30 hover:scale-105'
+                                : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                            }
+                          `}
+                          title={`Question ${index + 1}${isFlagged ? ' ⚑ Flagged' : ''}${isAnswered ? ' ✓ Answered' : ' ○ Not answered'}`}
+                        >
+                          <span className="relative z-10">{index + 1}</span>
+                          {isFlagged && (
+                            <Flag className="absolute -top-1 -right-1 w-3 h-3 text-amber-800 drop-shadow-sm" fill="currentColor" />
+                          )}
+                          {isAnswered && !isFlagged && (
+                            <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-white bg-emerald-600 rounded-full" />
+                          )}
+                          {isCurrent && (
+                            <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Legend */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-3">Status Legend</p>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 border-2 border-purple-400 ring-2 ring-purple-300"></div>
+                      <span className="text-xs text-gray-600">Current</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 border-2 border-emerald-400 relative">
+                        <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-2 h-2 text-white" />
+                      </div>
+                      <span className="text-xs text-gray-600">Answered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-yellow-300 to-yellow-400 border-2 border-yellow-400 relative">
+                        <Flag className="absolute -top-0.5 -right-0.5 w-2 h-2 text-yellow-900" fill="currentColor" />
+                      </div>
+                      <span className="text-xs text-gray-600">Flagged</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-white border-2 border-gray-300"></div>
+                      <span className="text-xs text-gray-600">Not Answered</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Question Area */}
+          <div className="lg:col-span-3 order-1 lg:order-2">
         {/* Animated Question Container */}
         <div className="relative overflow-hidden">
           <div 
@@ -656,27 +947,6 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
             <span>Previous</span>
           </Button>
 
-          <div className="flex items-center space-x-2">
-            {exam.questions.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => animateToQuestion(index)}
-                disabled={isAnimating}
-                className={`w-8 h-8 rounded-full text-xs font-medium transition-all duration-300 transform hover:scale-110 hover:shadow-md disabled:cursor-not-allowed ${
-                  index === currentQuestionIndex
-                    ? 'bg-primary text-white scale-110 shadow-lg ring-2 ring-primary ring-opacity-50'
-                    : flaggedQuestions.has(index)
-                    ? 'bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 hover:border-yellow-400'
-                    : answers[exam.questions[index]._id] !== undefined
-                    ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-200 hover:border-green-400'
-                    : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 hover:border-gray-400'
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-
           <Button
             variant="outline"
             onClick={handleNext}
@@ -687,12 +957,7 @@ export default function AnimatedExam({ examId, onComplete, onExit }: AnimatedExa
             <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Button>
         </div>
-
-        {/* Quick Navigation Hint */}
-        <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500 animate-pulse">
-            Tap question numbers to jump directly
-          </p>
+          </div>
         </div>
       </div>
 

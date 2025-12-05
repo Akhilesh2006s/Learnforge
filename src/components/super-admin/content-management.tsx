@@ -52,6 +52,9 @@ export default function ContentManagement() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [filterBySubject, setFilterBySubject] = useState<string>('all');
+  const [filterByClass, setFilterByClass] = useState<string>('all');
+  const [filterByType, setFilterByType] = useState<string>('all');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -72,6 +75,10 @@ export default function ContentManagement() {
   useEffect(() => {
     fetchSubjects();
     fetchContents();
+    // Reset filters when board changes
+    setFilterBySubject('all');
+    setFilterByClass('all');
+    setFilterByType('all');
   }, [selectedBoard]);
 
   const getSubjectsForBoard = async (boardCode: string, options: { silent?: boolean } = {}) => {
@@ -517,6 +524,69 @@ export default function ContentManagement() {
     return 'Asli Exclusive Schools';
   };
 
+  // Extract class number from subject name (e.g., "Chemistry_1" -> "1", "Chemistry_10" -> "10")
+  const extractClassNumber = (subjectName: string): string | null => {
+    const match = subjectName.match(/_(\d+)$/);
+    return match ? match[1] : null;
+  };
+
+  // Extract subject name without class number (e.g., "Chemistry_1" -> "Chemistry")
+  const extractSubjectName = (subjectName: string): string => {
+    const match = subjectName.match(/^(.+?)_\d+$/);
+    return match ? match[1] : subjectName;
+  };
+
+  // Get unique subject names from contents
+  const getUniqueSubjectNames = (): string[] => {
+    const names = contents
+      .map(c => c.subject?.name ? extractSubjectName(c.subject.name) : null)
+      .filter((name): name is string => name !== null);
+    return Array.from(new Set(names)).sort();
+  };
+
+  // Get unique class numbers from contents
+  const getUniqueClassNumbers = (): string[] => {
+    const classes = contents
+      .map(c => {
+        if (c.classNumber) return c.classNumber;
+        if (c.subject?.name) return extractClassNumber(c.subject.name);
+        return null;
+      })
+      .filter((c): c is string => c !== null);
+    return Array.from(new Set(classes)).sort((a, b) => parseInt(a) - parseInt(b));
+  };
+
+  // Get unique content types from contents
+  const getUniqueContentTypes = (): string[] => {
+    const types = contents.map(c => c.type);
+    return Array.from(new Set(types)).sort();
+  };
+
+  // Filter contents based on selected filters
+  const filteredContents = contents.filter(content => {
+    const subjectName = content.subject?.name ? extractSubjectName(content.subject.name) : null;
+    const classNumber = content.classNumber || (content.subject?.name ? extractClassNumber(content.subject.name) : null);
+
+    // Filter by subject name
+    if (filterBySubject !== 'all' && subjectName !== filterBySubject) {
+      return false;
+    }
+
+    // Filter by class number
+    if (filterByClass !== 'all') {
+      if (!classNumber || classNumber !== filterByClass) {
+        return false;
+      }
+    }
+
+    // Filter by content type
+    if (filterByType !== 'all' && content.type !== filterByType) {
+      return false;
+    }
+
+    return true;
+  });
+
   const handleDeleteAll = async () => {
     if (!confirm('Are you sure you want to delete ALL content? This action cannot be undone.')) {
       return;
@@ -599,10 +669,10 @@ export default function ContentManagement() {
         </div>
       </div>
 
-      {/* Board Selector */}
+      {/* Board Selector and Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Label className="font-semibold">Select Board:</Label>
             <div className="relative w-48">
               <div className="absolute -inset-[2px] bg-gradient-to-r from-sky-300 to-teal-400 rounded-md"></div>
@@ -619,8 +689,66 @@ export default function ContentManagement() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Filter by Subject */}
+            <Label className="font-semibold ml-4">Filter by Subject:</Label>
+            <div className="relative w-48">
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-orange-300 to-orange-400 rounded-md"></div>
+              <Select value={filterBySubject} onValueChange={setFilterBySubject}>
+                <SelectTrigger className="w-full relative z-10 border-0 bg-white focus:ring-2 focus:ring-orange-500 focus:ring-offset-0">
+                  <SelectValue placeholder="All Subjects" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {getUniqueSubjectNames().map(name => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filter by Class */}
+            <Label className="font-semibold ml-4">Filter by Class:</Label>
+            <div className="relative w-48">
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-teal-400 to-teal-500 rounded-md"></div>
+              <Select value={filterByClass} onValueChange={setFilterByClass}>
+                <SelectTrigger className="w-full relative z-10 border-0 bg-white focus:ring-2 focus:ring-teal-500 focus:ring-offset-0">
+                  <SelectValue placeholder="All Classes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {getUniqueClassNumbers().map(classNum => (
+                    <SelectItem key={classNum} value={classNum}>
+                      Class {classNum}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filter by Type */}
+            <Label className="font-semibold ml-4">Filter by Type:</Label>
+            <div className="relative w-48">
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-purple-300 to-purple-400 rounded-md"></div>
+              <Select value={filterByType} onValueChange={setFilterByType}>
+                <SelectTrigger className="w-full relative z-10 border-0 bg-white focus:ring-2 focus:ring-purple-500 focus:ring-offset-0">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {getUniqueContentTypes().map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <Badge variant="outline" className="ml-auto">
-              {contents.length} items
+              {filteredContents.length} of {contents.length} items
             </Badge>
           </div>
         </CardContent>
@@ -644,9 +772,27 @@ export default function ContentManagement() {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredContents.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Content Matches Filters</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your filter criteria</p>
+            <Button 
+              onClick={() => {
+                setFilterBySubject('all');
+                setFilterByClass('all');
+                setFilterByType('all');
+              }} 
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {contents.map((content) => (
+          {filteredContents.map((content) => (
             <Card key={content._id} className="hover:shadow-xl transition-all duration-300 border-0 overflow-hidden" style={{
               background: 'linear-gradient(135deg, #7dd3fc 0%, #7dd3fc 20%, #2dd4bf 60%, #14b8a6 100%)'
             }}>

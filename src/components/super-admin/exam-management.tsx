@@ -23,7 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/lib/api-config';
-import { Plus, Trash2, Edit, Eye, Calendar, Clock, BookOpen, FileQuestion, X } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Calendar, Clock, BookOpen, FileQuestion, X, Upload, Download } from 'lucide-react';
 
 interface Exam {
   _id: string;
@@ -72,6 +72,13 @@ export default function ExamManagement() {
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [questionCsvFile, setQuestionCsvFile] = useState<File | null>(null);
+  const [isUploadingQuestionCsv, setIsUploadingQuestionCsv] = useState(false);
+  const [questionCsvUploadResults, setQuestionCsvUploadResults] = useState<{ success: number; errors: string[] } | null>(null);
+  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [isUploadingCsv, setIsUploadingCsv] = useState(false);
+  const [csvUploadResults, setCsvUploadResults] = useState<{ success: number; errors: string[] } | null>(null);
   const [questionFormData, setQuestionFormData] = useState({
     questionText: '',
     questionImage: '',
@@ -145,6 +152,174 @@ export default function ExamManagement() {
       console.error('Failed to fetch questions:', error);
     } finally {
       setIsLoadingQuestions(false);
+    }
+  };
+
+  const handleDownloadQuestionTemplate = () => {
+    // Create CSV template for questions
+    const headers = [
+      'questionText',
+      'questionImage',
+      'questionType',
+      'subject',
+      'marks',
+      'negativeMarks',
+      'explanation',
+      'option1',
+      'option2',
+      'option3',
+      'option4',
+      'correctAnswer',
+      'correctAnswers',
+      'integerAnswer'
+    ];
+    
+    // Example rows for different question types
+    const mcqExample = [
+      'What is 2 + 2?',
+      '',
+      'mcq',
+      'maths',
+      '1',
+      '0',
+      'Basic addition',
+      '3',
+      '4',
+      '5',
+      '6',
+      '1',
+      '',
+      ''
+    ];
+    
+    const multipleExample = [
+      'Which are prime numbers?',
+      '',
+      'multiple',
+      'maths',
+      '2',
+      '0.5',
+      'Prime numbers are divisible only by 1 and themselves',
+      '2',
+      '3',
+      '4',
+      '5',
+      '',
+      '0,1,3',
+      ''
+    ];
+    
+    const integerExample = [
+      'What is the square root of 16?',
+      '',
+      'integer',
+      'maths',
+      '2',
+      '0',
+      'Square root of 16 is 4',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '4'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      mcqExample.join(','),
+      multipleExample.join(','),
+      integerExample.join(',')
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'question_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: 'Template Downloaded',
+      description: 'CSV template downloaded successfully. Fill it with your question data and upload it.',
+    });
+  };
+
+  const handleQuestionCsvUpload = async () => {
+    if (!questionCsvFile || !selectedExam) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a CSV file and ensure an exam is selected',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsUploadingQuestionCsv(true);
+    setQuestionCsvUploadResults(null);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const formData = new FormData();
+      formData.append('file', questionCsvFile);
+
+      const response = await fetch(`${API_BASE_URL}/api/super-admin/exams/${selectedExam._id}/questions/bulk-upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setQuestionCsvUploadResults({
+          success: data.created || data.data?.length || 0,
+          errors: data.errors || []
+        });
+        toast({
+          title: 'Success',
+          description: `Successfully created ${data.created || data.data?.length || 0} question(s)${data.errors?.length > 0 ? ` with ${data.errors.length} error(s)` : ''}`,
+        });
+        fetchQuestions(selectedExam._id);
+        fetchExams(); // Refresh exam list to update question count
+        // Reset file input
+        setQuestionCsvFile(null);
+        // Close dialog after 3 seconds if successful
+        if (!data.errors || data.errors.length === 0) {
+          setTimeout(() => {
+            setQuestionCsvUploadResults(null);
+          }, 3000);
+        }
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to upload CSV file',
+          variant: 'destructive'
+        });
+        setQuestionCsvUploadResults({
+          success: 0,
+          errors: [data.message || 'Upload failed']
+        });
+      }
+    } catch (error) {
+      console.error('Failed to upload question CSV:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload CSV file. Please try again.',
+        variant: 'destructive'
+      });
+      setQuestionCsvUploadResults({
+        success: 0,
+        errors: ['Network error: Failed to upload file']
+      });
+    } finally {
+      setIsUploadingQuestionCsv(false);
     }
   };
 
@@ -478,6 +653,133 @@ export default function ExamManagement() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    // Create CSV template
+    const headers = [
+      'title',
+      'description',
+      'examType',
+      'board',
+      'duration',
+      'totalQuestions',
+      'totalMarks',
+      'instructions',
+      'startDate',
+      'endDate',
+      'filterType',
+      'targetSchools'
+    ];
+    
+    const exampleRow = [
+      'JEE Mains Mock Test 2024',
+      'Mock test for JEE Mains preparation',
+      'mains',
+      'ASLI_EXCLUSIVE_SCHOOLS',
+      '180',
+      '90',
+      '360',
+      'Read all instructions carefully',
+      '2024-12-25T10:00:00',
+      '2024-12-25T13:00:00',
+      'all-schools',
+      ''
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      exampleRow.join(',')
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'exam_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: 'Template Downloaded',
+      description: 'CSV template downloaded successfully. Fill it with your exam data and upload it.',
+    });
+  };
+
+  const handleCsvUpload = async () => {
+    if (!csvFile) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a CSV file',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsUploadingCsv(true);
+    setCsvUploadResults(null);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const formData = new FormData();
+      formData.append('file', csvFile);
+
+      const response = await fetch(`${API_BASE_URL}/api/super-admin/exams/bulk-upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCsvUploadResults({
+          success: data.created || data.data?.length || 0,
+          errors: data.errors || []
+        });
+        toast({
+          title: 'Success',
+          description: `Successfully created ${data.created || data.data?.length || 0} exam(s)${data.errors?.length > 0 ? ` with ${data.errors.length} error(s)` : ''}`,
+        });
+        fetchExams();
+        // Reset file input
+        setCsvFile(null);
+        // Close dialog after 3 seconds if successful
+        if (!data.errors || data.errors.length === 0) {
+          setTimeout(() => {
+            setIsCsvDialogOpen(false);
+            setCsvUploadResults(null);
+          }, 3000);
+        }
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to upload CSV file',
+          variant: 'destructive'
+        });
+        setCsvUploadResults({
+          success: 0,
+          errors: [data.message || 'Upload failed']
+        });
+      }
+    } catch (error) {
+      console.error('Failed to upload CSV:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload CSV file. Please try again.',
+        variant: 'destructive'
+      });
+      setCsvUploadResults({
+        success: 0,
+        errors: ['Network error: Failed to upload file']
+      });
+    } finally {
+      setIsUploadingCsv(false);
+    }
+  };
+
   const handleDeleteExam = async (examId: string) => {
     if (!confirm('Are you sure you want to delete this exam? This will also delete all associated questions.')) {
       return;
@@ -556,13 +858,102 @@ export default function ExamManagement() {
           <h2 className="text-2xl font-bold text-gray-900">Exam Management</h2>
           <p className="text-gray-600 mt-1">Create and manage exams</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-sky-300 to-teal-400 hover:from-sky-400 hover:to-teal-500 text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Exam
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isCsvDialogOpen} onOpenChange={setIsCsvDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload CSV
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Bulk Upload Exams via CSV</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV file to create multiple exams at once. Download the template to see the required format.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                  <div>
+                    <p className="font-semibold text-sm">Need a template?</p>
+                    <p className="text-xs text-gray-600">Download the CSV template with example data</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadTemplate}
+                    className="border-blue-500 text-blue-600 hover:bg-blue-100"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Template
+                  </Button>
+                </div>
+                
+                <div>
+                  <Label htmlFor="csvFile">Select CSV File *</Label>
+                  <Input
+                    id="csvFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setCsvFile(file);
+                        setCsvUploadResults(null);
+                      }
+                    }}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    CSV file should contain: title, description, examType, board, duration, totalQuestions, totalMarks, instructions, startDate, endDate, filterType, targetSchools
+                  </p>
+                </div>
+
+                {csvUploadResults && (
+                  <div className={`p-4 rounded-lg ${csvUploadResults.errors.length > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
+                    <p className="font-semibold text-sm mb-2">
+                      {csvUploadResults.success > 0 ? `✅ Successfully created ${csvUploadResults.success} exam(s)` : '❌ No exams created'}
+                    </p>
+                    {csvUploadResults.errors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-yellow-800 mb-1">Errors:</p>
+                        <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1 max-h-32 overflow-y-auto">
+                          {csvUploadResults.errors.map((error, idx) => (
+                            <li key={idx}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  setIsCsvDialogOpen(false);
+                  setCsvFile(null);
+                  setCsvUploadResults(null);
+                }}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCsvUpload} 
+                  disabled={isUploadingCsv || !csvFile}
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                >
+                  {isUploadingCsv ? 'Uploading...' : 'Upload CSV'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-sky-300 to-teal-400 hover:from-sky-400 hover:to-teal-500 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Exam
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Exam</DialogTitle>
@@ -753,8 +1144,46 @@ export default function ExamManagement() {
           </DialogContent>
         </Dialog>
       </div>
+      </div>
 
       <div className="flex items-center gap-4 flex-wrap">
+        {/* Quick Add Questions Option */}
+        {filteredExams.length > 0 && (
+          <div className="relative">
+            <div className="absolute -inset-[2px] bg-gradient-to-r from-purple-300 to-purple-400 rounded-md"></div>
+            <Select 
+              value="" 
+              onValueChange={(examId) => {
+                const exam = filteredExams.find(e => e._id === examId);
+                if (exam) {
+                  setSelectedExam(exam);
+                  setIsQuestionDialogOpen(true);
+                  fetchQuestions(exam._id);
+                }
+              }}
+            >
+              <SelectTrigger className="w-[220px] relative z-10 border-0 bg-white focus:ring-2 focus:ring-purple-500 focus:ring-offset-0">
+                <SelectValue placeholder="Quick Add Questions" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredExams.map((exam) => (
+                  <SelectItem key={exam._id} value={exam._id}>
+                    <div className="flex items-center gap-2">
+                      <FileQuestion className="h-4 w-4" />
+                      <span>{exam.title}</span>
+                      {exam.questions && exam.questions.length > 0 && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {exam.questions.length} Q
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="relative w-[200px]">
           <div className="absolute -inset-[2px] bg-gradient-to-r from-sky-300 to-teal-400 rounded-md"></div>
           <Select value={filterType} onValueChange={(value: FilterType) => {
@@ -943,7 +1372,14 @@ export default function ExamManagement() {
       )}
 
       {/* Question Management Dialog */}
-      <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+      <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
+        setIsQuestionDialogOpen(open);
+        if (!open) {
+          // Reset CSV upload state when dialog closes
+          setQuestionCsvFile(null);
+          setQuestionCsvUploadResults(null);
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Manage Questions - {selectedExam?.title}</DialogTitle>
@@ -984,9 +1420,182 @@ export default function ExamManagement() {
               </div>
             )}
 
+            {/* CSV Upload Section */}
+            <div className="border-t pt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Bulk Upload Questions via CSV</h3>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadQuestionTemplate}
+                    className="border-blue-500 text-blue-600 hover:bg-blue-100"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Template
+                  </Button>
+                </div>
+              </div>
+              <div className="p-4 bg-blue-50 rounded-lg space-y-3">
+                <div>
+                  <Label htmlFor="questionCsvFile">Select CSV File *</Label>
+                  <Input
+                    id="questionCsvFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setQuestionCsvFile(file);
+                        setQuestionCsvUploadResults(null);
+                      }
+                    }}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    CSV should contain: questionText, questionType, subject, marks, options (option1-option4), correctAnswer/correctAnswers/integerAnswer
+                  </p>
+                </div>
+                {questionCsvUploadResults && (
+                  <div className={`p-3 rounded-lg ${questionCsvUploadResults.errors.length > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
+                    <p className="font-semibold text-sm mb-2">
+                      {questionCsvUploadResults.success > 0 ? `✅ Successfully created ${questionCsvUploadResults.success} question(s)` : '❌ No questions created'}
+                    </p>
+                    {questionCsvUploadResults.errors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-yellow-800 mb-1">Errors:</p>
+                        <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1 max-h-24 overflow-y-auto">
+                          {questionCsvUploadResults.errors.map((error, idx) => (
+                            <li key={idx}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  onClick={handleQuestionCsvUpload}
+                  disabled={isUploadingQuestionCsv || !questionCsvFile}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                >
+                  {isUploadingQuestionCsv ? 'Uploading...' : 'Upload Questions CSV'}
+                </Button>
+              </div>
+            </div>
+
+            {/* View All Questions Section */}
+            <div className="border-t pt-6 space-y-4">
+              <h3 className="font-semibold">All Questions ({questions.length})</h3>
+              {isLoadingQuestions ? (
+                <div className="text-center py-8">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading questions...</p>
+                </div>
+              ) : questions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileQuestion className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                  <p>No questions added yet</p>
+                  <p className="text-sm mt-1">Upload a CSV file or add questions manually below</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {questions.map((q: any, idx: number) => (
+                    <Card key={q._id || idx} className="p-4 border-l-4 border-l-blue-500">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="font-semibold">
+                                Q{idx + 1}
+                              </Badge>
+                              <Badge variant="outline" className={
+                                q.questionType === 'mcq' ? 'bg-blue-100 text-blue-800' :
+                                q.questionType === 'multiple' ? 'bg-purple-100 text-purple-800' :
+                                'bg-green-100 text-green-800'
+                              }>
+                                {q.questionType?.toUpperCase() || 'MCQ'}
+                              </Badge>
+                              <Badge variant="outline" className="bg-orange-100 text-orange-800">
+                                {q.subject?.toUpperCase() || 'MATHS'}
+                              </Badge>
+                              <Badge variant="outline" className="bg-teal-100 text-teal-800">
+                                {q.marks} mark{q.marks !== 1 ? 's' : ''}
+                              </Badge>
+                              {q.negativeMarks > 0 && (
+                                <Badge variant="outline" className="bg-red-100 text-red-800">
+                                  -{q.negativeMarks} negative
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-2">
+                              {q.questionImage ? (
+                                <div className="mb-2">
+                                  <img 
+                                    src={q.questionImage} 
+                                    alt="Question" 
+                                    className="max-w-full h-auto rounded-md border"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              ) : null}
+                              <p className="text-sm font-medium text-gray-900 mb-2">
+                                {q.questionText || 'Image question'}
+                              </p>
+                              {(q.questionType === 'mcq' || q.questionType === 'multiple') && q.options && q.options.length > 0 && (
+                                <div className="space-y-1 mt-3">
+                                  <p className="text-xs font-semibold text-gray-600 mb-1">Options:</p>
+                                  {q.options.map((option: any, optIdx: number) => {
+                                    const isCorrect = Array.isArray(q.correctAnswer) 
+                                      ? q.correctAnswer.includes(option.text)
+                                      : q.correctAnswer === option.text;
+                                    return (
+                                      <div 
+                                        key={optIdx} 
+                                        className={`p-2 rounded text-sm ${
+                                          isCorrect 
+                                            ? 'bg-green-50 border border-green-300 text-green-900' 
+                                            : 'bg-gray-50 border border-gray-200 text-gray-700'
+                                        }`}
+                                      >
+                                        <span className="font-semibold mr-2">{String.fromCharCode(65 + optIdx)}.</span>
+                                        {option.text || option}
+                                        {isCorrect && (
+                                          <Badge className="ml-2 bg-green-600 text-white text-xs">Correct</Badge>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {q.questionType === 'integer' && (
+                                <div className="mt-3 p-2 bg-green-50 border border-green-300 rounded">
+                                  <p className="text-xs font-semibold text-gray-600 mb-1">Correct Answer:</p>
+                                  <p className="text-sm font-bold text-green-900">{q.correctAnswer}</p>
+                                </div>
+                              )}
+                              {q.explanation && (
+                                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+                                  <p className="text-xs font-semibold text-gray-600 mb-1">Explanation:</p>
+                                  <p className="text-sm text-gray-700">{q.explanation}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Add New Question Form */}
             <div className="border-t pt-6 space-y-4">
-              <h3 className="font-semibold">Add New Question</h3>
+              <h3 className="font-semibold">Add New Question (Single)</h3>
               
               <div>
                 <Label>Question Type *</Label>

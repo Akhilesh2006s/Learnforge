@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { API_BASE_URL } from '@/lib/api-config';
 import { 
   Trophy, 
   Target, 
@@ -630,208 +631,233 @@ export default function DetailedAnalysis({ result, examTitle, onBack }: Detailed
 
         {/* Questions Tab */}
         {activeTab === 'questions' && (
-          <div className="flex justify-center">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {result.questions && result.questions.length > 0 ? (
-              <div className="w-full max-w-sm mx-auto">
-                {/* Mobile Container */}
-                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden" style={{ height: '600px' }}>
-                  {/* Mobile Header */}
-                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                
+                {/* Question Navigation Sidebar - Modern Grid Layout */}
+                <div className="lg:col-span-1">
+                  <Card className="sticky top-24">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-purple-600" />
+                        Questions
+                      </CardTitle>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {result.questions.length} questions
+                      </p>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {/* Question Numbers Grid - 5 columns, 5-6 rows */}
+                      <div className="bg-gradient-to-br from-gray-50 to-purple-50/30 rounded-xl p-4 border border-gray-200">
+                        <div className="grid grid-cols-5 gap-2.5">
+                          {result.questions.map((question, index) => {
+                            const userAnswer = result.answers?.[question._id];
+                            const isCorrect = compareAnswers(userAnswer, question.correctAnswer);
+                            const isAttempted = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
+                            const isCurrent = index === mobileQuestionIndex;
+                            
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => setMobileQuestionIndex(index)}
+                                className={`
+                                  group relative
+                                  w-11 h-11 rounded-xl font-bold text-sm
+                                  transition-all duration-300 ease-out
+                                  flex items-center justify-center
+                                  border-2
+                                  ${
+                                    isCurrent
+                                      ? 'bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white border-purple-400 shadow-xl shadow-purple-500/50 scale-110 z-10 ring-2 ring-purple-300'
+                                      : isCorrect
+                                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-400/30 hover:scale-105'
+                                      : isAttempted && !isCorrect
+                                      ? 'bg-gradient-to-br from-red-500 to-red-600 text-white border-red-400 shadow-lg shadow-red-400/30 hover:scale-105'
+                                      : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                                  }
+                                `}
+                                title={`Question ${index + 1}${isCorrect ? ' ✓ Correct' : isAttempted ? ' ✗ Incorrect' : ' ○ Not attempted'}`}
+                              >
+                                <span className="relative z-10">{index + 1}</span>
+                                {isCorrect && (
+                                  <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-white bg-emerald-600 rounded-full" />
+                                )}
+                                {isAttempted && !isCorrect && (
+                                  <XCircle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-white bg-red-600 rounded-full" />
+                                )}
+                                {isCurrent && (
+                                  <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse"></div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">9:43</div>
-                      <div className="text-xs text-gray-500">4G 84%</div>
-                    </div>
-                  </div>
-
-                  {/* Overlay Question Cards */}
-                  <div
-                    className="h-full relative overflow-hidden"
-                    onWheel={handleWheel}
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    {/* Render all questions as overlays */}
-                    {result.questions.map((question, index) => {
-                  const userAnswer = result.answers?.[question._id];
-                  const isCorrect = compareAnswers(userAnswer, question.correctAnswer);
-                  const isAttempted = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
-                  
-                      // Calculate position and animation based on current index
-                      const isActive = index === mobileQuestionIndex;
-                      const isPrevious = index < mobileQuestionIndex;
-                      const isNext = index > mobileQuestionIndex;
                       
-                      let yPosition = 0;
-                      let zIndex = 0;
-                      let opacity = 1;
-                      let scale = 1;
-                      
-                      if (isActive) {
-                        yPosition = 0;
-                        zIndex = 10;
-                        opacity = 1;
-                        scale = 1;
-                      } else if (isPrevious) {
-                        yPosition = -20;
-                        zIndex = 5;
-                        opacity = 0.3;
-                        scale = 0.95;
-                      } else if (isNext) {
-                        yPosition = 100;
-                        zIndex = 1;
-                        opacity = 0;
-                        scale = 0.9;
-                      }
-
-                  return (
-                            <motion.div 
-                          key={question._id}
-                          initial={false}
-                          animate={{
-                            y: yPosition,
-                            opacity: opacity,
-                            scale: scale,
-                            zIndex: zIndex
-                          }}
-                          transition={{
-                            type: 'spring',
-                            stiffness: 300,
-                            damping: 30,
-                            duration: 0.6
-                          }}
-                          className="absolute inset-0 bg-white rounded-3xl"
-                          style={{ zIndex }}
-                        >
-                          <div className="p-4 h-full flex flex-col justify-center">
-                            {/* Subject Tag */}
-                            <div className="mb-4">
-                              <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
-                                #{question.subject.charAt(0).toUpperCase() + question.subject.slice(1)} Exam
-                              </span>
+                      {/* Legend */}
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-700 mb-3">Status Legend</p>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 border-2 border-purple-400 ring-2 ring-purple-300"></div>
+                            <span className="text-xs text-gray-600">Current</span>
                           </div>
-                          
-                            {/* Question Label */}
-                            <div className="mb-3">
-                              <span className="text-sm font-medium text-gray-700">Q:</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 border-2 border-emerald-400 relative">
+                              <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-2 h-2 text-white" />
+                            </div>
+                            <span className="text-xs text-gray-600">Correct</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-400 relative">
+                              <XCircle className="absolute -bottom-0.5 -right-0.5 w-2 h-2 text-white" />
+                            </div>
+                            <span className="text-xs text-gray-600">Incorrect</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-lg bg-white border-2 border-gray-300"></div>
+                            <span className="text-xs text-gray-600">Not Attempted</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Main Question Area */}
+                <div className="lg:col-span-3">
+                {/* Question Container */}
+                <Card className="shadow-lg border-0 bg-white">
+                  <CardContent className="p-6">
+                    {result.questions && result.questions.length > 0 && (
+                      <>
+                        {/* Question Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-4">
+                            <Badge variant="outline" className="capitalize">
+                              {result.questions[mobileQuestionIndex]?.subject || 'Unknown'}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {result.questions[mobileQuestionIndex]?.marks || 0} marks
+                            </Badge>
+                          </div>
                         </div>
 
-                            {/* Question Content Box */}
-                            <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
-                              <p className="text-center text-gray-600">{String(question.questionText || '')}</p>
-                            {question.questionImage && (
-                                <img src={question.questionImage} alt="Question" className="mt-3 max-w-full rounded-md mx-auto" />
+                        {/* Question Content */}
+                        <div className="mb-8">
+                          <div className="flex items-start space-x-3 mb-4">
+                            <span className="text-lg font-semibold text-gray-900">
+                              Q{mobileQuestionIndex + 1}.
+                            </span>
+                            <div className="flex-1">
+                              {result.questions[mobileQuestionIndex]?.questionText && (
+                                <p className="text-lg text-gray-900 mb-4">
+                                  {result.questions[mobileQuestionIndex].questionText}
+                                </p>
                               )}
-                        </div>
+                              
+                              {result.questions[mobileQuestionIndex]?.questionImage && (
+                                <div className="mb-4">
+                                  <img 
+                                    src={result.questions[mobileQuestionIndex].questionImage.startsWith('http') 
+                                      ? result.questions[mobileQuestionIndex].questionImage 
+                                      : `${API_BASE_URL}${result.questions[mobileQuestionIndex].questionImage}`}
+                                    alt="Question" 
+                                    className="max-w-full h-auto rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
-                            {/* MCQ Options */}
-                            {question.questionType === 'mcq' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
-                              <div className="space-y-3 mb-6">
-                                {question.options.map((opt, i) => {
-                                  const text = getOptionText(opt);
-                                  const isUser = Array.isArray(userAnswer) ? userAnswer.some(a => getOptionText(a) === text) : getOptionText(userAnswer) === text;
-                                  const isRight = Array.isArray(question.correctAnswer) ? question.correctAnswer.some(a => getOptionText(a) === text) : getOptionText(question.correctAnswer) === text;
+                          {/* Answer Options */}
+                          {result.questions[mobileQuestionIndex]?.questionType === 'mcq' && result.questions[mobileQuestionIndex]?.options && (
+                            <div className="space-y-3">
+                              {result.questions[mobileQuestionIndex].options.map((option: any, index: number) => {
+                                const optionText = getOptionText(option);
+                                const userAnswer = result.answers?.[result.questions[mobileQuestionIndex]._id];
+                                const isUser = Array.isArray(userAnswer) ? userAnswer.some((a: any) => getOptionText(a) === optionText) : getOptionText(userAnswer) === optionText;
+                                const isRight = Array.isArray(result.questions[mobileQuestionIndex].correctAnswer) 
+                                  ? result.questions[mobileQuestionIndex].correctAnswer.some((a: any) => getOptionText(a) === optionText) 
+                                  : getOptionText(result.questions[mobileQuestionIndex].correctAnswer) === optionText;
                                 
                                 return (
-                                    <div key={i} className={`flex items-center rounded-lg border px-3 py-3 text-sm ${
-                                    isRight ? 'border-green-300 bg-green-50' : isUser && !isRight ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
-                                  }`}>
-                                      <span className="mr-3 text-sm font-medium text-gray-600">{String.fromCharCode(65 + i)}</span>
-                                      <span className={`flex-1 ${
-                                        isRight ? 'text-green-800' : isUser && !isRight ? 'text-red-800' : 'text-gray-700'
-                                      }`}>
-                                        {text}
-                                      </span>
-                                      {isRight && <CheckCircle className="h-4 w-4 text-green-600" />}
-                                      {isUser && !isRight && <XCircle className="h-4 w-4 text-red-600" />}
+                                  <div 
+                                    key={index} 
+                                    className={`flex items-center space-x-3 p-4 rounded-lg border-2 ${
+                                      isRight 
+                                        ? 'border-green-400 bg-green-50' 
+                                        : isUser && !isRight 
+                                        ? 'border-red-400 bg-red-50' 
+                                        : 'border-gray-200 bg-gray-50'
+                                    }`}
+                                  >
+                                    <span className="text-sm font-medium text-gray-600 w-6">{String.fromCharCode(65 + index)}.</span>
+                                    <span className={`flex-1 ${
+                                      isRight ? 'text-green-800 font-medium' : isUser && !isRight ? 'text-red-800 font-medium' : 'text-gray-700'
+                                    }`}>
+                                      {optionText}
+                                    </span>
+                                    {isRight && <CheckCircle className="w-5 h-5 text-green-600" />}
+                                    {isUser && !isRight && <XCircle className="w-5 h-5 text-red-600" />}
                                   </div>
                                 );
                               })}
-                          </div>
-                        )}
-
-                            {/* Show options for other question types too */}
-                            {question.questionType !== 'mcq' && question.options && Array.isArray(question.options) && question.options.length > 0 && (
-                              <div className="space-y-3 mb-6">
-                                <div className="text-sm font-medium text-gray-700 mb-2">Available Options:</div>
-                                {question.options.map((opt, i) => {
-                                  const text = getOptionText(opt);
-                                  const isUser = Array.isArray(userAnswer) ? userAnswer.some(a => getOptionText(a) === text) : getOptionText(userAnswer) === text;
-                                  const isRight = Array.isArray(question.correctAnswer) ? question.correctAnswer.some(a => getOptionText(a) === text) : getOptionText(question.correctAnswer) === text;
-                                  
-                                  return (
-                                    <div key={i} className={`flex items-center rounded-lg border px-3 py-3 text-sm ${
-                                    isRight ? 'border-green-300 bg-green-50' : isUser && !isRight ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
-                                  }`}>
-                                      <span className="mr-3 text-sm font-medium text-gray-600">{String.fromCharCode(65 + i)}</span>
-                                      <span className={`flex-1 ${
-                                        isRight ? 'text-green-800' : isUser && !isRight ? 'text-red-800' : 'text-gray-700'
-                                      }`}>
-                                        {text}
-                                      </span>
-                                      {isRight && <CheckCircle className="h-4 w-4 text-green-600" />}
-                                      {isUser && !isRight && <XCircle className="h-4 w-4 text-red-600" />}
-                                    </div>
-                                    );
-                                })}
-                                </div>
-                            )}
-
-                            {/* Answer Status */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                              <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                                <div className="text-xs font-semibold text-purple-800 mb-1">Your Answer</div>
-                                <div className="text-sm text-purple-900">
-                                  {isAttempted ? String(Array.isArray(userAnswer) ? userAnswer.map(getOptionText).join(', ') : getOptionText(userAnswer)) : 'Not attempted'}
-                                </div>
-                              </div>
-                              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                                <div className="text-xs font-semibold text-green-800 mb-1">Correct Answer</div>
-                                <div className="text-sm text-green-900">
-                                  {String(Array.isArray(question.correctAnswer) ? question.correctAnswer.map(getOptionText).join(', ') : getOptionText(question.correctAnswer))}
-                                </div>
-                              </div>
-                        </div>
-
-                            {/* Next Button */}
-                            {mobileQuestionIndex < result.questions.length - 1 && (
-                              <div className="text-center mb-4">
-                                <button
-                                  onClick={goToNext}
-                                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                                >
-                                  Next Question
-                                </button>
-                              </div>
-                            )}
-
-                            {/* Question Counter */}
-                            <div className="mt-2 text-center">
-                              <div className="text-xs text-gray-500">
-                                Question {index + 1} of {result.questions.length}
-                              </div>
-                              <div className="flex justify-center mt-2 space-x-1">
-                                {result.questions.map((_, i) => (
-                                  <div key={i} className={`w-2 h-2 rounded-full ${i === index ? 'bg-orange-500' : 'bg-gray-300'}`}></div>
-                                ))}
                             </div>
+                          )}
+
+                          {/* Answer Status */}
+                          <div className="grid grid-cols-2 gap-4 mt-6">
+                            <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
+                              <div className="text-xs font-semibold text-purple-800 mb-2">Your Answer</div>
+                              <div className="text-sm text-purple-900">
+                                {(() => {
+                                  const userAnswer = result.answers?.[result.questions[mobileQuestionIndex]._id];
+                                  const isAttempted = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
+                                  return isAttempted 
+                                    ? String(Array.isArray(userAnswer) ? userAnswer.map(getOptionText).join(', ') : getOptionText(userAnswer))
+                                    : 'Not attempted';
+                                })()}
                               </div>
                             </div>
-                        </motion.div>
-                      );
-                    })}
+                            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                              <div className="text-xs font-semibold text-green-800 mb-2">Correct Answer</div>
+                              <div className="text-sm text-green-900">
+                                {String(Array.isArray(result.questions[mobileQuestionIndex].correctAnswer) 
+                                  ? result.questions[mobileQuestionIndex].correctAnswer.map(getOptionText).join(', ') 
+                                  : getOptionText(result.questions[mobileQuestionIndex].correctAnswer))}
+                              </div>
+                            </div>
                           </div>
-
-                  {/* Mobile Bottom Bar */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 p-2">
-                    <div className="w-full h-1 bg-gray-300 rounded-full"></div>
                         </div>
+
+                        {/* Navigation Buttons */}
+                        <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                          <Button
+                            variant="outline"
+                            onClick={() => setMobileQuestionIndex(Math.max(0, mobileQuestionIndex - 1))}
+                            disabled={mobileQuestionIndex === 0}
+                          >
+                            Previous
+                          </Button>
+                          <span className="text-sm text-gray-600">
+                            Question {mobileQuestionIndex + 1} of {result.questions.length}
+                          </span>
+                          <Button
+                            variant="outline"
+                            onClick={() => setMobileQuestionIndex(Math.min(result.questions.length - 1, mobileQuestionIndex + 1))}
+                            disabled={mobileQuestionIndex === result.questions.length - 1}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
                 </div>
-              </div>
+                </div>
               ) : (
                 <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 to-slate-50">
                   <CardContent className="p-16 text-center">
@@ -839,7 +865,7 @@ export default function DetailedAnalysis({ result, examTitle, onBack }: Detailed
                       <Eye className="w-12 h-12 text-gray-500" />
                     </div>
                     <h3 className="text-2xl font-semibold text-gray-700 mb-3">No Question Details Available</h3>
-                  <p className="text-gray-500 text-lg">Question details are not available for this exam result.</p>
+                    <p className="text-gray-500 text-lg">Question details are not available for this exam result.</p>
                   </CardContent>
                 </Card>
               )}

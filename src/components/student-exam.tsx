@@ -441,45 +441,92 @@ export default function StudentExam({ examId, onComplete, onExit }: StudentExamP
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
-          {/* Question Navigation Sidebar */}
+          {/* Question Navigation Sidebar - Modern Grid Layout */}
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Question Navigation</CardTitle>
+            <Card className="sticky top-24">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-purple-600" />
+                  Questions
+                </CardTitle>
+                <p className="text-xs text-gray-500 mt-1">
+                  {Object.keys(answers).length} of {exam.questions.length} answered
+                </p>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-5 gap-2">
-                  {exam.questions.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentQuestionIndex(index)}
-                      className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-sm font-medium transition-colors ${
-                        index === currentQuestionIndex
-                          ? 'border-primary bg-primary text-white'
-                          : flaggedQuestions.has(index)
-                          ? 'border-yellow-400 bg-yellow-100 text-yellow-700'
-                          : answers[exam.questions[index]._id] !== undefined
-                          ? 'border-green-400 bg-green-100 text-green-700'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-primary'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+              <CardContent className="pt-0">
+                {/* Question Numbers Grid - 5 columns, 5-6 rows */}
+                <div className="bg-gradient-to-br from-gray-50 to-purple-50/30 rounded-xl p-4 border border-gray-200">
+                  <div className="grid grid-cols-5 gap-2.5">
+                    {exam.questions.map((_, index) => {
+                      const questionId = exam.questions[index]._id;
+                      const isAnswered = answers[questionId] !== undefined;
+                      const isFlagged = flaggedQuestions.has(index);
+                      const isCurrent = index === currentQuestionIndex;
+                      
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentQuestionIndex(index)}
+                          className={`
+                            group relative
+                            w-11 h-11 rounded-xl font-bold text-sm
+                            transition-all duration-300 ease-out
+                            flex items-center justify-center
+                            border-2
+                            ${
+                              isCurrent
+                                ? 'bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white border-purple-400 shadow-xl shadow-purple-500/50 scale-110 z-10 ring-2 ring-purple-300'
+                                : isFlagged && isAnswered
+                                ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white border-amber-300 shadow-lg shadow-amber-400/30 hover:scale-105'
+                                : isFlagged
+                                ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 text-yellow-900 border-yellow-400 shadow-md hover:scale-105'
+                                : isAnswered
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-400/30 hover:scale-105'
+                                : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                            }
+                          `}
+                          title={`Question ${index + 1}${isFlagged ? ' ⚑ Flagged' : ''}${isAnswered ? ' ✓ Answered' : ' ○ Not answered'}`}
+                        >
+                          <span className="relative z-10">{index + 1}</span>
+                          {isFlagged && (
+                            <Flag className="absolute -top-1 -right-1 w-3 h-3 text-amber-800 drop-shadow-sm" fill="currentColor" />
+                          )}
+                          {isAnswered && !isFlagged && (
+                            <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-white bg-emerald-600 rounded-full" />
+                          )}
+                          {isCurrent && (
+                            <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-green-400 bg-green-100 rounded"></div>
-                    <span>Answered</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-yellow-400 bg-yellow-100 rounded"></div>
-                    <span>Flagged</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-gray-300 bg-white rounded"></div>
-                    <span>Not Answered</span>
+                {/* Legend */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs font-semibold text-gray-700 mb-3">Status Legend</p>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 border-2 border-purple-400 ring-2 ring-purple-200"></div>
+                      <span className="text-xs text-gray-600">Current</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 border-2 border-emerald-400 relative">
+                        <CheckCircle className="absolute -bottom-0.5 -right-0.5 w-2 h-2 text-white" />
+                      </div>
+                      <span className="text-xs text-gray-600">Answered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-gradient-to-br from-yellow-300 to-yellow-400 border-2 border-yellow-400 relative">
+                        <Flag className="absolute -top-0.5 -right-0.5 w-2 h-2 text-yellow-900" fill="currentColor" />
+                      </div>
+                      <span className="text-xs text-gray-600">Flagged</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-lg bg-white border-2 border-gray-300"></div>
+                      <span className="text-xs text-gray-600">Not Answered</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -659,7 +706,7 @@ export default function StudentExam({ examId, onComplete, onExit }: StudentExamP
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-6">
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
@@ -691,6 +738,7 @@ export default function StudentExam({ examId, onComplete, onExit }: StudentExamP
                     )}
                   </div>
                 </div>
+
               </CardContent>
             </Card>
           </div>

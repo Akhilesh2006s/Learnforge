@@ -1044,7 +1044,7 @@ export default function TeacherToolPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Tool Not Found</h1>
           <Button onClick={() => {
-            localStorage.setItem('teacherDashboardTab', 'vidya-ai');
+            localStorage.setItem('teacherDashboardTab', 'amenity-ai');
             setLocation('/teacher/dashboard');
           }}>Go Back</Button>
         </div>
@@ -1062,8 +1062,8 @@ export default function TeacherToolPage() {
           <Button
             variant="ghost"
             onClick={() => {
-              // Navigate to dashboard and set Vidya AI tab as active
-              localStorage.setItem('teacherDashboardTab', 'vidya-ai');
+              // Navigate to dashboard and set Amenity AI tab as active
+              localStorage.setItem('teacherDashboardTab', 'amenity-ai');
               setLocation('/teacher/dashboard');
             }}
             className="hover:bg-white/50"

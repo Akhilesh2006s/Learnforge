@@ -83,7 +83,7 @@ export default function Navigation() {
     { path: "/learning-paths", label: "Learning Paths", icon: BookOpen, onClick: handleLearningPathsClick },
     { path: "/edu-ott", label: "EduOTT", icon: Video },
     { path: "/student-exams", label: "Exams", icon: FileText },
-    { path: "/ai-tutor", label: "Vidya AI", icon: MessageCircle },
+    { path: "/ai-tutor", label: "Amenity AI", icon: MessageCircle },
   ];
 
   const NavContent = () => (
@@ -143,14 +143,14 @@ export default function Navigation() {
                     <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
                       <img 
                         src="/logo.jpg" 
-                        alt="ASLILEARN Logo" 
+                        alt="LEARNFORGE Logo" 
                         className="w-full h-full object-contain p-1"
                       />
                     </div>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                      ASLILEARN AI
+                      LEARNFORGE AI
                     </span>
                     <span className="text-xs text-gray-600 font-medium -mt-1">AI-Powered Learning</span>
                   </div>
@@ -234,14 +234,14 @@ export default function Navigation() {
                             <div className="w-full h-full rounded-lg bg-white flex items-center justify-center overflow-hidden">
                               <img 
                                 src="/logo.jpg" 
-                                alt="ASLILEARN Logo" 
+                                alt="LEARNFORGE Logo" 
                                 className="w-full h-full object-contain p-1"
                               />
                             </div>
                           </div>
                           <div className="flex flex-col">
                             <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                              ASLILEARN AI
+                              LEARNFORGE AI
                             </span>
                             <span className="text-xs text-gray-600 font-medium">AI-Powered Learning</span>
                           </div>

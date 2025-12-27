@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'vidya-ai' | 'courses' | 'add-admin' | 'calendar';
+export type SuperAdminView = 'dashboard' | 'admins' | 'analytics' | 'ai-analytics' | 'subscriptions' | 'settings' | 'board-comparison' | 'content' | 'board' | 'subjects' | 'exams' | 'iq-rank-boost' | 'amenity-ai' | 'courses' | 'add-admin' | 'calendar';
 
 interface SuperAdminSidebarProps {
   currentView: SuperAdminView;
@@ -38,7 +38,7 @@ export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdmi
     { id: 'exams', label: 'Exam Management', icon: FileTextIcon },
     { id: 'iq-rank-boost', label: 'IQ/Rank Boost Activities', icon: TrophyIcon },
     { id: 'calendar', label: 'School Calendar', icon: Calendar },
-    { id: 'vidya-ai', label: 'Vidya AI', icon: Sparkles },
+    { id: 'amenity-ai', label: 'Amenity AI', icon: Sparkles },
     { id: 'analytics', label: 'Analytics', icon: BarChartIcon },
     { id: 'ai-analytics', label: 'AI Analytics', icon: BrainCircuitIcon },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
@@ -51,7 +51,7 @@ export function SuperAdminSidebar({ currentView, onViewChange, user }: SuperAdmi
         <div className="flex items-center space-x-3 mb-8">
           <GraduationCapIcon className="h-8 w-8 text-white" />
           <div>
-            <h2 className="text-lg font-bold text-white">Aslilearn AI</h2>
+            <h2 className="text-lg font-bold text-white">LearnForge AI</h2>
             <p className="text-xs text-white/90">Super Admin</p>
           </div>
         </div>

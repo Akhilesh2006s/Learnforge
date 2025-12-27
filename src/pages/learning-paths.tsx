@@ -661,7 +661,7 @@ export default function LearningPaths() {
             <div className="fixed bottom-8 left-4 z-30 cursor-pointer">
               <img 
                 src="/Vidya-ai.jpg" 
-                alt="Vidya AI - Click to chat" 
+                alt="Amenity AI - Click to chat" 
                 className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
               />
             </div>
@@ -1193,7 +1193,7 @@ export default function LearningPaths() {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Vidya AI</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Amenity AI</h3>
               <p className="text-gray-600 text-sm mb-4">Monitor your learning journey</p>
               <Button variant="outline" className="w-full">
                 View Progress

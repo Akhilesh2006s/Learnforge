@@ -929,7 +929,7 @@ export default function SuperAdminDashboard() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span>Platform Name</span>
-              <span className="font-medium">AsliLearn</span>
+              <span className="font-medium">LearnForge</span>
             </div>
             <div className="flex justify-between items-center">
               <span>Registration Status</span>
@@ -1239,7 +1239,7 @@ export default function SuperAdminDashboard() {
                         <SelectValue placeholder="Select board" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ASLI_EXCLUSIVE_SCHOOLS">Asli Exclusive Schools</SelectItem>
+                        <SelectItem value="ASLI_EXCLUSIVE_SCHOOLS">LearnForge Exclusive Schools</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

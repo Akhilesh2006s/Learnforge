@@ -436,7 +436,7 @@ export default function SubjectContent() {
           <div className="fixed bottom-8 left-4 z-30 pointer-events-none">
             <img 
               src="/Vidya-ai.jpg" 
-              alt="Vidya AI" 
+              alt="Amenity AI" 
               className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 transition-opacity"
             />
           </div>

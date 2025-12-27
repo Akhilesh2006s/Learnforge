@@ -45,7 +45,7 @@ interface Exam {
 }
 
 const BOARDS = [
-  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'Asli Exclusive Schools' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'LearnForge Exclusive Schools' }
 ];
 
 const EXAM_TYPES = [
@@ -1038,7 +1038,7 @@ export default function ExamManagement() {
                               className="rounded"
                             />
                             <Label htmlFor={`school-${school.id}`} className="text-sm cursor-pointer">
-                              {school.name} (Asli Exclusive Schools)
+                              {school.name} (LearnForge Exclusive Schools)
                             </Label>
                           </div>
                         ))
@@ -1285,7 +1285,7 @@ export default function ExamManagement() {
                           {EXAM_TYPES.find(t => t.value === exam.examType)?.label}
                         </Badge>
                         <Badge className="bg-orange-600 text-white border-2 border-white/50 shadow-lg font-semibold">
-                          Asli Exclusive Schools
+                          LearnForge Exclusive Schools
                         </Badge>
                         {exam.isActive ? (
                           <Badge className="bg-teal-600 text-white border-2 border-white/50 shadow-lg font-semibold">Active</Badge>

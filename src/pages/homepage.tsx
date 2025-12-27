@@ -15,11 +15,11 @@ const Navbar = () => {
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img 
               src="/logo.jpg" 
-              alt="AsliLearn Logo" 
+              alt="LearnForge Logo" 
               className="w-12 h-12 object-contain"
             />
             <span className="text-2xl md:text-3xl font-extrabold text-blue-600 animate-blue-glow">
-              ASLILEARN AI
+              LEARNFORGE AI
             </span>
           </Link>
 
@@ -148,7 +148,7 @@ const Index = () => {
               </div>
               <div className="mt-8 text-center">
                 <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-gray-900">
-                  {renderAnimatedHeading("ASLILEARN AI")}
+                  {renderAnimatedHeading("LEARNFORGE AI")}
                 </h2>
               </div>
             </div>
@@ -521,7 +521,7 @@ const Index = () => {
       <footer className="bg-gradient-to-br from-purple-900 to-purple-800 text-white py-12">
         <div className="w-full max-w-7xl mx-auto px-4">
           <div className="text-center space-y-6">
-            <h3 className="text-2xl font-bold">AsliLearn</h3>
+            <h3 className="text-2xl font-bold">LearnForge</h3>
             <p className="text-purple-200 text-lg">
               Empowering Indian students with world-class AI-driven education
             </p>
@@ -540,7 +540,7 @@ const Index = () => {
             </div>
             <div className="pt-6 border-t border-purple-700">
               <p className="text-sm text-purple-300">
-                © 2025 AsliLearn. All rights reserved.
+                © 2025 LearnForge. All rights reserved.
               </p>
             </div>
           </div>

@@ -23,7 +23,7 @@ interface Subject {
 }
 
 const BOARDS = [
-  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'Asli Exclusive Schools' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'LearnForge Exclusive Schools' }
 ];
 
 export default function SubjectManagement() {
@@ -437,7 +437,7 @@ export default function SubjectManagement() {
                   <div className={`flex items-center justify-between text-sm ${subject.classNumber ? 'mb-2' : ''}`}>
                     <span className={colorScheme.text + '/90'}>Board:</span>
                     <Badge className="bg-orange-600 text-white border-2 border-white/50 shadow-lg font-semibold">
-                      Asli Exclusive Schools
+                      LearnForge Exclusive Schools
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm mt-2">

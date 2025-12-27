@@ -659,7 +659,7 @@ export default function AdminManagement() {
 
       {/* Admin Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Total Schools - Orange (matching Asli Exclusive Schools) */}
+        {/* Total Schools - Orange (matching LearnForge Exclusive Schools) */}
         <Card className="bg-gradient-to-r from-orange-300 to-orange-400 text-white border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">

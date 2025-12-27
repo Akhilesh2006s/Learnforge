@@ -322,7 +322,7 @@ export default function AITutor() {
               <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
             </div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">Loading...</h2>
-            <p className="text-gray-600">Preparing Vidya AI...</p>
+            <p className="text-gray-600">Preparing Amenity AI...</p>
           </div>
         </div>
       </>

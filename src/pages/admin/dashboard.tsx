@@ -267,8 +267,8 @@ const AdminDashboard = () => {
     return null;
   }
 
-  // Vidya AI Corner Button Component
-  const VidyaAICornerButton = () => {
+  // Amenity AI Corner Button Component
+  const AmenityAICornerButton = () => {
     const messages = [
       "Need help managing your school?",
       "Ask me about student management",
@@ -300,18 +300,18 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        {/* Vidya AI Image */}
+        {/* Amenity AI Image */}
         <div 
           className="cursor-pointer"
           onClick={() => {
-            setActiveTab('vidya-ai');
+            setActiveTab('amenity-ai');
             // Scroll to top of the page
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
           <img 
             src="/Vidya-ai.jpg" 
-            alt="Vidya AI - Click to chat" 
+            alt="Amenity AI - Click to chat" 
             className="w-32 h-32 rounded-full shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300 object-cover"
           />
         </div>
@@ -336,7 +336,7 @@ const AdminDashboard = () => {
                 <span className="text-white font-bold text-responsive-sm">AS</span>
               </div>
               <div>
-                <h1 className="text-responsive-base font-bold text-white">ASLILEARN AI</h1>
+                <h1 className="text-responsive-base font-bold text-white">LEARNFORGE AI</h1>
                 <p className="text-responsive-xs text-white/90 font-medium">Admin Panel</p>
               </div>
             </div>
@@ -353,7 +353,7 @@ const AdminDashboard = () => {
                       <span className="text-white font-bold text-responsive-lg">AS</span>
                     </div>
                     <div>
-                      <h1 className="text-responsive-lg font-bold text-white">ASLILEARN AI</h1>
+                      <h1 className="text-responsive-lg font-bold text-white">LEARNFORGE AI</h1>
                       <p className="text-responsive-xs text-white/90 font-medium">Admin Panel</p>
                     </div>
                   </div>
@@ -511,7 +511,7 @@ const AdminDashboard = () => {
               <span className="text-white font-bold text-xl">AS</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">ASLILEARN AI</h1>
+              <h1 className="text-xl font-bold text-white">LEARNFORGE AI</h1>
               <p className="text-xs text-white/90 font-medium">Admin Panel</p>
             </div>
           </div>
@@ -628,15 +628,15 @@ const AdminDashboard = () => {
                     </button>
                     
                     <button
-                      onClick={() => setActiveTab('vidya-ai')}
+                      onClick={() => setActiveTab('amenity-ai')}
                       className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                        activeTab === 'vidya-ai' 
+                        activeTab === 'amenity-ai' 
                           ? 'bg-white text-orange-600 shadow-md' 
                           : 'text-white hover:bg-orange-600/50'
                       }`}
                     >
                       <Sparkles className="mr-3 h-5 w-5 flex-shrink-0" />
-                      <span className="truncate">Vidya AI</span>
+                      <span className="truncate">Amenity AI</span>
                     </button>
           
         </nav>
@@ -1034,9 +1034,9 @@ const AdminDashboard = () => {
           {activeTab === 'learning-paths' && <AdminLearningPaths />}
           {activeTab === 'eduott' && <AdminEduOTT />}
           {activeTab === 'calendar' && <AdminCalendar />}
-          {activeTab === 'vidya-ai' && (
+          {activeTab === 'amenity-ai' && (
             <div className="space-y-6">
-              {/* Vidya AI */}
+              {/* Amenity AI */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1047,11 +1047,11 @@ const AdminDashboard = () => {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                     <img 
                       src="/Vidya-ai.jpg" 
-                      alt="Vidya AI" 
+                      alt="Amenity AI" 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">Vidya AI</h3>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">Amenity AI</h3>
                 </div>
 
                 {/* Chat Content */}
@@ -1088,8 +1088,8 @@ const AdminDashboard = () => {
         </div>
       </div>
       
-      {/* Vidya AI Corner Button */}
-      <VidyaAICornerButton />
+      {/* Amenity AI Corner Button */}
+      <AmenityAICornerButton />
     </div>
   );
 };

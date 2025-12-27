@@ -26,7 +26,7 @@ export default function SuperAdminDashboard() {
   const [user] = useState({ 
     fullName: 'Super Admin', 
     role: 'super-admin',
-    email: 'super.admin@aslilearn.com'
+    email: 'super.admin@learnforge.com'
   });
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -225,7 +225,7 @@ export default function SuperAdminDashboard() {
   ];
 
   const coursesPerBoardData = [
-    { name: 'Asli Exclusive Schools', value: 100, color: '#fb923c' },
+    { name: 'LearnForge Exclusive Schools', value: 100, color: '#fb923c' },
   ];
 
   const studentsPerAdminData = [
@@ -244,14 +244,14 @@ export default function SuperAdminDashboard() {
     { Icon: UploadIcon, view: 'content', label: 'Content Management' },
     { Icon: FileTextIcon, view: 'exams', label: 'Exam Management' },
     { Icon: TrophyIcon, view: 'iq-rank-boost', label: 'IQ/Rank Boost Activities' },
-    { Icon: Sparkles, view: 'vidya-ai', label: 'Vidya AI' },
+    { Icon: Sparkles, view: 'amenity-ai', label: 'Amenity AI' },
     { Icon: BarChartIcon, view: 'analytics', label: 'Analytics' },
     { Icon: BarChart3Icon, view: 'board-comparison', label: 'Board Comparison' },
     { Icon: BrainCircuitIcon, view: 'ai-analytics', label: 'AI Analytics' },
     { Icon: CreditCardIcon, view: 'subscriptions', label: 'Subscriptions' },
     { Icon: SettingsIcon, view: 'settings', label: 'Settings' },
     { Icon: Shield, view: 'admins', label: 'School Management' },
-    { Icon: Sparkles, view: 'vidya-ai', label: 'Vidya AI' }
+    { Icon: Sparkles, view: 'amenity-ai', label: 'Amenity AI' }
   ];
 
   const renderDashboardContent = () => {
@@ -288,7 +288,7 @@ export default function SuperAdminDashboard() {
               <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-2xl font-bold mb-1 text-white">Asli Exclusive Schools</h3>
+                    <h3 className="text-2xl font-bold mb-1 text-white">LearnForge Exclusive Schools</h3>
                     <p className="text-white/90 text-sm">All Boards Content - Unified Platform</p>
                 </div>
                   <Users2 className="h-16 w-16 text-white" />
@@ -376,24 +376,24 @@ export default function SuperAdminDashboard() {
           </Card>
         </div>
 
-        {/* Vidya AI Card - Clickable */}
+        {/* Amenity AI Card - Clickable */}
         <Card 
           className="relative cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-blue-300 hover:border-blue-400 overflow-hidden"
-          onClick={() => setCurrentView('vidya-ai')}
+          onClick={() => setCurrentView('amenity-ai')}
         >
           <div className="absolute inset-0 bg-white/85"></div>
           <div className="absolute inset-0 bg-orange-300/15"></div>
           <CardContent className="p-6 relative z-10">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Vidya AI</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Amenity AI</h3>
                 <p className="text-sm text-gray-600">24/7 AI Tutor Support</p>
-                <p className="text-xs text-orange-500 mt-2 font-medium">Click to access Vidya AI →</p>
+                <p className="text-xs text-orange-500 mt-2 font-medium">Click to access Amenity AI →</p>
               </div>
               <div className="ml-4">
                 <img 
                   src="/Vidya-ai.jpg" 
-                  alt="Vidya AI" 
+                  alt="Amenity AI" 
                   className="h-24 w-24 object-contain rounded-lg"
                 />
               </div>
@@ -740,7 +740,7 @@ export default function SuperAdminDashboard() {
     let boardName = boardData.board?.name || selectedBoard || 'Board';
     // Format board name to title case
     if (boardName === 'ASLI EXCLUSIVE SCHOOLS' || boardName === 'ASLI_EXCLUSIVE_SCHOOLS') {
-      boardName = 'Asli Exclusive Schools';
+      boardName = 'LearnForge Exclusive Schools';
     }
     
     return (
@@ -849,24 +849,24 @@ export default function SuperAdminDashboard() {
     </div>
   );
 
-  const renderVidyaAIContent = () => (
+  const renderAmenityAIContent = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent">Vidya AI Management</h2>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent">Amenity AI Management</h2>
           <p className="text-gray-600 mt-1">Manage and monitor your AI tutor system</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Vidya AI Chat Interface */}
+        {/* Amenity AI Chat Interface */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-r from-orange-300 to-orange-200 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span>Vidya AI Chat Interface</span>
+              <span>Amenity AI Chat Interface</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -957,8 +957,8 @@ export default function SuperAdminDashboard() {
         return <IQRankBoostActivities />;
       case 'calendar':
         return <SuperAdminCalendar />;
-      case 'vidya-ai':
-        return renderVidyaAIContent();
+      case 'amenity-ai':
+        return renderAmenityAIContent();
       case 'analytics':
         return renderAnalyticsContent();
       case 'board-comparison':

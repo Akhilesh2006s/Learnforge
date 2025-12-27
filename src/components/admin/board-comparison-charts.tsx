@@ -21,7 +21,7 @@ export default function BoardComparisonCharts() {
   const formatBoardName = (name: string): string => {
     if (!name) return name;
     if (name === 'ASLI EXCLUSIVE SCHOOLS' || name === 'ASLI_EXCLUSIVE_SCHOOLS') {
-      return 'Asli Exclusive Schools';
+      return 'LearnForge Exclusive Schools';
     }
     return name;
   };
@@ -85,7 +85,7 @@ export default function BoardComparisonCharts() {
       
       // Format data for comparison
       const formattedAnalytics = results.map((result) => {
-        const boardName = formatBoardName('Asli Exclusive Schools');
+        const boardName = formatBoardName('LearnForge Exclusive Schools');
         
         if (result.data && result.data.stats) {
           const stats = result.data.stats;

@@ -127,7 +127,7 @@ interface Assessment {
 
 
 const TeacherDashboard = () => {
-  const [dashboardSubTab, setDashboardSubTab] = useState<'ai-classes' | 'students' | 'eduott' | 'vidya-ai'>('ai-classes');
+  const [dashboardSubTab, setDashboardSubTab] = useState<'ai-classes' | 'students' | 'eduott' | 'amenity-ai'>('ai-classes');
   const [stats, setStats] = useState<TeacherStats>({
     totalStudents: 0,
     totalClasses: 0,
@@ -212,7 +212,7 @@ const TeacherDashboard = () => {
 
   const [isGeneratingLessonPlan, setIsGeneratingLessonPlan] = useState(false);
   const [generatedLessonPlan, setGeneratedLessonPlan] = useState('');
-  const [vidyaAiTab, setVidyaAiTab] = useState<'teacher-tools' | 'chat'>('teacher-tools');
+  const [amenityAiTab, setAmenityAiTab] = useState<'teacher-tools' | 'chat'>('teacher-tools');
   const [teacherId, setTeacherId] = useState<string>('');
   const [teacherUser, setTeacherUser] = useState<any>(null);
   
@@ -257,8 +257,8 @@ const TeacherDashboard = () => {
   useEffect(() => {
     // Check for saved tab preference from tool pages first
     const savedTab = localStorage.getItem('teacherDashboardTab');
-    if (savedTab && ['ai-classes', 'students', 'eduott', 'vidya-ai'].includes(savedTab)) {
-      setDashboardSubTab(savedTab as 'ai-classes' | 'students' | 'eduott' | 'vidya-ai');
+    if (savedTab && ['ai-classes', 'students', 'eduott', 'amenity-ai'].includes(savedTab)) {
+      setDashboardSubTab(savedTab as 'ai-classes' | 'students' | 'eduott' | 'amenity-ai');
       // Clear it after using so it doesn't persist on refresh
       localStorage.removeItem('teacherDashboardTab');
     }
@@ -1297,9 +1297,20 @@ const TeacherDashboard = () => {
     }
   };
 
-  const fetchTeacherData = async () => {
+  const fetchTeacherData = async (retryCount = 0) => {
+    const maxRetries = 2;
     try {
       const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.error('No auth token found');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`[Mobile Debug] Fetching teacher data (attempt ${retryCount + 1}/${maxRetries + 1})...`);
+      console.log(`[Mobile Debug] API URL: ${API_BASE_URL}/api/teacher/dashboard`);
+      console.log(`[Mobile Debug] Token present: ${token ? 'Yes' : 'No'}`);
+      
       const response = await fetch(`${API_BASE_URL}/api/teacher/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1307,24 +1318,61 @@ const TeacherDashboard = () => {
         }
       });
 
+      console.log(`[Mobile Debug] Response status: ${response.status}`);
+      console.log(`[Mobile Debug] Response ok: ${response.ok}`);
+
       if (response.ok) {
         const data = await response.json();
-        console.log('Teacher dashboard data:', data);
+        console.log('[Mobile Debug] Teacher dashboard data received:', data);
+        console.log('[Mobile Debug] Data structure:', {
+          hasSuccess: 'success' in data,
+          hasData: 'data' in data,
+          dataKeys: data.data ? Object.keys(data.data) : 'no data object'
+        });
         
-        if (data.success) {
-          setStats({
-            ...(data.data.stats || {}),
+        if (data.success && data.data) {
+          // Ensure stats object has all required fields
+          // Handle both nested stats object and flat stats in data
+          const statsData = data.data.stats || data.data;
+          const studentsData = data.data.students || [];
+          const videosData = data.data.videos || [];
+          const assignedClassesData = data.data.assignedClasses || [];
+          const teacherSubjectsData = data.data.teacherSubjects || [];
+          
+          // Calculate stats from actual data if not provided
+          const calculatedStats = {
+            totalStudents: statsData.totalStudents ?? studentsData.length ?? 0,
+            totalClasses: statsData.totalClasses ?? assignedClassesData.length ?? 0,
+            totalVideos: statsData.totalVideos ?? videosData.length ?? 0,
+            totalAssessments: statsData.totalAssessments ?? 0,
+            averagePerformance: statsData.averagePerformance ?? 0,
             recentActivity: data.data.recentActivity || []
+          };
+          
+          setStats(calculatedStats);
+          
+          console.log('[Mobile Debug] Stats set:', calculatedStats);
+          console.log('[Mobile Debug] Raw data structure:', {
+            hasStats: !!data.data.stats,
+            hasStudents: Array.isArray(studentsData),
+            hasVideos: Array.isArray(videosData),
+            hasAssignedClasses: Array.isArray(assignedClassesData),
+            hasTeacherSubjects: Array.isArray(teacherSubjectsData)
           });
-          setStudents(data.data.students || []);
+          
+          setStudents(studentsData);
+          console.log('[Mobile Debug] Students set:', studentsData.length);
           
           // Fetch performance data for students
           fetchStudentPerformance();
-          setVideos(data.data.videos || []);
+          setVideos(videosData);
+          console.log('[Mobile Debug] Videos set:', videosData.length);
 
-          setTeacherEmail(data.data.teacherEmail || '');
-          setAssignedClasses(data.data.assignedClasses || []);
-          setTeacherSubjects(data.data.teacherSubjects || []);
+          setTeacherEmail(data.data.teacherEmail || localStorage.getItem('userEmail') || '');
+          setAssignedClasses(assignedClassesData);
+          setTeacherSubjects(teacherSubjectsData);
+          console.log('[Mobile Debug] Assigned classes set:', assignedClassesData.length);
+          console.log('[Mobile Debug] Teacher subjects set:', teacherSubjectsData.length);
           
           // Process assigned classes to get unique classNumbers and their subjects
           const classesMap = new Map<string, Set<string>>();
@@ -1416,12 +1464,27 @@ const TeacherDashboard = () => {
               console.error('Failed to extract teacher ID from token:', e);
             }
           }
-          console.log('Teacher subjects received:', data.data.teacherSubjects);
+          console.log('[Mobile Debug] Teacher subjects received:', data.data.teacherSubjects);
         } else {
-          console.error('API returned success: false:', data.message);
+          console.error('[Mobile Debug] API returned success: false:', data.message || 'Unknown error');
+          // Retry if we haven't exceeded max retries
+          if (retryCount < maxRetries) {
+            console.log(`[Mobile Debug] Retrying... (${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => fetchTeacherData(retryCount + 1), 1000 * (retryCount + 1));
+            return;
+          }
         }
       } else {
-        console.error('Failed to fetch teacher data:', response.status);
+        const errorText = await response.text();
+        console.error(`[Mobile Debug] Failed to fetch teacher data: ${response.status}`, errorText);
+        
+        // Retry on network/server errors if we haven't exceeded max retries
+        if ((response.status >= 500 || response.status === 0) && retryCount < maxRetries) {
+          console.log(`[Mobile Debug] Retrying due to server error... (${retryCount + 1}/${maxRetries})`);
+          setTimeout(() => fetchTeacherData(retryCount + 1), 1000 * (retryCount + 1));
+          return;
+        }
+        
         // Show fallback data when API fails
         setStats({
           totalStudents: 0,
@@ -1438,8 +1501,21 @@ const TeacherDashboard = () => {
         setAvailableClasses([]);
         setSelectedClassSubjects([]);
       }
-    } catch (error) {
-      console.error('Failed to fetch teacher data:', error);
+    } catch (error: any) {
+      console.error('[Mobile Debug] Failed to fetch teacher data (catch block):', error);
+      console.error('[Mobile Debug] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+      
+      // Retry on network errors if we haven't exceeded max retries
+      if (retryCount < maxRetries && (error?.message?.includes('fetch') || error?.message?.includes('network'))) {
+        console.log(`[Mobile Debug] Retrying due to network error... (${retryCount + 1}/${maxRetries})`);
+        setTimeout(() => fetchTeacherData(retryCount + 1), 1000 * (retryCount + 1));
+        return;
+      }
+      
       // Show fallback data when API fails
       setStats({
         totalStudents: 0,
@@ -1457,6 +1533,7 @@ const TeacherDashboard = () => {
       setSelectedClassSubjects([]);
     } finally {
       setIsLoading(false);
+      console.log('[Mobile Debug] Loading state set to false');
     }
   };
 
@@ -1540,7 +1617,7 @@ const TeacherDashboard = () => {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">ASLILEARN AI</h1>
+                <h1 className="text-xl font-bold">LEARNFORGE AI</h1>
                 <p className="text-xs text-white/80 font-medium">Teacher Portal</p>
               </div>
             </div>
@@ -1603,17 +1680,43 @@ const TeacherDashboard = () => {
                     EduOTT
                   </Button>
                   <Button
-                    variant={dashboardSubTab === 'vidya-ai' ? 'default' : 'outline'}
-                    className={dashboardSubTab === 'vidya-ai' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
+                    variant={dashboardSubTab === 'amenity-ai' ? 'default' : 'outline'}
+                    className={dashboardSubTab === 'amenity-ai' ? 'bg-white text-orange-600 shadow-lg border-white' : 'bg-transparent text-white border-white/30 hover:bg-white/10'}
                     onClick={() => {
-                      setDashboardSubTab('vidya-ai');
+                      setDashboardSubTab('amenity-ai');
                       localStorage.removeItem('teacherDashboardTab'); // Clear saved tab when manually selected
                     }}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Vidya AI
+                    Amenity AI
                   </Button>
                 </div>
+              </div>
+
+              {/* Refresh Button - Mobile Friendly */}
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => {
+                    setIsLoading(true);
+                    fetchTeacherData();
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/90 hover:bg-white text-orange-600 border-orange-300"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Refresh Data
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Stats Cards */}
@@ -1931,10 +2034,10 @@ const TeacherDashboard = () => {
                 </>
               )}
 
-              {/* Vidya AI Tab */}
-              {dashboardSubTab === 'vidya-ai' && (
+              {/* Amenity AI Tab */}
+              {dashboardSubTab === 'amenity-ai' && (
                 <>
-              {/* Vidya AI */}
+              {/* Amenity AI */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1945,20 +2048,20 @@ const TeacherDashboard = () => {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                     <img 
                       src="/Vidya-ai.jpg" 
-                      alt="Vidya AI" 
+                      alt="Amenity AI" 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Vidya AI</h3>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Amenity AI</h3>
                 </div>
 
                 {/* Tabs for Teacher Tools and Chat */}
                 <div className="mb-6 border-b border-gray-200">
                   <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                     <button
-                      onClick={() => setVidyaAiTab('teacher-tools')}
+                      onClick={() => setAmenityAiTab('teacher-tools')}
                       className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'teacher-tools'
+                        amenityAiTab === 'teacher-tools'
                           ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
@@ -1967,9 +2070,9 @@ const TeacherDashboard = () => {
                       Teacher Tools
                     </button>
                     <button
-                      onClick={() => setVidyaAiTab('chat')}
+                      onClick={() => setAmenityAiTab('chat')}
                       className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        vidyaAiTab === 'chat'
+                        amenityAiTab === 'chat'
                           ? 'bg-white text-gray-900 shadow-sm border border-gray-300'
                           : 'text-gray-600 hover:text-gray-900'
                       }`}
@@ -1981,7 +2084,7 @@ const TeacherDashboard = () => {
                 </div>
 
                 {/* Teacher Tools Content */}
-                {vidyaAiTab === 'teacher-tools' && (
+                {amenityAiTab === 'teacher-tools' && (
                   <div className="space-y-8">
                     {/* Header */}
                     <div>
@@ -2282,7 +2385,7 @@ const TeacherDashboard = () => {
                 )}
 
                 {/* Chat Content */}
-                {vidyaAiTab === 'chat' && (
+                {amenityAiTab === 'chat' && (
                   <div className="space-y-4">
                     <div>
                       <h2 className="text-3xl font-bold text-gray-900 mb-2">AI Chat Assistant</h2>

@@ -33,14 +33,14 @@ interface Content {
 }
 
 const BOARDS = [
-  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'Asli Exclusive Schools' }
+  { value: 'ASLI_EXCLUSIVE_SCHOOLS', label: 'LearnForge Exclusive Schools' }
 ];
 
 const ALL_BOARDS_VALUE = 'ALL_BOARDS';
 
 const BOARD_SELECT_OPTIONS = [
   ...BOARDS,
-  { value: ALL_BOARDS_VALUE, label: 'Aslilearn Exclusive (All Boards)' }
+  { value: ALL_BOARDS_VALUE, label: 'LearnForge Exclusive (All Boards)' }
 ];
 
 export default function ContentManagement() {
@@ -181,7 +181,7 @@ export default function ContentManagement() {
       if (commonSubjects.length === 0) {
         toast({
           title: 'No Common Subjects',
-          description: 'No subject exists across every board yet. Please create matching subjects for each board to use the Aslilearn Exclusive option.',
+          description: 'No subject exists across every board yet. Please create matching subjects for each board to use the LearnForge Exclusive option.',
           variant: 'destructive'
         });
       }
@@ -270,7 +270,7 @@ export default function ContentManagement() {
       if (!formData.subject) {
         toast({
           title: 'Validation Error',
-          description: 'Select a subject that exists across every board for Aslilearn Exclusive content.',
+          description: 'Select a subject that exists across every board for LearnForge Exclusive content.',
           variant: 'destructive'
         });
         return;
@@ -524,7 +524,7 @@ export default function ContentManagement() {
   };
 
   const getBoardLabel = (boardCode: string) => {
-    return 'Asli Exclusive Schools';
+    return 'LearnForge Exclusive Schools';
   };
 
   // Extract class number from subject name (e.g., "Chemistry_1" -> "1", "Chemistry_10" -> "10")
@@ -769,7 +769,7 @@ export default function ContentManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Content Management</h2>
-          <p className="text-gray-600 mt-1">Upload videos and notes for AsliLearn Exclusive</p>
+          <p className="text-gray-600 mt-1">Upload videos and notes for LearnForge Exclusive</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -1182,7 +1182,7 @@ export default function ContentManagement() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Upload New Content</DialogTitle>
             <DialogDescription>
-              Upload exclusive videos and notes for AsliLearn students
+              Upload exclusive videos and notes for LearnForge students
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpload} className="space-y-4">
@@ -1219,7 +1219,7 @@ export default function ContentManagement() {
                 </Select>
                 {formData.board === ALL_BOARDS_VALUE && (
                   <p className="text-xs text-blue-700 mt-2">
-                    Selecting Aslilearn Exclusive will duplicate this content across every board that has the chosen subject.
+                    Selecting LearnForge Exclusive will duplicate this content across every board that has the chosen subject.
                   </p>
                 )}
               </div>

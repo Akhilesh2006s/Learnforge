@@ -1,9 +1,8 @@
 // Centralized API URL Management
 // Production Backend
 
-// Production server URL (using HTTPS for Vercel deployment)
-// Point to the public API domain (served via Nginx proxy on the droplet)
-const PRODUCTION_URL = 'https://api.aslilearn.ai';
+// Production server URL (Railway deployment)
+const PRODUCTION_URL = 'https://asli-stud-back-production.up.railway.app';
 
 // Local development URL (for reference)
 const LOCAL_URL = 'http://localhost:5000';
@@ -36,31 +35,22 @@ const isIpAddress = (url?: string) => {
   }
 };
 
-// In production: ignore localhost, optionally convert HTTP to HTTPS, otherwise use envUrl or default
-// In development: use LOCAL_URL if envUrl is not set
+// Use Railway URL by default, allow override via VITE_API_URL
+// In production: ignore localhost URLs, force HTTPS for HTTP domains
+// In development: use Railway URL unless VITE_API_URL is explicitly set to localhost
 let finalUrl: string;
-if (isProduction) {
-  // Production mode
-  if (envUrl) {
-    if (isLocalhostUrl) {
-      finalUrl = PRODUCTION_URL; // Ignore localhost in production
-    } else if (isHttpUrl && !allowHttpApi && !isIpAddress(envUrl)) {
-      finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS for domains
-    } else {
-      finalUrl = envUrl; // Respect explicit env URL (e.g., droplet IP over HTTP)
-    }
+if (envUrl) {
+  // Environment variable is set
+  if (isLocalhostUrl && isProduction) {
+    finalUrl = PRODUCTION_URL; // Ignore localhost in production
+  } else if (isHttpUrl && !allowHttpApi && !isIpAddress(envUrl) && isProduction) {
+    finalUrl = envUrl.replace('http://', 'https://'); // Force HTTPS for domains in production
   } else {
-    finalUrl = PRODUCTION_URL; // Default to production
+    finalUrl = envUrl; // Use the env URL as specified
   }
 } else {
-  // Development mode - prioritize localhost
-  if (isLocalhost) {
-    // If running on localhost, use local backend unless explicitly overridden
-    finalUrl = envUrl && !isLocalhostUrl ? envUrl : LOCAL_URL;
-  } else {
-    // Not localhost but in dev mode - use env URL or local URL
-    finalUrl = envUrl || LOCAL_URL;
-  }
+  // No environment variable - use Railway URL by default
+  finalUrl = PRODUCTION_URL;
 }
 
 export const API_BASE_URL = finalUrl;
@@ -73,6 +63,7 @@ const envLabel = API_BASE_URL.includes('localhost')
     : 'PRODUCTION';
 console.log(`🔌 API Base URL: ${API_BASE_URL} (${envLabel})`);
 console.log(`🔍 Environment: isProduction=${isProduction}, isLocalhost=${isLocalhost}, envUrl=${envUrl || 'not set'}`);
+console.log(`⚠️ If you see api.aslilearn.ai, clear browser cache and restart dev server!`);
 
 // Helper function for making API calls
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {

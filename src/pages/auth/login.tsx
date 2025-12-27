@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,8 +12,6 @@ import { API_BASE_URL } from '@/lib/api-config';
 
 const Login = () => {
   const [, setLocation] = useLocation();
-  const [showVideo, setShowVideo] = useState(true);
-  const [showSignInForm, setShowSignInForm] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -21,18 +19,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Handle video timing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowVideo(false);
-      setTimeout(() => {
-        setShowSignInForm(true);
-      }, 500); // Small delay for smooth transition
-    }, 3000); // Show video for 3 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +28,7 @@ const Login = () => {
     try {
       // Test backend connection first
       console.log('Testing backend connection...');
+      console.log('API_BASE_URL:', API_BASE_URL);
       const healthCheck = await fetch(`${API_BASE_URL}/api/health`);
       if (!healthCheck.ok) {
         throw new Error('Backend server is not running. Please check the server status.');
@@ -138,71 +125,12 @@ const Login = () => {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        {showVideo && (
-          <motion.div
-            key="video"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 w-full h-full flex items-center justify-center z-20"
-          >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            >
-              <source src="/logovideo.mp4" type="video/mp4" />
-            </video>
-            {/* Video overlay for better branding */}
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-200/80 via-blue-200/80 to-cyan-200/80 flex items-center justify-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="text-center"
-              >
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                >
-                  <img 
-                    src="/logo.jpg" 
-                    alt="ASLILEARN Logo" 
-                    className="w-32 h-32 mx-auto mb-4 object-cover rounded-full shadow-2xl ring-4 ring-white/20"
-                  />
-                </motion.div>
-                <motion.h1 
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                  className="text-5xl font-bold text-blue-900 mb-2 bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent"
-                >
-                  ASLILEARN AI
-                </motion.h1>
-                <motion.p 
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.9 }}
-                  className="text-white/90 text-xl font-medium"
-                >
-                  Intelligent Learning Platform
-                </motion.p>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-
-        {showSignInForm && (
-          <motion.div
-            key="signin"
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6, type: "spring" }}
-            className="relative z-10 w-full max-w-md"
-          >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, type: "spring" }}
+        className="relative z-10 w-full max-w-md"
+      >
             {/* Glassmorphism Card with Enhanced Design */}
             <Card className="backdrop-blur-xl bg-white/90 border-white/30 shadow-2xl relative overflow-hidden">
               {/* Decorative gradient overlay */}
@@ -218,7 +146,7 @@ const Login = () => {
                   <div className="absolute inset-0 bg-gradient-to-br from-sky-300 to-blue-400 rounded-full blur-lg opacity-30"></div>
                   <img 
                     src="/logo.jpg" 
-                    alt="ASLILEARN Logo" 
+                    alt="LEARNFORGE Logo" 
                     className="w-full h-full object-cover rounded-full shadow-xl relative z-10 ring-2 ring-sky-200"
                   />
                 </motion.div>
@@ -400,9 +328,7 @@ const Login = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </motion.div>
     </div>
   );
 };

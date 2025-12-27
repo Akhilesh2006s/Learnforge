@@ -83,8 +83,8 @@ import { InteractiveBackground, FloatingParticles } from "@/components/backgroun
 // Mock user ID - in a real app, this would come from authentication
 const MOCK_USER_ID = "user-1";
 
-// Vidya AI Corner Button Component with Rotating Messages
-function VidyaAICornerButton() {
+// Amenity AI Corner Button Component with Rotating Messages
+function AmenityAICornerButton() {
   const [, setLocation] = useLocation();
   const messages = [
     "Need some help with your homework?",
@@ -117,14 +117,14 @@ function VidyaAICornerButton() {
         </div>
       </div>
       
-      {/* Vidya AI Image */}
+      {/* Amenity AI Image */}
       <div 
         className="cursor-pointer"
         onClick={() => setLocation('/ai-tutor')}
       >
         <img 
           src="/Vidya-ai.jpg" 
-          alt="Vidya AI - Click to chat" 
+          alt="Amenity AI - Click to chat" 
           className="w-32 h-auto rounded-xl shadow-xl opacity-80 hover:opacity-100 hover:scale-105 transition-all duration-300"
         />
       </div>
@@ -313,7 +313,7 @@ export default function Dashboard() {
     }
   };
   const [learningPathTab, setLearningPathTab] = useState<'subjects' | 'quizzes'>('subjects');
-  const [vidyaAiTab, setVidyaAiTab] = useState<'student-tools' | 'chat'>('student-tools');
+  const [amenityAiTab, setAmenityAiTab] = useState<'student-tools' | 'chat'>('student-tools');
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
@@ -1528,8 +1528,8 @@ export default function Dashboard() {
           <FloatingParticles /> */}
         </div>
         
-        {/* Vidya AI - Fixed at Bottom Left with Message Popup */}
-        {!isMobile && <VidyaAICornerButton />}
+        {/* Amenity AI - Fixed at Bottom Left with Message Popup */}
+        {!isMobile && <AmenityAICornerButton />}
         
         {/* Welcome Section */}
         <div className="mt-6 sm:mt-8 mb-6 relative z-10">
@@ -1542,7 +1542,7 @@ export default function Dashboard() {
                   Welcome back, {user?.email?.split('@')[0] || user?.fullName?.split(' ')[0] || 'Student'}!
                 </h1>
                 <p className="text-white/90 mb-3 sm:mb-4 text-xs sm:text-sm">
-                  Ready to continue your {user?.educationStream || 'JEE'} preparation journey? Your Vidya AI has personalized recommendations waiting.
+                  Ready to continue your {user?.educationStream || 'JEE'} preparation journey? Your Amenity AI has personalized recommendations waiting.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -1557,7 +1557,7 @@ export default function Dashboard() {
                     className="border-white/30 bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto text-sm py-2 px-4"
                     onClick={() => setLocation('/ai-tutor')}
                   >
-                    Ask Vidya AI
+                    Ask Amenity AI
                   </Button>
                 </div>
               </div>
@@ -1568,7 +1568,7 @@ export default function Dashboard() {
                   <div className="absolute inset-0 bg-white/20 rounded-xl backdrop-blur-sm p-1.5">
                     <img 
                       src="/Vidya-ai.jpg" 
-                      alt="Vidya AI" 
+                      alt="Amenity AI" 
                       className="w-full h-full object-contain rounded-lg"
                     />
                   </div>
@@ -2100,7 +2100,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="bg-gradient-to-r from-orange-600 via-orange-400 to-teal-500 bg-clip-text text-transparent">Your Learning Progress</CardTitle>
                   <Badge className="bg-gradient-to-r from-orange-400 to-teal-500 text-white shadow-lg">
-                    Asli Learn
+                    LearnForge
                   </Badge>
                 </div>
               </CardHeader>
@@ -2657,22 +2657,22 @@ export default function Dashboard() {
 
                   </div>
 
-          {/* Right Column: Vidya AI & Performance */}
+          {/* Right Column: Amenity AI & Performance */}
           <div className="space-y-6">
             
-            {/* Vidya AI Section */}
+            {/* Amenity AI Section */}
             <Card className="bg-white/60 backdrop-blur-xl border-white/20 shadow-xl">
               <CardHeader>
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                   <img 
                     src="/Vidya-ai.jpg" 
-                    alt="Vidya AI" 
+                    alt="Amenity AI" 
                     className="w-full h-full object-cover"
                   />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Vidya AI</CardTitle>
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">Amenity AI</CardTitle>
                     <p className="text-sm text-gray-600">AI-powered study tools</p>
                   </div>
                 </div>
@@ -2680,9 +2680,9 @@ export default function Dashboard() {
                 {/* Tabs */}
                 <div className="flex space-x-2 border-b border-gray-200">
                   <button
-                    onClick={() => setVidyaAiTab('student-tools')}
+                    onClick={() => setAmenityAiTab('student-tools')}
                     className={`px-4 py-2 text-sm font-medium rounded-t-md transition-all ${
-                      vidyaAiTab === 'student-tools'
+                      amenityAiTab === 'student-tools'
                         ? 'bg-white text-blue-600 shadow-sm border border-gray-300 border-b-0'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -2690,9 +2690,9 @@ export default function Dashboard() {
                     Student Tools
                   </button>
                   <button
-                    onClick={() => setVidyaAiTab('chat')}
+                    onClick={() => setAmenityAiTab('chat')}
                     className={`px-4 py-2 text-sm font-medium rounded-t-md transition-all ${
-                      vidyaAiTab === 'chat'
+                      amenityAiTab === 'chat'
                         ? 'bg-white text-blue-600 shadow-sm border border-gray-300 border-b-0'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
@@ -2703,7 +2703,7 @@ export default function Dashboard() {
               </CardHeader>
               
               <CardContent>
-                {vidyaAiTab === 'student-tools' && (
+                {amenityAiTab === 'student-tools' && (
                   <div className="space-y-6">
                     {/* Stats Overview */}
                     <div className="grid grid-cols-3 gap-4">
@@ -2886,7 +2886,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {vidyaAiTab === 'chat' && (
+                {amenityAiTab === 'chat' && (
                   <div className="text-center py-8">
                 <Button 
                       className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"

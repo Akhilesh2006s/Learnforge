@@ -314,7 +314,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
               <div className="w-16 h-16 rounded-full overflow-hidden mb-6 border-2 border-orange-200">
               <img 
                 src="/Vidya-ai.jpg" 
-                alt="Vidya AI" 
+                alt="Amenity AI" 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -364,7 +364,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                     <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-orange-200/50">
                       <img 
                         src="/Vidya-ai.jpg" 
-                        alt="Vidya AI" 
+                        alt="Amenity AI" 
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -397,7 +397,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-orange-200/50">
                   <img 
                     src="/Vidya-ai.jpg" 
-                    alt="Vidya AI" 
+                    alt="Amenity AI" 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -461,7 +461,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
                   handleSendMessage();
                 }
               }}
-              placeholder={`Message Vidya AI...`}
+              placeholder={`Message Amenity AI...`}
               className="flex-1 min-h-[44px] max-h-32 py-3 px-2 resize-none border-0 focus:outline-none focus:ring-0 text-sm"
               disabled={sendMessageMutation.isPending}
               rows={1}
@@ -482,7 +482,7 @@ export default function AIChat({ userId, context, className }: AIChatProps) {
           </div>
         </div>
           <p className="text-xs text-gray-600 text-center mt-2">
-            Vidya AI can make mistakes. Check important info.
+            Amenity AI can make mistakes. Check important info.
           </p>
         </div>
       </div>
